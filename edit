@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# API documentation: http://www.mediawiki.org/wiki/API:Main_page
+
+. wiki-config
+ 
+TITLE="$1"
+CONTENTS="$2"
+
+if [ -z "$CONTENTS" -o -n "$3" ]; then
+  echo "Syntax: $0 <page_to_edit> <new_content_file>"
+  exit 1
+fi
+
+if [ ! -r "$CONTENTS" ]; then
+  echo "File '$CONTENTS' does not exist"
+  exit 2
+fi
+
+echo "Fetching edit token..."
+
+CR=$(curl -s -S \
+	--location \
+	--cookie $cookie_jar \
+	--cookie-jar $cookie_jar \
+	--keepalive-time 60 \
+	--header "Accept-Language: en-GB" \
+	--header "Connection: keep-alive" \
+	--compressed \
+	--request "POST" "${WIKIAPI}?action=tokens&format=txt")
+ 
+EDITTOKEN=$(echo "$CR" | awk '/\[edittoken\] =>/ {print $3}')
+
+if [ ${#EDITTOKEN} = 34 ]; then
+	echo "Edit token is: $EDITTOKEN"
+else
+	echo "Edit token not set."
+	echo $CR
+	exit 1
+fi
+
+
+CR=$(curl -S \
+	--location \
+	--cookie $cookie_jar \
+	--cookie-jar $cookie_jar \
+	--keepalive-time 60 \
+	--header "Accept-Language: en-GB" \
+	--header "Connection: keep-alive" \
+	--header "Expect:" \
+	--data-urlencode "title=$TITLE" \
+	--data-urlencode "text@$CONTENTS" \
+	--data-urlencode "token=${EDITTOKEN}" \
+	--request "POST" "${WIKIAPI}?action=edit&format=txt&")
+
+echo "$CR"
+
+echo "Done..."
+

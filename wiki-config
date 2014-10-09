@@ -1,0 +1,16 @@
+# wiki-config
+
+# Location of wiki's api.php
+WIKIAPI="https://wiki.example/Wiki/api.php"
+
+# Location of wiki's index.php
+WIKIINDEX="https://wiki.example/Wiki/index.php"
+
+# Username to log in as
+USERNAME="myuser"
+
+# Domain to use (may be required if using, e.g. LDAP auth module)
+USERDOMAIN="mywiki"
+
+# Cookie jar file
+cookie_jar="wiki-cookiejar"

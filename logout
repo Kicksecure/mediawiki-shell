@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# API documentation: http://www.mediawiki.org/wiki/API:Main_page
+
+. wiki-config
+ 
+echo "Logging out of $WIKIAPI"
+
+CR=$(curl -s -S \
+	--location \
+	--retry 2 \
+	--retry-delay 5\
+	--cookie $cookie_jar \
+	--cookie-jar $cookie_jar \
+	--keepalive-time 60 \
+	--header "Accept-Language: en-GB" \
+	--header "Connection: keep-alive" \
+	--compressed \
+	--request "POST" "${WIKIAPI}?action=logout&format=txt")
+

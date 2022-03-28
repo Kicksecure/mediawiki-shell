@@ -31,7 +31,8 @@ curl \
    --header "Connection: keep-alive" \
    --compressed \
    --output "${TMPFOLDER}/fetch-edit-token.json" \
-   --request "GET" "${WIKIAPI}?action=query&meta=tokens&format=json"
+   --request "GET" \
+   "${WIKIAPI}?action=query&meta=tokens&format=json"
 
 EDITTOKEN=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
@@ -59,6 +60,7 @@ curl \
    --data-urlencode "text@$CONTENTS" \
    --data-urlencode "token=$EDITTOKEN" \
    --output "${TMPFOLDER}/edit-result.json" \
-   --request "POST" "${WIKIAPI}?action=edit&format=json&"
+   --request "POST" \
+   "${WIKIAPI}?action=edit&format=json&"
 
 echo "INFO: Edit success."

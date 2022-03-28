@@ -40,6 +40,6 @@ curl \
 	--header "Accept-Language: en-GB" \
 	--header "Connection: keep-alive" \
 	--header "Expect:" \
-        "${WIKIINDEX}?title=$TITLE&action=raw"
+   "${WIKIINDEX}?title=$TITLE&action=raw"
 
 true "INFO: Fetch success."

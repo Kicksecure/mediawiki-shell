@@ -18,6 +18,7 @@ curl \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --compressed \
-   --request "POST" "${WIKIAPI}?action=logout&format=txt"
+   --request "POST" \
+   "${WIKIAPI}?action=logout&format=txt"
 
 echo "INFO: OK, logged out."

@@ -27,7 +27,8 @@ curl \
    --data-urlencode "lgpassword=${USERPASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \
    --output "${TMPFOLDER}/login.json" \
-   --request "POST" "${WIKIAPI}?action=login&format=json"
+   --request "POST" \
+   "${WIKIAPI}?action=login&format=json"
 
 RESULT=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.result')
 TOKEN=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.token')
@@ -48,9 +49,10 @@ if [ "$RESULT" = "NeedToken" ]; then
    --data-urlencode "lgdomain=${USERDOMAIN}" \
    --data-urlencode "lgtoken=${TOKEN}" \
    --output "${TMPFOLDER}/login.json2" \
-   --request "POST" "${WIKIAPI}?action=login&format=json"
+   --request "POST" \
+   "${WIKIAPI}?action=login&format=json"
 
-  RESULT=$(cat "${TMPFOLDER}/login.json2" | jq -r '.login.result')
+   RESULT=$(cat "${TMPFOLDER}/login.json2" | jq -r '.login.result')
 fi
 
 if [ "$RESULT" = "Success" ]; then

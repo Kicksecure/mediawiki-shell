@@ -17,7 +17,7 @@ if [ ! -r "$CONTENTS" ]; then
   exit 2
 fi
 
-echo "INFO: Editing '$TITLE'..."
+echo "INFO: Editing '${WIKIAPI}' '$TITLE'..."
 #echo "INFO: Fetching edit token..."
 
 curl \

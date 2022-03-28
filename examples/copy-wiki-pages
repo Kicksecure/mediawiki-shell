@@ -20,7 +20,7 @@ COPY_WIKI_PAGES_LIST=(
 ./login
 
 for copy_wiki_pages_item in ${COPY_WIKI_PAGES_LIST[@]} ; do
-   echo "INFO: Fetching '$copy_wiki_pages_item'..."
+   echo "INFO: Fetching '$SOURCE_WIKI' '$copy_wiki_pages_item'..."
    WIKIINDEX="$SOURCE_WIKI" ./fetch "$copy_wiki_pages_item" | tee "$TMPFOLDER/fetched-wiki-page" >/dev/null
    echo "INFO: Fetch success."
 

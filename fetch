@@ -13,7 +13,7 @@ fi
 
 ## NOTE: Do not use 'echo' here as this script writes to stdout which is
 ##       processed by other scripts.
-true "INFO: Fetching '$TITLE'..."
+true "INFO: Fetching '${WIKIINDEX}' '$TITLE'..."
 
 # curl \
 # 	--fail \

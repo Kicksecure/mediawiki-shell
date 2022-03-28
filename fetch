@@ -11,6 +11,10 @@ if [ -z "${TITLE:-}" -o -n "${2:-}" ]; then
   exit 1
 fi
 
+## NOTE: Do not use 'echo' here as this script writes to stdout which is
+##       processed by other scripts.
+true "INFO: Fetching '$TITLE'..."
+
 # curl \
 # 	--fail \
 #    --silent \
@@ -37,3 +41,5 @@ curl \
 	--header "Connection: keep-alive" \
 	--header "Expect:" \
         "${WIKIINDEX}?title=$TITLE&action=raw"
+
+true "INFO: Fetch success."

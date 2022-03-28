@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 set -e
 
 cd ..
@@ -13,13 +13,16 @@ DESTINATION_WIKI=(
 )
 
 COPY_WIKI_PAGES_LIST=(
-   Testpage14
+   "Testpage14"
+   "Testpage15"
 )
 
 ./login
 
-for copy_wiki_pages_item in $COPY_WIKI_PAGES_LIST ; do
+for copy_wiki_pages_item in ${COPY_WIKI_PAGES_LIST[@]} ; do
+   echo "INFO: Fetching '$copy_wiki_pages_item'..."
    WIKIINDEX="$SOURCE_WIKI" ./fetch "$copy_wiki_pages_item" | tee "$TMPFOLDER/fetched-wiki-page" >/dev/null
+   echo "INFO: Fetch success."
 
    wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 

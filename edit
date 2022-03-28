@@ -17,7 +17,8 @@ if [ ! -r "$CONTENTS" ]; then
   exit 2
 fi
 
-echo "INFO: Fetching edit token..."
+echo "INFO: Editing '$TITLE'..."
+#echo "INFO: Fetching edit token..."
 
 curl \
    --silent \
@@ -36,11 +37,13 @@ EDITTOKEN=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-t
 
 if [ "${#EDITTOKEN}" = 42 ]; then
    #echo "INFO: Edit token is: $EDITTOKEN"
-   echo "INFO: Edit token OK."
+   true "INFO: Edit token OK."
 else
    echo "ERROR: Edit token not set."
    exit 1
 fi
+
+#echo "INFO: Editing '$TITLE'..."
 
 curl \
    --silent \
@@ -55,6 +58,7 @@ curl \
    --data-urlencode "title=$TITLE" \
    --data-urlencode "text@$CONTENTS" \
    --data-urlencode "token=$EDITTOKEN" \
+   --output "${TMPFOLDER}/edit-result.json" \
    --request "POST" "${WIKIAPI}?action=edit&format=json&"
 
 echo "INFO: Edit success."

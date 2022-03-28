@@ -2,58 +2,59 @@
 
 # API documentation: http://www.mediawiki.org/wiki/API:Main_page
 
-. wiki-config
- 
+source wiki-config
+
 TITLE="$1"
 CONTENTS="$2"
 
-if [ -z "$CONTENTS" -o -n "$3" ]; then
-  echo "Syntax: $0 <page_to_edit> <new_content_file>"
+if [ -z "$CONTENTS" ]; then
+  echo "ERROR: Syntax: $0 <page_to_edit> <new_content_file>"
   exit 1
 fi
 
 if [ ! -r "$CONTENTS" ]; then
-  echo "File '$CONTENTS' does not exist"
+  echo "ERROR: File '$CONTENTS' does not exist!"
   exit 2
 fi
 
-echo "Fetching edit token..."
+echo "INFO: Fetching edit token..."
 
-CR=$(curl -s -S \
-	--location \
-	--cookie $cookie_jar \
-	--cookie-jar $cookie_jar \
-	--keepalive-time 60 \
-	--header "Accept-Language: en-GB" \
-	--header "Connection: keep-alive" \
-	--compressed \
-	--request "POST" "${WIKIAPI}?action=tokens&format=txt")
- 
-EDITTOKEN=$(echo "$CR" | awk '/\[edittoken\] =>/ {print $3}')
+curl \
+   --silent \
+   --show-error \
+   --location \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --keepalive-time 60 \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --compressed \
+   --output "${TMPFOLDER}/fetch-edit-token.json" \
+   --request "GET" "${WIKIAPI}?action=query&meta=tokens&format=json"
 
-if [ ${#EDITTOKEN} = 34 ]; then
-	echo "Edit token is: $EDITTOKEN"
+EDITTOKEN=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
+
+if [ "${#EDITTOKEN}" = 42 ]; then
+   #echo "INFO: Edit token is: $EDITTOKEN"
+   echo "INFO: Edit token OK."
 else
-	echo "Edit token not set."
-	echo $CR
-	exit 1
+   echo "ERROR: Edit token not set."
+   exit 1
 fi
 
+curl \
+   --silent \
+   --show-error \
+   --location \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --keepalive-time 60 \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --header "Expect:" \
+   --data-urlencode "title=$TITLE" \
+   --data-urlencode "text@$CONTENTS" \
+   --data-urlencode "token=$EDITTOKEN" \
+   --request "POST" "${WIKIAPI}?action=edit&format=json&"
 
-CR=$(curl -S \
-	--location \
-	--cookie $cookie_jar \
-	--cookie-jar $cookie_jar \
-	--keepalive-time 60 \
-	--header "Accept-Language: en-GB" \
-	--header "Connection: keep-alive" \
-	--header "Expect:" \
-	--data-urlencode "title=$TITLE" \
-	--data-urlencode "text@$CONTENTS" \
-	--data-urlencode "token=${EDITTOKEN}" \
-	--request "POST" "${WIKIAPI}?action=edit&format=txt&")
-
-echo "$CR"
-
-echo "Done..."
-
+echo "INFO: Edit success."

@@ -2,24 +2,38 @@
 
 # API documentation: http://www.mediawiki.org/wiki/API:Main_page
 
-. wiki-config
- 
+source wiki-config
+
 TITLE="$1"
 
-if [ -z "$TITLE" -o -n "$2" ]; then
-  echo "Syntax: $0 <page_title>"
+if [ -z "${TITLE:-}" -o -n "${2:-}" ]; then
+  echo "ERROR: Syntax: $0 <page_title>"
   exit 1
 fi
 
-exec curl -s -S \
+# curl \
+# 	--fail \
+#    --silent \
+#    --show-error \
+# 	--location \
+# 	--cookie "$cookie_jar" \
+# 	--cookie-jar "$cookie_jar" \
+# 	--user-agent "Curl Shell Script" \
+# 	--keepalive-time 60 \
+# 	--header "Accept-Language: en-GB" \
+# 	--header "Connection: keep-alive" \
+# 	--header "Expect:" \
+# 	--data-urlencode "title=$TITLE" \
+# 	--request "POST" "${WIKIINDEX}?action=raw"
+
+curl \
+   --fail \
+   --silent \
+   --show-error \
 	--location \
-	--cookie $cookie_jar \
-	--cookie-jar $cookie_jar \
 	--user-agent "Curl Shell Script" \
 	--keepalive-time 60 \
 	--header "Accept-Language: en-GB" \
 	--header "Connection: keep-alive" \
 	--header "Expect:" \
-	--data-urlencode "title=$TITLE" \
-	--request "POST" "${WIKIINDEX}?action=raw"
-
+        "${WIKIINDEX}?title=$TITLE&action=raw"

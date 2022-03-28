@@ -1,16 +1,38 @@
-# wiki-config
+#!/bin/bash
+
+set -x
+set -e
+set -o pipefail
+set -o nounset
+
+## TODO:
+## create a file:
+## credentials
+## with the following contents:
+#[[ -v USERNAME ]] || USERNAME="username"
+#[[ -v USERPASS ]] || USERPASS="password"
 
 # Location of wiki's api.php
-WIKIAPI="https://wiki.example/Wiki/api.php"
+[[ -v WIKIAPI ]] || WIKIAPI="https://www.whonix.org/w/api.php"
 
 # Location of wiki's index.php
-WIKIINDEX="https://wiki.example/Wiki/index.php"
+[[ -v WIKIINDEX ]] || WIKIINDEX="https://www.whonix.org/w/index.php"
 
-# Username to log in as
-USERNAME="myuser"
+[[ -v TMPFOLDER ]] || TMPFOLDER=/tmp/kicksecure-auto-deploy
+mkdir -p "$TMPFOLDER"
 
 # Domain to use (may be required if using, e.g. LDAP auth module)
-USERDOMAIN="mywiki"
+[[ -v USERDOMAIN ]] || USERDOMAIN=""
 
-# Cookie jar file
-cookie_jar="wiki-cookiejar"
+[[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
+
+### DO NOT EDIT BELOW HERE! ###
+
+error_handler() {
+   echo "$0 ERROR: BASH_COMMAND: '$BASH_COMMAND' failed with exit code '$?'." >&2
+   exit 1
+}
+
+trap error_handler ERR
+
+source credentials

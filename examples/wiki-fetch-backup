@@ -1,0 +1,19 @@
+#!/bin/bash
+
+## TODO: unfinished
+
+#set -x
+set -e
+
+cd ..
+source wiki-config
+
+## Not required for public wiki.
+#./login
+
+wiki_target="https://www.whonix.org/w/"
+
+all_pages=$(curl "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=100000")
+
+## TODO: How to get a list of all page names?
+echo "$all_pages" | jq -r .query.allpages

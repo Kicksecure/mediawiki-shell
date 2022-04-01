@@ -22,4 +22,4 @@ for item_from_all_pages in "$parsed_all_pages" ; do
    echo "item_from_all_pages: '$item_from_all_pages'"
 done
 
-#https://en.wikipedia.org/w/api.php?action=query&list=allpages&apnamespace=0&format=json&aplimit=500&continue=
+#https://www.whonix.org/w/api.php?action=query&list=allpages&apnamespace=0&format=json&aplimit=500&continue=

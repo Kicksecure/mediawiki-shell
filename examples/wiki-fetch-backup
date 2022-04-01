@@ -13,13 +13,25 @@ source wiki-config
 
 wiki_target="https://www.whonix.org/w/"
 
-all_pages=$(curl "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&continue=")
+api_continue_or_not=""
+parsed_all_pages=""
 
-#parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title")
-parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | .title")
+while true ; do
+   all_pages=$(curl "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&apcontinue=$api_continue_or_not")
 
-for item_from_all_pages in "$parsed_all_pages" ; do
-   echo "item_from_all_pages: '$item_from_all_pages'"
+   #parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title")
+   parsed_all_pages+=$(echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh")
+   parsed_all_pages+="
+"
+
+   if ! api_continue_or_not=$(echo "$all_pages" | jq -r ".continue | .apcontinue") ; then
+      break
+   fi
+   if [ "$api_continue_or_not" = "null" ]; then
+      break
+   fi
 done
 
-#https://www.whonix.org/w/api.php?action=query&list=allpages&apnamespace=0&format=json&aplimit=500&continue=
+for item_from_all_pages in "$parsed_all_pages" ; do
+    echo "item_from_all_pages: '$item_from_all_pages'"
+done

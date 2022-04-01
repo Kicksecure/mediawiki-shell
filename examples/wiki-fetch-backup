@@ -13,7 +13,13 @@ source wiki-config
 
 wiki_target="https://www.whonix.org/w/"
 
-all_pages=$(curl "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=100000")
+all_pages=$(curl "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&continue=")
 
-## TODO: How to get a list of all page names?
-echo "$all_pages" | jq -r .query.allpages
+#parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title")
+parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | .title")
+
+for item_from_all_pages in "$parsed_all_pages" ; do
+   echo "item_from_all_pages: '$item_from_all_pages'"
+done
+
+#https://en.wikipedia.org/w/api.php?action=query&list=allpages&apnamespace=0&format=json&aplimit=500&continue=

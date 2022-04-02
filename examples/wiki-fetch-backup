@@ -67,12 +67,12 @@ fi
 
 ## site-specific sanity test
 ## Should be disabled by other users.
-# if echo "$result_test" | grep -q "ZeroNet" ; then
-#    true "OK"
-# else
-#    echo "$0 ERROR: See script source code. result_test does not contain ZeroNet!"
-#    exit 1
-# fi
+if echo "$result_test" | grep -q "ZeroNet" ; then
+   true "OK"
+else
+   echo "$0 ERROR: See script source code. result_test does not contain ZeroNet!"
+   exit 1
+fi
 
 ## Using the same format as git-mediawiki was initially useful during development
 ## to verify that this script produces the same backup result, i.e. is free of bugs.

@@ -11,25 +11,53 @@ source common
 
 wiki_target="https://www.whonix.org/w/"
 
-api_continue_or_not=""
-parsed_all_pages=""
+## https://www.mediawiki.org/wiki/Manual:Namespace
+wiki_namespace_list="0 2 4 6 8 10 12 14"
 
-while true ; do
-   all_pages=$(curl --fail "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&apcontinue=$api_continue_or_not")
+rm -f "$TMPFOLDER/allpages.txt"
 
-   #parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title")
-   parsed_all_pages+=$(echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh")
-   parsed_all_pages+="
-"
+for wiki_namespace_item in $wiki_namespace_list ; do
+   echo "wiki_namespace_item: $wiki_namespace_item"
 
-   if ! api_continue_or_not=$(echo "$all_pages" | jq -r ".continue | .apcontinue") ; then
-      break
-   fi
-   if [ "$api_continue_or_not" = "null" ]; then
-      break
-   fi
+   api_continue_or_not=""
+
+   while true ; do
+      all_pages=$(curl --fail --silent "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&apnamespace=$wiki_namespace_item&apcontinue=$api_continue_or_not")
+
+      #echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title"
+
+      echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$TMPFOLDER/allpages.txt" >/dev/null
+
+      if ! api_continue_or_not=$(echo "$all_pages" | jq -r ".continue | .apcontinue") ; then
+         break
+      fi
+      if [ "$api_continue_or_not" = "null" ]; then
+         break
+      fi
+   done
 done
 
-for item_from_all_pages in "$parsed_all_pages" ; do
-    echo "item_from_all_pages: '$item_from_all_pages'"
-done
+test -f "$TMPFOLDER/allpages.txt"
+result_test="$(cat "$TMPFOLDER/allpages.txt")"
+if [ "$result_test" = "" ]; then
+   echo "$0 ERROR: result_test is empty!"
+   exit 1
+fi
+
+## site-specific sanity test
+## Should be disabled by other users.
+# if echo "$result_test" | grep -q "ZeroNet" ; then
+#    true "OK"
+# else
+#    echo "$0 ERROR: See script source code. result_test does not contain ZeroNet!"
+#    exit 1
+# fi
+
+while IFS=\n read -r item_from_all_pages ; do
+   ## remove last letter ("'")
+   item_from_all_pages="${item_from_all_pages::-1}"
+   ## remove first letter ("'")
+   item_from_all_pages="${item_from_all_pages:1}"
+
+   echo "item_from_all_pages: $item_from_all_pages"
+done < "$TMPFOLDER/allpages.txt"

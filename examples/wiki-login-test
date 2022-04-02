@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "$0: START"
+
 set -e
 cd ..
 
@@ -11,7 +13,7 @@ source common
 #    'https://www.whonix.org'
 # )
 
-DESTINATION_WIKI=(
+[[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
    'https://www.whonix.org'
 )
 

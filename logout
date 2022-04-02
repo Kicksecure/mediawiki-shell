@@ -3,7 +3,7 @@
 set -e
 source common
 
-echo "INFO: Logging out of $WIKI_API..."
+echo "$0: INFO: Logging out of $WIKI_API..."
 
 curl \
    --fail \
@@ -21,4 +21,4 @@ curl \
    --request "POST" \
    "${WIKI_API}?action=logout&format=txt"
 
-echo "INFO: OK, logged out."
+echo "$0: INFO: OK, logged out."

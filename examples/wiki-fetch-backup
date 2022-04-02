@@ -2,6 +2,8 @@
 
 ## TODO: unfinished
 
+echo "$0: START"
+
 set -e
 cd ..
 
@@ -19,7 +21,7 @@ source common
 rm -f "$TMPFOLDER/allpages.txt"
 
 for wiki_namespace_item in $wiki_namespace_list ; do
-   echo "wiki_namespace_item: $wiki_namespace_item"
+   echo "$0: wiki_namespace_item: $wiki_namespace_item"
 
    api_continue_or_not=""
 
@@ -62,12 +64,12 @@ while IFS=\n read -r item_from_all_pages ; do
    ## remove first letter ("'")
    page_item="${page_item:1}"
 
-   echo "page_item: $page_item"
+   echo "$0: page_item: $page_item"
 
    search="/"
    replace="%2F"
    backup_filename_item=$(echo "$page_item" | str_replace "$search" "$replace")
 
-   echo "backup_filename_item: $backup_filename_item"
+   echo "$0: backup_filename_item: $backup_filename_item"
 
 done < "${TMPFOLDER}/allpages.txt"

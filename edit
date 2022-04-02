@@ -7,17 +7,17 @@ TITLE="$1"
 CONTENTS="$2"
 
 if [ -z "$CONTENTS" ]; then
-  echo "ERROR: Syntax: $0 <page_to_edit> <new_content_file>"
+  echo "$0: ERROR: Syntax: $0 <page_to_edit> <new_content_file>"
   exit 1
 fi
 
 if [ ! -r "$CONTENTS" ]; then
-  echo "ERROR: File '$CONTENTS' does not exist!"
+  echo "$0: ERROR: File '$CONTENTS' does not exist!"
   exit 2
 fi
 
-echo "INFO: Editing '${WIKI_API}' '$TITLE'..."
-#echo "INFO: Fetching edit token..."
+echo "$0: INFO: Editing '${WIKI_API}' '$TITLE'..."
+#echo "$0: INFO: Fetching edit token..."
 
 curl \
    --fail \
@@ -38,13 +38,13 @@ EDITTOKEN=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-t
 
 if [ "${#EDITTOKEN}" = 42 ]; then
    #echo "INFO: Edit token is: $EDITTOKEN"
-   true "INFO: Edit token OK."
+   true "$0: INFO: Edit token OK."
 else
-   echo "ERROR: Edit token not set."
+   echo "$0: ERROR: Edit token not set."
    exit 1
 fi
 
-#echo "INFO: Editing '$TITLE'..."
+#echo "$0: INFO: Editing '$TITLE'..."
 
 curl \
    --fail \
@@ -64,4 +64,4 @@ curl \
    --request "POST" \
    "${WIKI_API}?action=edit&format=json&"
 
-echo "INFO: Edit success."
+echo "$0: INFO: Edit success."

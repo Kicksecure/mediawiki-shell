@@ -4,11 +4,11 @@ set -e
 source common
 
 if [ -z "$USERPASS" ]; then
-   echo "ERROR: Password not supplied!"
+   echo "$0: ERROR: Password not supplied!"
    exit 1
 fi
 
-echo "INFO: Logging into '$WIKI_API' as '$USERNAME'..."
+echo "$0: INFO: Logging into '$WIKI_API' as '$USERNAME'..."
 
 curl \
    --fail \
@@ -57,8 +57,8 @@ if [ "$RESULT" = "NeedToken" ]; then
 fi
 
 if [ "$RESULT" = "Success" ]; then
-   echo "INFO: Successfully logged in as '$USERNAME'."
+   echo "$0: INFO: Successfully logged in as '$USERNAME'."
 else
-   echo "ERROR: Login failed"
+   echo "$0: ERROR: Login failed"
    exit 1
 fi

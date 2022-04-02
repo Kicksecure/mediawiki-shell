@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "$0: START"
+
 set -e
 cd ..
 
@@ -25,7 +27,7 @@ WIKI_URL="$DESTINATION_WIKI_URL" \
    ./login
 
 for copy_wiki_pages_item in ${COPY_WIKI_PAGES_LIST[@]} ; do
-   echo "INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
+   echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 
    rm -f "$TMPFOLDER/fetched-wiki-page"
 
@@ -39,10 +41,10 @@ for copy_wiki_pages_item in ${COPY_WIKI_PAGES_LIST[@]} ; do
    #cat "$TMPFOLDER/fetched-wiki-page"
    #echo ""
 
-   echo "INFO: Fetch success."
+   echo "$0: INFO: Fetch success."
 
    wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 
    WIKI_URL="$DESTINATION_WIKI_URL" \
-   ./edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
+      ./edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
 done

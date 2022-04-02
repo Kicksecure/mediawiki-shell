@@ -6,13 +6,13 @@ source common
 TITLE="$1"
 
 if [ -z "${TITLE:-}" -o -n "${2:-}" ]; then
-  echo "ERROR: Syntax: $0 <page_title>"
+  echo "$0: ERROR: Syntax: $0 <page_title>"
   exit 1
 fi
 
 ## NOTE: Do not use 'echo' here as this script writes to stdout which is
 ##       processed by other scripts.
-true "INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
+true "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 
 # curl \
 # --fail \
@@ -41,4 +41,4 @@ curl \
    --header "Expect:" \
    "${WIKI_INDEX}?title=$TITLE&action=raw"
 
-true "INFO: Fetch success."
+true "$0: INFO: Fetch success."

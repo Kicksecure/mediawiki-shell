@@ -17,9 +17,8 @@ failed with exit code '$?'.
 trap error_handler ERR
 
 exit_handler() {
-   local exit_code
-   exit_code=$?
-   echo "$0: END: with exit code: '$?'"
+   local exit_code=$?
+   echo "$0: END: with exit code: '$exit_code'"
    exit "$exit_code"
 }
 

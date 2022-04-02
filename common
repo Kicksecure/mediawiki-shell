@@ -24,3 +24,4 @@ source credentials
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 
 mkdir -p "$TMPFOLDER"
+chmod og-rw "$TMPFOLDER"

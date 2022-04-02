@@ -9,10 +9,10 @@ source common
 ## Not required for public wiki.
 #./login
 
-wiki_target="https://www.whonix.org/w/"
+[[ -v wiki_target_api ]] || wiki_target_api="https://www.whonix.org/w/api.php"
 
 ## https://www.mediawiki.org/wiki/Manual:Namespace
-wiki_namespace_list="0 2 4 6 8 10 12 14"
+[[ -v wiki_namespace_list ]] || wiki_namespace_list="0 2 4 6 8 10 12 14"
 
 rm -f "$TMPFOLDER/allpages.txt"
 
@@ -22,11 +22,11 @@ for wiki_namespace_item in $wiki_namespace_list ; do
    api_continue_or_not=""
 
    while true ; do
-      all_pages=$(curl --fail --silent "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&apnamespace=$wiki_namespace_item&apcontinue=$api_continue_or_not")
+      all_pages=$(curl --fail --silent "${wiki_target_api}?action=query&format=json&list=allpages&aplimit=500&apnamespace=${wiki_namespace_item}&apcontinue=${api_continue_or_not}")
 
       #echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title"
 
-      echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$TMPFOLDER/allpages.txt" >/dev/null
+      echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh" | tee -a "${TMPFOLDER}/allpages.txt" >/dev/null
 
       if ! api_continue_or_not=$(echo "$all_pages" | jq -r ".continue | .apcontinue") ; then
          break
@@ -38,7 +38,7 @@ for wiki_namespace_item in $wiki_namespace_list ; do
 done
 
 test -f "$TMPFOLDER/allpages.txt"
-result_test="$(cat "$TMPFOLDER/allpages.txt")"
+result_test="$(cat "${TMPFOLDER}/allpages.txt")"
 if [ "$result_test" = "" ]; then
    echo "$0 ERROR: result_test is empty!"
    exit 1
@@ -68,4 +68,4 @@ while IFS=\n read -r item_from_all_pages ; do
 
    echo "backup_filename_item: $backup_filename_item"
 
-done < "$TMPFOLDER/allpages.txt"
+done < "${TMPFOLDER}/allpages.txt"

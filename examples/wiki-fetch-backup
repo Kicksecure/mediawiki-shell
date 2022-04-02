@@ -15,7 +15,7 @@ api_continue_or_not=""
 parsed_all_pages=""
 
 while true ; do
-   all_pages=$(curl "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&apcontinue=$api_continue_or_not")
+   all_pages=$(curl --fail "$wiki_target/api.php?action=query&format=json&list=allpages&aplimit=500&apcontinue=$api_continue_or_not")
 
    #parsed_all_pages=$(echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title")
    parsed_all_pages+=$(echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh")

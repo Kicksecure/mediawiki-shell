@@ -8,9 +8,10 @@ if [ -z "$USERPASS" ]; then
    exit 1
 fi
 
-echo "INFO: Logging into $WIKIAPI as $USERNAME..."
+echo "INFO: Logging into '$WIKIAPI' as '$USERNAME'..."
 
 curl \
+   --fail \
    --silent \
    --show-error \
    --location \
@@ -34,6 +35,7 @@ TOKEN=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.token')
 
 if [ "$RESULT" = "NeedToken" ]; then
    curl \
+   --fail \
    --silent \
    --show-error \
    --location \
@@ -55,7 +57,7 @@ if [ "$RESULT" = "NeedToken" ]; then
 fi
 
 if [ "$RESULT" = "Success" ]; then
-   echo "INFO: Successfully logged in as $USERNAME."
+   echo "INFO: Successfully logged in as '$USERNAME'."
 else
    echo "ERROR: Login failed"
    exit 1

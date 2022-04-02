@@ -7,16 +7,5 @@
 #[[ -v USERNAME ]] || USERNAME="username"
 #[[ -v USERPASS ]] || USERPASS="password"
 
-# Location of wiki's api.php
-[[ -v WIKIAPI ]] || WIKIAPI="https://www.whonix.org/w/api.php"
-
-# Location of wiki's index.php
-[[ -v WIKIINDEX ]] || WIKIINDEX="https://www.whonix.org/w/index.php"
-
-[[ -v TMPFOLDER ]] || TMPFOLDER=/tmp/kicksecure-auto-deploy
-mkdir -p "$TMPFOLDER"
-
-# Domain to use (may be required if using, e.g. LDAP auth module)
-[[ -v USERDOMAIN ]] || USERDOMAIN=""
-
-[[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
+#[[ -v WIKIAPI ]] || WIKIAPI="https://www.whonix.org/w/api.php"
+#[[ -v WIKIINDEX ]] || WIKIINDEX="https://www.whonix.org/w/index.php"

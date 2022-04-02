@@ -6,7 +6,11 @@ set -o pipefail
 set -o nounset
 
 error_handler() {
-   echo "$0 ERROR: BASH_COMMAND: '$BASH_COMMAND' failed with exit code '$?'." >&2
+   echo "###
+$0 ERROR:
+BASH_COMMAND: '$BASH_COMMAND'
+failed with exit code '$?'.
+###" >&2
    exit 1
 }
 
@@ -14,3 +18,9 @@ trap error_handler ERR
 
 source wiki-config
 source credentials
+
+[[ -v TMPFOLDER ]] || TMPFOLDER="/tmp/kicksecure-auto-deploy"
+[[ -v USERDOMAIN ]] || USERDOMAIN=""
+[[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
+
+mkdir -p "$TMPFOLDER"

@@ -60,6 +60,10 @@ fi
 #    exit 1
 # fi
 
+## Using the same format as git-mediawiki was initially useful during development
+## to verify that this script produces the same backup result, i.e. is free of bugs.
+## In the future it might allow for more backup restoration options.
+
 while IFS=\n read -r item_from_all_pages ; do
    backup_page_item="$item_from_all_pages"
    ## remove last letter ("'")

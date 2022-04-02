@@ -26,7 +26,10 @@ exit_handler() {
 trap exit_handler EXIT
 
 source wiki-config
-source credentials
+
+if test -f credentials ; then
+   source credentials
+fi
 
 [[ -v TMPFOLDER ]] || TMPFOLDER="/tmp/wiki-shell-temp"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""

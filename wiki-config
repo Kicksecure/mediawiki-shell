@@ -4,6 +4,6 @@
 ## create a file:
 ## credentials
 ## with the following contents:
-#[[ -v USERNAME ]] || USERNAME="username"
-#[[ -v USERPASS ]] || USERPASS="password"
+#[[ -v WIKI_API_USER_NAME ]] || WIKI_API_USER_NAME="username"
+#[[ -v WIKI_API_USER_PASS ]] || WIKI_API_USER_PASS="password"
 [[ -v WIKI_SCRIPT_FOLDER ]] || WIKI_SCRIPT_FOLDER="w"

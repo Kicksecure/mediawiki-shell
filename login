@@ -3,12 +3,12 @@
 set -e
 source common
 
-if [ -z "$USERPASS" ]; then
+if [ -z "$WIKI_API_USER_PASS" ]; then
    echo "$0: ERROR: Password not supplied!"
    exit 1
 fi
 
-echo "$0: INFO: Logging into '$WIKI_API' as '$USERNAME'..."
+echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'..."
 
 curl \
    --fail \
@@ -23,8 +23,8 @@ curl \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --compressed \
-   --data-urlencode "lgname=${USERNAME}" \
-   --data-urlencode "lgpassword=${USERPASS}" \
+   --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
+   --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \
    --output "${TMPFOLDER}/login.json" \
    --request "POST" \
@@ -45,8 +45,8 @@ if [ "$RESULT" = "NeedToken" ]; then
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --compressed \
-   --data-urlencode "lgname=${USERNAME}" \
-   --data-urlencode "lgpassword=${USERPASS}" \
+   --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
+   --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \
    --data-urlencode "lgtoken=${TOKEN}" \
    --output "${TMPFOLDER}/login.json2" \
@@ -57,7 +57,7 @@ if [ "$RESULT" = "NeedToken" ]; then
 fi
 
 if [ "$RESULT" = "Success" ]; then
-   echo "$0: INFO: Successfully logged in as '$USERNAME'."
+   echo "$0: INFO: Successfully logged in as '$WIKI_API_USER_NAME'."
 else
    echo "$0: ERROR: Login failed"
    exit 1

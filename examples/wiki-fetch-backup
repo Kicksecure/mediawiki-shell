@@ -90,16 +90,18 @@ while IFS=\n read -r item_from_all_pages ; do
    replace="'"
    backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
 
+   ## Same format as git-mediawiki: add '.mw' file extension.
+   backup_filename_item="${backup_filename_item}.mw"
+
    echo "$0: backup_page_item    : $backup_page_item"
    echo "$0: backup_filename_item: $backup_filename_item"
 
-   ## Same format as git-mediawiki: add '.mw' file extension.
    WIKI_URL="$SOURCE_WIKI_URL" \
       ./fetch \
          "$backup_page_item" | \
-         tee "${wiki_backup_folder}/${backup_filename_item}.mw" >/dev/null
+         tee "${wiki_backup_folder}/${backup_filename_item}" >/dev/null
 
    ## Same format as git-mediawiki: add newline at the end.
-   echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}.mw" >/dev/null
+   echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}" >/dev/null
 
 done < "${TMPFOLDER}/allpages.txt"

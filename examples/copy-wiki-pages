@@ -1,10 +1,8 @@
 #!/bin/bash
 
-#set -x
 set -e
-
 cd ..
-source wiki-config
+source common
 
 SOURCE_WIKI='https://www.kicksecure.com/w/index.php'
 

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# API documentation: http://www.mediawiki.org/wiki/API:Main_page
-
-. wiki-config
+set -e
+source common
 
 echo "INFO: Logging out of $WIKIAPI..."
 
 curl \
+   --fail \
    --silent \
    --show-error \
    --location \

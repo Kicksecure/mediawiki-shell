@@ -1,12 +1,11 @@
 #!/bin/bash
 
-# API documentation: http://www.mediawiki.org/wiki/API:Main_page
-
-source wiki-config
+set -e
+source common
 
 if [ -z "$USERPASS" ]; then
-  echo "ERROR: Password not supplied!"
-  exit 1
+   echo "ERROR: Password not supplied!"
+   exit 1
 fi
 
 echo "INFO: Logging into $WIKIAPI as $USERNAME..."
@@ -34,7 +33,7 @@ RESULT=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.result')
 TOKEN=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.token')
 
 if [ "$RESULT" = "NeedToken" ]; then
-  curl \
+   curl \
    --silent \
    --show-error \
    --location \
@@ -56,8 +55,8 @@ if [ "$RESULT" = "NeedToken" ]; then
 fi
 
 if [ "$RESULT" = "Success" ]; then
-  echo "INFO: Successfully logged in as $USERNAME."
+   echo "INFO: Successfully logged in as $USERNAME."
 else
-  echo "ERROR: Login failed"
-  exit 1
+   echo "ERROR: Login failed"
+   exit 1
 fi

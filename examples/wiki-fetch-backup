@@ -2,11 +2,9 @@
 
 ## TODO: unfinished
 
-#set -x
 set -e
-
 cd ..
-source wiki-config
+source common
 
 ## Not required for public wiki.
 #./login

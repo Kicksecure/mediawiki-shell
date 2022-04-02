@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# API documentation: http://www.mediawiki.org/wiki/API:Main_page
-
-source wiki-config
+set -e
+source common
 
 TITLE="$1"
 
@@ -17,8 +16,8 @@ true "INFO: Fetching '${WIKIINDEX}' '$TITLE'..."
 
 # curl \
 # 	--fail \
-#    --silent \
-#    --show-error \
+#       --silent \
+#       --show-error \
 # 	--location \
 # 	--cookie "$cookie_jar" \
 # 	--cookie-jar "$cookie_jar" \

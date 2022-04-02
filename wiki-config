@@ -1,10 +1,5 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail
-set -o nounset
-
 ## TODO:
 ## create a file:
 ## credentials
@@ -25,14 +20,3 @@ mkdir -p "$TMPFOLDER"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
-
-### DO NOT EDIT BELOW HERE! ###
-
-error_handler() {
-   echo "$0 ERROR: BASH_COMMAND: '$BASH_COMMAND' failed with exit code '$?'." >&2
-   exit 1
-}
-
-trap error_handler ERR
-
-source credentials

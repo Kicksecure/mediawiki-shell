@@ -15,8 +15,9 @@ source common
 
 ## TODO
 [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
-[[ -v wiki_target_api ]] || wiki_target_api="https://www.whonix.org/w/api.php"
 [[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
+
+[[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/${WIKI_SCRIPT_FOLDER}/api.php"
 
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 [[ -v wiki_namespace_list ]] || wiki_namespace_list="0 2 4 6 8 10 12 14"

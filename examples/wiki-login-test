@@ -2,14 +2,20 @@
 
 set -e
 cd ..
+
+[[ -v WIKI_API ]] || WIKI_URL="invalid.tld"
 source common
 
-DESTINATION_WIKI_API=(
-   'https://www.kicksecure.com/w/api.php'
-   'https://www.whonix.org/w/api.php'
+# DESTINATION_WIKI=(
+#    'https://www.kicksecure.com'
+#    'https://www.whonix.org'
+# )
+
+DESTINATION_WIKI=(
+   'https://www.whonix.org'
 )
 
-for DESTINATION_WIKI_API in ${DESTINATION_WIKI_API[@]} ; do
-   WIKIAPI="$DESTINATION_WIKI_API"  \
+for DESTINATION_WIKI in ${DESTINATION_WIKI[@]} ; do
+   WIKI_URL="$DESTINATION_WIKI"  \
       ./login
 done

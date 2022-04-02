@@ -8,7 +8,7 @@ if [ -z "$USERPASS" ]; then
    exit 1
 fi
 
-echo "INFO: Logging into '$WIKIAPI' as '$USERNAME'..."
+echo "INFO: Logging into '$WIKI_API' as '$USERNAME'..."
 
 curl \
    --fail \
@@ -28,7 +28,7 @@ curl \
    --data-urlencode "lgdomain=${USERDOMAIN}" \
    --output "${TMPFOLDER}/login.json" \
    --request "POST" \
-   "${WIKIAPI}?action=login&format=json"
+   "${WIKI_API}?action=login&format=json"
 
 RESULT=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.result')
 TOKEN=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.token')
@@ -51,7 +51,7 @@ if [ "$RESULT" = "NeedToken" ]; then
    --data-urlencode "lgtoken=${TOKEN}" \
    --output "${TMPFOLDER}/login.json2" \
    --request "POST" \
-   "${WIKIAPI}?action=login&format=json"
+   "${WIKI_API}?action=login&format=json"
 
    RESULT=$(cat "${TMPFOLDER}/login.json2" | jq -r '.login.result')
 fi

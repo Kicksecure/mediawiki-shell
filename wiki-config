@@ -6,6 +6,4 @@
 ## with the following contents:
 #[[ -v USERNAME ]] || USERNAME="username"
 #[[ -v USERPASS ]] || USERPASS="password"
-
-#[[ -v WIKIAPI ]] || WIKIAPI="https://www.whonix.org/w/api.php"
-#[[ -v WIKIINDEX ]] || WIKIINDEX="https://www.whonix.org/w/index.php"
+[[ -v WIKI_SCRIPT_FOLDER ]] || WIKI_SCRIPT_FOLDER="w"

@@ -4,6 +4,8 @@
 
 set -e
 cd ..
+
+[[ -v WIKI_API ]] || WIKI_URL="invalid.tld"
 source common
 
 ## Not required for public wiki.

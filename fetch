@@ -12,7 +12,7 @@ fi
 
 ## NOTE: Do not use 'echo' here as this script writes to stdout which is
 ##       processed by other scripts.
-true "INFO: Fetching '${WIKIINDEX}' '$TITLE'..."
+true "INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 
 # curl \
 # --fail \
@@ -27,7 +27,7 @@ true "INFO: Fetching '${WIKIINDEX}' '$TITLE'..."
 # --header "Connection: keep-alive" \
 # --header "Expect:" \
 # --data-urlencode "title=$TITLE" \
-# --request "POST" "${WIKIINDEX}?action=raw"
+# --request "POST" "${WIKI_INDEX}?action=raw"
 
 curl \
    --fail \
@@ -39,6 +39,6 @@ curl \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --header "Expect:" \
-   "${WIKIINDEX}?title=$TITLE&action=raw"
+   "${WIKI_INDEX}?title=$TITLE&action=raw"
 
 true "INFO: Fetch success."

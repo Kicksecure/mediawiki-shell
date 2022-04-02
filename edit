@@ -20,6 +20,7 @@ echo "INFO: Editing '${WIKIAPI}' '$TITLE'..."
 #echo "INFO: Fetching edit token..."
 
 curl \
+   --fail \
    --silent \
    --show-error \
    --location \
@@ -46,6 +47,7 @@ fi
 #echo "INFO: Editing '$TITLE'..."
 
 curl \
+   --fail \
    --silent \
    --show-error \
    --location \

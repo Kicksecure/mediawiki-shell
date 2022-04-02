@@ -1,6 +1,9 @@
 #!/bin/bash
 
-## TODO: unfinished
+missing_variable() {
+   echo "$0: ERROR: missing variable '$1'!"
+   exit 1
+}
 
 echo "$0: START"
 
@@ -10,12 +13,13 @@ cd ..
 [[ -v WIKI_API ]] || WIKI_URL="invalid.tld"
 source common
 
-## Not required for public wiki.
-#./login
+## These variables should be set by the calling script as environment variables.
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
+[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 
-## TODO
-[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
-[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
+## example:
+# [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
+# [[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
 
 [[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/${WIKI_SCRIPT_FOLDER}/api.php"
 
@@ -23,6 +27,9 @@ source common
 [[ -v wiki_namespace_list ]] || wiki_namespace_list="0 2 4 6 8 10 12 14"
 
 rm -f "$TMPFOLDER/allpages.txt"
+
+## Not required for public wiki.
+#./login
 
 for wiki_namespace_item in $wiki_namespace_list ; do
    echo "$0: wiki_namespace_item: $wiki_namespace_item"

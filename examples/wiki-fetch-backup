@@ -54,10 +54,18 @@ fi
 # fi
 
 while IFS=\n read -r item_from_all_pages ; do
+   page_item="$item_from_all_pages"
    ## remove last letter ("'")
-   item_from_all_pages="${item_from_all_pages::-1}"
+   page_item="${page_item::-1}"
    ## remove first letter ("'")
-   item_from_all_pages="${item_from_all_pages:1}"
+   page_item="${page_item:1}"
 
-   echo "item_from_all_pages: $item_from_all_pages"
+   echo "page_item: $page_item"
+
+   search="/"
+   replace="%2F"
+   backup_filename_item=$(echo "$page_item" | str_replace "$search" "$replace")
+
+   echo "backup_filename_item: $backup_filename_item"
+
 done < "$TMPFOLDER/allpages.txt"

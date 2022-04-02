@@ -16,6 +16,11 @@ failed with exit code '$?'.
 
 trap error_handler ERR
 
+if [ "$(id -u)" = "0" ]; then
+   echo "ERROR: This must NOT be run as root (sudo)!"
+   exit 1
+fi
+
 source wiki-config
 source credentials
 

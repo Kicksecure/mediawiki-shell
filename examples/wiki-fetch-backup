@@ -13,13 +13,14 @@ cd ..
 [[ -v WIKI_API ]] || WIKI_URL="invalid.tld"
 source common
 
+## example:
+## TODO
+[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
+[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
+
 ## These variables should be set by the calling script as environment variables.
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
-
-## example:
-# [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
-# [[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
 
 [[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/${WIKI_SCRIPT_FOLDER}/api.php"
 
@@ -28,7 +29,7 @@ source common
 
 rm -f "$TMPFOLDER/allpages.txt"
 
-echo "$0: INFO: TMPFOLDER: $TMPFOLDER"
+echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
 echo "$0: INFO: wiki_namespace_list: $wiki_namespace_list"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
@@ -38,7 +39,7 @@ echo "$0: INFO: wiki_target_api: $wiki_target_api"
 #./login
 
 for wiki_namespace_item in $wiki_namespace_list ; do
-   echo "$0: wiki_namespace_item: $wiki_namespace_item"
+   echo "$0: INFO: wiki_namespace_item: $wiki_namespace_item"
 
    api_continue_or_not=""
 

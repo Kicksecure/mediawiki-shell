@@ -19,7 +19,7 @@ trap error_handler ERR
 source wiki-config
 source credentials
 
-[[ -v TMPFOLDER ]] || TMPFOLDER="/tmp/kicksecure-auto-deploy"
+[[ -v TMPFOLDER ]] || TMPFOLDER="/tmp/wiki-shell-temp"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 

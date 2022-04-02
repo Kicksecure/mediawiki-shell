@@ -12,6 +12,8 @@ fi
 
 ## NOTE: Do not use 'echo' here as this script writes to stdout which is
 ##       processed by other scripts.
+trap "" EXIT
+
 true "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 
 # curl \

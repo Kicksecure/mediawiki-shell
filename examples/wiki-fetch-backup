@@ -94,7 +94,7 @@ while IFS=\n read -r item_from_all_pages ; do
    backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
 
    ## Same format as git-mediawiki: replace ' ' with '_'.
-   ## Replace spaces with underscoore.
+   ## Replace spaces with underscore.
    search=" "
    replace="_"
    backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")

@@ -24,7 +24,7 @@ source common
 [[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/${WIKI_SCRIPT_FOLDER}/api.php"
 
 ## https://www.mediawiki.org/wiki/Manual:Namespace
-[[ -v wiki_namespace_list ]] || wiki_namespace_list="0 2 4 6 8 10 12 14"
+[[ -v wiki_namespace_list ]] || wiki_namespace_list="0 4 6 8 10 12 14"
 
 rm -f "$TMPFOLDER/allpages.txt"
 

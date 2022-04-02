@@ -86,6 +86,10 @@ while IFS=\n read -r item_from_all_pages ; do
    replace="_"
    backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
 
+   search="'\''"
+   replace="'"
+   backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
+
    echo "$0: backup_page_item    : $backup_page_item"
    echo "$0: backup_filename_item: $backup_filename_item"
 

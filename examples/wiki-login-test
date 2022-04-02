@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+cd ..
+source common
+
+DESTINATION_WIKI_API=(
+   'https://www.kicksecure.com/w/api.php'
+   'https://www.whonix.org/w/api.php'
+)
+
+for DESTINATION_WIKI_API in ${DESTINATION_WIKI_API[@]} ; do
+   WIKIAPI="$DESTINATION_WIKI_API"  \
+      ./login
+done

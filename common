@@ -8,8 +8,13 @@ set -o nounset
 error_handler() {
    echo "###
 $0: ERROR:
+
 BASH_COMMAND: '$BASH_COMMAND'
 failed with exit code '$?'.
+
+WIKI_INDEX: $WIKI_INDEX
+TITLE: $TITLE:
+
 ###" >&2
    exit 1
 }

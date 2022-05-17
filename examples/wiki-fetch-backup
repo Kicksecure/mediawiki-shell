@@ -10,12 +10,13 @@ echo "$0: START"
 set -e
 cd ..
 
-[[ -v WIKI_API ]] || WIKI_URL="invalid.tld"
+[[ -v WIKI_API ]] || WIKI_API="invalid.tld"
 source common
 
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
 #[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
+#[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test="ZeroNet"
 
 ## These variables should be set by the calling script as environment variables.
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
@@ -32,8 +33,20 @@ rm -f "$TMPFOLDER/allpages.txt"
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
 echo "$0: INFO: wiki_namespace_list: $wiki_namespace_list"
+echo "$0: INFO: WIKI_SCRIPT_FOLDER: $WIKI_SCRIPT_FOLDER"
+echo "$0: INFO: WIKI_INDEX: $WIKI_INDEX"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 echo "$0: INFO: wiki_target_api: $wiki_target_api"
+
+if ! test -d "$wiki_backup_folder" ; then
+   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   echo "mkdir --parents '$wiki_backup_folder'"
+fi
+
+if ! test -w "$wiki_backup_folder" ; then
+   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+fi
 
 ## Not required for public wiki.
 #./login
@@ -66,13 +79,13 @@ if [ "$result_test" = "" ]; then
    exit 1
 fi
 
-## site-specific sanity test
-## Should be disabled by other users.
-if echo "$result_test" | grep -q "ZeroNet" ; then
-   true "OK"
-else
-   echo "$0 ERROR: See script source code. result_test does not contain ZeroNet!"
-   exit 1
+if [ ! "$wiki_article_must_include_sanity_test" = "" ]; then
+   if echo "$result_test" | grep -q "$wiki_article_must_include_sanity_test" ; then
+      true "OK"
+   else
+      echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'!"
+      exit 1
+   fi
 fi
 
 ## Using the same format as git-mediawiki was initially useful during development

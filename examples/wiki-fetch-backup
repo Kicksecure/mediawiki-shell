@@ -32,7 +32,6 @@ rm -f "$TMPFOLDER/allpages.txt"
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
 echo "$0: INFO: wiki_namespace_list: $wiki_namespace_list"
-echo "$0: INFO: WIKI_INDEX: $WIKI_INDEX"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 echo "$0: INFO: wiki_target_api: $wiki_target_api"
 

@@ -9,9 +9,23 @@
 
 #[[ -v WIKI_URL ]] || WIKI_URL="https://www.whonix.org/w"
 
+## DO NOT EDIT BELOW THIS LINE
+## UNLESS YOU KNOW WHAT YOU ARE DOING!
+
+error_message_if_missing_wiki_url_variable() {
+   echo "ERROR: environment variable WIKI_URL missing! Run for example:
+
+WIKI_URL=https://www.whonix.org/w $0
+" >&2
+   exit 1
+}
+
+[[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable
+
 [[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
 [[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
 
 if test -f credentials ; then
    source credentials
 fi
+

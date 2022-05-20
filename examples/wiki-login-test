@@ -5,16 +5,15 @@ echo "$0: START"
 set -e
 cd ..
 
-[[ -v WIKI_API ]] || WIKI_URL="invalid.tld"
 source common
 
 # DESTINATION_WIKI=(
-#    'https://www.kicksecure.com'
-#    'https://www.whonix.org'
+#    'https://www.kicksecure.com/w'
+#    'https://www.whonix.org/w'
 # )
 
 [[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
-   'https://www.whonix.org'
+   'https://www.whonix.org/w'
 )
 
 for DESTINATION_WIKI in ${DESTINATION_WIKI[@]} ; do

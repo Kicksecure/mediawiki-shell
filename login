@@ -2,6 +2,7 @@
 
 set -e
 source common
+source wiki-config
 
 if [ -z "$WIKI_API_USER_PASS" ]; then
    echo "$0: ERROR: Password not supplied!"

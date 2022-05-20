@@ -10,11 +10,10 @@ echo "$0: START"
 set -e
 cd ..
 
-[[ -v WIKI_API ]] || WIKI_API="invalid.tld"
 source common
 
 ## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org'
+#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
 #[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
 #[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test="ZeroNet"
 
@@ -22,7 +21,7 @@ source common
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 
-[[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/${WIKI_SCRIPT_FOLDER}/api.php"
+[[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/api.php"
 
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 ## 500: site-specific
@@ -33,7 +32,6 @@ rm -f "$TMPFOLDER/allpages.txt"
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
 echo "$0: INFO: wiki_namespace_list: $wiki_namespace_list"
-echo "$0: INFO: WIKI_SCRIPT_FOLDER: $WIKI_SCRIPT_FOLDER"
 echo "$0: INFO: WIKI_INDEX: $WIKI_INDEX"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 echo "$0: INFO: wiki_target_api: $wiki_target_api"

@@ -33,17 +33,9 @@ exit_handler() {
 
 trap exit_handler EXIT
 
-source wiki-config
-
-if test -f credentials ; then
-   source credentials
-fi
-
 [[ -v TMPFOLDER ]] || TMPFOLDER="/tmp/wiki-shell-temp"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
-[[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/${WIKI_SCRIPT_FOLDER}/api.php"
-[[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/${WIKI_SCRIPT_FOLDER}/index.php"
 
 mkdir -p "$TMPFOLDER"
 chmod og-rw "$TMPFOLDER"

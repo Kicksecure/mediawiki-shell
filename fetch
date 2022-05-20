@@ -2,6 +2,7 @@
 
 set -e
 source common
+source wiki-config
 
 TITLE="$1"
 

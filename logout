@@ -2,6 +2,7 @@
 
 set -e
 source common
+source wiki-config
 
 echo "$0: INFO: Logging out of $WIKI_API..."
 

@@ -6,4 +6,12 @@
 ## with the following contents:
 #[[ -v WIKI_API_USER_NAME ]] || WIKI_API_USER_NAME="username"
 #[[ -v WIKI_API_USER_PASS ]] || WIKI_API_USER_PASS="password"
-[[ -v WIKI_SCRIPT_FOLDER ]] || WIKI_SCRIPT_FOLDER="w"
+
+#[[ -v WIKI_URL ]] || WIKI_URL="https://www.whonix.org/w"
+
+[[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
+[[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
+
+if test -f credentials ; then
+   source credentials
+fi

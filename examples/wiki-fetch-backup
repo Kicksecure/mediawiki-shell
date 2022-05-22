@@ -92,7 +92,9 @@ if [ "$result_test" = "" ]; then
    exit 1
 fi
 
-if [ ! "$wiki_article_must_include_sanity_test" = "" ]; then
+if [ "$wiki_article_must_include_sanity_test" = "" ]; then
+   echo "$0 INFO: wiki_article_must_include_sanity_test not configured, ok."
+else
    if echo "$result_test" | grep -q -i "$wiki_article_must_include_sanity_test" ; then
       echo "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
    else

@@ -5,6 +5,16 @@ missing_variable() {
    exit 1
 }
 
+error_out_maybe() {
+   if [ "$wiki_error_on_fetch" = "true" ]; then
+      ## error out
+      return 1
+   else
+      ## ignore error
+      return 0
+   fi
+}
+
 echo "$0: START"
 
 set -e
@@ -20,6 +30,7 @@ source common
 ## These variables should be set by the calling script as environment variables.
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
+[[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 
 [[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/api.php"
 
@@ -133,7 +144,8 @@ while IFS=\n read -r item_from_all_pages ; do
       ./fetch \
          "$backup_page_item" | \
          tee "${wiki_backup_folder}/${backup_filename_item}" \
-         >/dev/null
+         >/dev/null \
+         || error_out_maybe
 
    ## Same format as git-mediawiki: add newline at the end.
    echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}" >/dev/null

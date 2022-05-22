@@ -95,6 +95,7 @@ if [ ! "$wiki_article_must_include_sanity_test" = "" ]; then
       true "OK"
    else
       echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'!"
+      echo ""
       echo "$0 result_test: '$result_test'"
       echo ""
       exit 1

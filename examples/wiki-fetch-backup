@@ -49,6 +49,8 @@ echo "$0: INFO: wiki_namespace_list: $wiki_namespace_list"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 echo "$0: INFO: wiki_target_api: $wiki_target_api"
 
+echo "$0: NOTE: wiki_namespace_list is site-specific."
+
 if ! test -d "$wiki_backup_folder" ; then
    echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
    echo "mkdir --parents '$wiki_backup_folder'"

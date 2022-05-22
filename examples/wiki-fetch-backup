@@ -87,6 +87,7 @@ done
 
 test -f "$TMPFOLDER/allpages.txt"
 result_test="$(cat "${TMPFOLDER}/allpages.txt")"
+counter_total="$(cat "${TMPFOLDER}/allpages.txt" | wc -l)"
 if [ "$result_test" = "" ]; then
    echo "$0 ERROR: result_test is empty!"
    exit 1
@@ -110,7 +111,12 @@ fi
 ## to verify that this script produces the same backup result, i.e. is free of bugs.
 ## In the future it might allow for more backup restoration options.
 
+echo "$0: $backup_page_item | $backup_filename_item"
+
+counter_currently=0
 while IFS=\n read -r item_from_all_pages ; do
+   counter_currently=$(( $counter_currently + 1 ))
+
    backup_page_item="$item_from_all_pages"
    ## remove last letter ("'")
    backup_page_item="${backup_page_item::-1}"
@@ -141,9 +147,7 @@ while IFS=\n read -r item_from_all_pages ; do
 
    ## Same format as git-mediawiki: add '.mw' file extension.
    backup_filename_item="${backup_filename_item}.mw"
-
-   echo "$0: backup_page_item    : $backup_page_item"
-   echo "$0: backup_filename_item: $backup_filename_item"
+   echo "counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
 
    WIKI_URL="$SOURCE_WIKI_URL" \
       ./fetch \

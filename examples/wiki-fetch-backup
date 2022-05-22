@@ -80,7 +80,7 @@ if [ "$result_test" = "" ]; then
 fi
 
 if [ ! "$wiki_article_must_include_sanity_test" = "" ]; then
-   if echo "$result_test" | grep -q "$wiki_article_must_include_sanity_test" ; then
+   if echo "$result_test" | grep -q -i "$wiki_article_must_include_sanity_test" ; then
       true "OK"
    else
       echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'!"

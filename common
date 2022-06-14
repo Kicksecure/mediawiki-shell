@@ -6,14 +6,18 @@ set -o pipefail
 set -o nounset
 
 error_handler() {
+   [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
+   [[ -v TITLE ]] || TITLE=""
+   [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
+
    echo "###
 $0: ERROR:
 
 BASH_COMMAND: '$BASH_COMMAND'
 failed with exit code '$?'.
 
-WIKI_INDEX: $WIKI_INDEX
-TITLE: $TITLE:
+WIKI_INDEX: '$WIKI_INDEX'
+TITLE: '$TITLE'
 
 ###" >&2
    exit 1

@@ -72,7 +72,10 @@ for wiki_namespace_item in $wiki_namespace_list ; do
    api_continue_or_not=""
 
    while true ; do
-      all_pages=$(curl --fail --silent "${wiki_target_api}?action=query&format=json&list=allpages&aplimit=500&apnamespace=${wiki_namespace_item}&apcontinue=${api_continue_or_not}")
+      all_pages=$(curl \
+      --fail \
+      --silent \
+      "${wiki_target_api}?action=query&format=json&list=allpages&aplimit=500&apnamespace=${wiki_namespace_item}&apcontinue=${api_continue_or_not}")
 
       #echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title"
 

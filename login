@@ -16,8 +16,9 @@ curl \
    --silent \
    --show-error \
    --location \
-   --retry 2 \
-   --retry-delay 5\
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --keepalive-time 60 \
@@ -40,6 +41,9 @@ if [ "$RESULT" = "NeedToken" ]; then
    --silent \
    --show-error \
    --location \
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --keepalive-time 60 \

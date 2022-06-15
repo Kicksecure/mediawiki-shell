@@ -41,6 +41,7 @@ source common
 ## 500: site-specific
 [[ -v wiki_namespace_list ]] || wiki_namespace_list="0 4 6 8 10 12 14"
 
+allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "${TMPFOLDER}/allpages.txt"
 
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"

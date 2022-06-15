@@ -112,8 +112,6 @@ fi
 ## to verify that this script produces the same backup result, i.e. is free of bugs.
 ## In the future it might allow for more backup restoration options.
 
-echo "$0: $backup_page_item | $backup_filename_item"
-
 counter_currently=0
 while IFS=\n read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))

@@ -146,7 +146,7 @@ while IFS=\n read -r item_from_all_pages ; do
 
    ## Same format as git-mediawiki: add '.mw' file extension.
    backup_filename_item="${backup_filename_item}.mw"
-   echo "counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
+   echo "$counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
 
    WIKI_URL="$SOURCE_WIKI_URL" \
       ./fetch \

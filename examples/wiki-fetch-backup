@@ -41,7 +41,7 @@ source common
 ## 500: site-specific
 [[ -v wiki_namespace_list ]] || wiki_namespace_list="0 4 6 8 10 12 14"
 
-rm -f "$TMPFOLDER/allpages.txt"
+rm -f "${TMPFOLDER}/allpages.txt"
 
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
@@ -85,7 +85,7 @@ for wiki_namespace_item in $wiki_namespace_list ; do
    done
 done
 
-test -f "$TMPFOLDER/allpages.txt"
+test -f "${TMPFOLDER}/allpages.txt"
 result_test="$(cat "${TMPFOLDER}/allpages.txt")"
 counter_total="$(cat "${TMPFOLDER}/allpages.txt" | wc -l)"
 if [ "$result_test" = "" ]; then

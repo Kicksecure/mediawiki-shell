@@ -100,7 +100,7 @@ else
    if echo "$result_test" | grep -q -i "$wiki_article_must_include_sanity_test" ; then
       echo "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
    else
-      echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'!"
+      echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'"
       echo ""
       echo "$0 result_test: '$result_test'"
       echo ""

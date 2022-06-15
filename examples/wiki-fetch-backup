@@ -74,6 +74,9 @@ for wiki_namespace_item in $wiki_namespace_list ; do
    while true ; do
       all_pages=$(curl \
       --fail \
+      --retry-connrefused \
+      --retry 3 \
+      --retry-delay 5 \
       --silent \
       "${wiki_target_api}?action=query&format=json&list=allpages&aplimit=500&apnamespace=${wiki_namespace_item}&apcontinue=${api_continue_or_not}")
 

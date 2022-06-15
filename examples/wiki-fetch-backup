@@ -42,7 +42,7 @@ source common
 [[ -v wiki_namespace_list ]] || wiki_namespace_list="0 4 6 8 10 12 14"
 
 allpages_file="${TMPFOLDER}/allpages.txt"
-rm -f "${TMPFOLDER}/allpages.txt"
+rm -f "$allpages_file"
 
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
@@ -75,7 +75,7 @@ for wiki_namespace_item in $wiki_namespace_list ; do
 
       #echo "$all_pages" | jq -r ".query.allpages[] | {title: .title}| .title"
 
-      echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh" | tee -a "${TMPFOLDER}/allpages.txt" >/dev/null
+      echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
 
       if ! api_continue_or_not=$(echo "$all_pages" | jq -r ".continue | .apcontinue") ; then
          break
@@ -86,9 +86,9 @@ for wiki_namespace_item in $wiki_namespace_list ; do
    done
 done
 
-test -f "${TMPFOLDER}/allpages.txt"
-result_test="$(cat "${TMPFOLDER}/allpages.txt")"
-counter_total="$(cat "${TMPFOLDER}/allpages.txt" | wc -l)"
+test -f "$allpages_file"
+result_test="$(cat "$allpages_file")"
+counter_total="$(cat "$allpages_file" | wc -l)"
 if [ "$result_test" = "" ]; then
    echo "$0 ERROR: result_test is empty!"
    exit 1
@@ -160,4 +160,4 @@ while IFS=\n read -r item_from_all_pages ; do
    ## Same format as git-mediawiki: add newline at the end.
    echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}" >/dev/null
 
-done < "${TMPFOLDER}/allpages.txt"
+done < "$allpages_file"

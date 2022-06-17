@@ -78,4 +78,20 @@ curl \
    --request "POST" \
    "${WIKI_API}?action=edit&format=json&"
 
-echo "$0: INFO: Edit success."
+echo "$0: INFO: Network ok."
+
+test -r "${TMPFOLDER}/edit-result.json"
+
+edit_result_output="$(cat "${TMPFOLDER}/edit-result.json")"
+
+edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
+
+if [ "$edit_result_jq" = "Success" ]; then
+   echo "$0: INFO: Edit success."
+   exit 0
+fi
+
+echo "$edit_result_output" | jq
+echo "$0: ERROR: Edit error." >&2
+
+exit 1

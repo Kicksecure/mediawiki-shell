@@ -23,13 +23,15 @@ WIKI_URL="$DESTINATION_WIKI_URL" \
 echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 
 rm -f "$TMPFOLDER/fetched-wiki-page"
+touch "$TMPFOLDER/fetched-wiki-page"
+test -w "$TMPFOLDER/fetched-wiki-page"
 
 WIKI_URL="$SOURCE_WIKI_URL" \
    ./fetch \
       "$copy_wiki_pages_item" | \
       tee "$TMPFOLDER/fetched-wiki-page" >/dev/null
 
-test -f "$TMPFOLDER/fetched-wiki-page"
+test -r "$TMPFOLDER/fetched-wiki-page"
 
 #cat "$TMPFOLDER/fetched-wiki-page"
 #echo ""

@@ -19,7 +19,7 @@ fi
 
 file_content="$(cat "$filename_with_contents")"
 
-if [ ! -r "$file_content" ]; then
+if [ "$file_content" = "" ]; then
   echo "$0: ERROR: File '$filename_with_contents' must not be empty!"
   exit 3
 fi

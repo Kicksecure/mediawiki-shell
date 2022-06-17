@@ -109,6 +109,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
    TMPFOLDER="$TMPFOLDER" \
    copy_wiki_pages_item="$backup_page_item" \
+   edit_message="mediawiki-shell-bot-mirror-multi-wiki-from-kicksecure-to-whonix" \
       ./copy-wiki-pages
 
    ## TODO: disable

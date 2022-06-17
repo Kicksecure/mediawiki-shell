@@ -7,6 +7,8 @@ source wiki-config
 TITLE="$1"
 filename_with_contents="$2"
 
+[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-edit-message"
+
 if [ -z "$filename_with_contents" ]; then
   echo "$0: ERROR: Syntax: $0 <page_to_edit> <new_content_file>"
   exit 1
@@ -76,7 +78,7 @@ curl \
    --data-urlencode "token=$EDITTOKEN" \
    --output "${TMPFOLDER}/edit-result.json" \
    --request "POST" \
-   "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=mediawiki-shell&bot"
+   "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
 
 echo "$0: INFO: Network ok."
 

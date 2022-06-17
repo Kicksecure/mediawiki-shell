@@ -59,6 +59,11 @@ fi
 
 #echo "$0: INFO: Editing '$TITLE'..."
 
+## XXX
+## &tags=mediawiki-shell
+## Need to create wiki tag mediawiki-shell here:
+## https://www.whonix.org/wiki/Special:Tags
+
 curl \
    --fail \
    --silent \

@@ -38,6 +38,22 @@ test -r "$TMPFOLDER/fetched-wiki-page"
 
 echo "$0: INFO: Fetch success."
 
+wiki_source_api="${SOURCE_WIKI_URL}/api.php"
+
+page_pending_status_json=$(\
+   curl \
+   --fail \
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
+   --silent \
+   "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
+)
+
+if echo "$page_pending_status_json" | jq | grep pending_since ; then
+
+fi
+
 wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 
 WIKI_URL="$DESTINATION_WIKI_URL" \

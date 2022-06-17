@@ -105,12 +105,24 @@ while IFS=$'\n' read -r item_from_all_pages ; do
 
    echo "$counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
+   copy_wiki_pages_exit_code=0
+
    SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
    TMPFOLDER="$TMPFOLDER" \
    copy_wiki_pages_item="$backup_page_item" \
    edit_message="mediawiki-shell-bot-mirror-multi-wiki-from-kicksecure-to-whonix" \
-      ./copy-wiki-pages
+      ./copy-wiki-pages \
+         || { copy_wiki_pages_exit_code="$?" ; true; }
+
+   if [ "$copy_wiki_pages_exit_code" = "10" ]; then
+      echo "$0: WARNING: Skipped backup_page_item '$backup_page_item' because of pending edits."
+   elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
+      echo "$0: INFO: backup_page_item '$backup_page_item' mirroring success."
+   else
+      echo "$0: ERROR: backup_page_item '$backup_page_item' mirroring error!"
+      exit 1
+   fi
 
    ## TODO: disable
    break

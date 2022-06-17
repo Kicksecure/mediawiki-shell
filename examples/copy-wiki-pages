@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 echo "$0: START"
 
 set -e
@@ -7,43 +7,36 @@ cd ..
 
 source common
 
-SOURCE_WIKI_URL='https://www.kicksecure.com'
-
-DESTINATION_WIKI_URL=(
-   'https://www.whonix.org'
-)
-
-#COPY_WIKI_PAGES_LIST=(
-#   "Testpage14"
-#   "Testpage15"
+## example:
+#SOURCE_WIKI_URL='https://www.kicksecure.com'
+#DESTINATION_WIKI_URL=(
+#   'https://www.whonix.org'
 #)
 
-COPY_WIKI_PAGES_LIST=(
-   "Testpage14"
-)
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
+[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
+[[ -v copy_wiki_pages_item ]] || missing_variable copy_wiki_pages_item
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
    ./login
 
-for copy_wiki_pages_item in ${COPY_WIKI_PAGES_LIST[@]} ; do
-   echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
+echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 
-   rm -f "$TMPFOLDER/fetched-wiki-page"
+rm -f "$TMPFOLDER/fetched-wiki-page"
 
-   WIKI_URL="$SOURCE_WIKI_URL" \
-      ./fetch \
-         "$copy_wiki_pages_item" | \
-         tee "$TMPFOLDER/fetched-wiki-page" >/dev/null
+WIKI_URL="$SOURCE_WIKI_URL" \
+   ./fetch \
+      "$copy_wiki_pages_item" | \
+      tee "$TMPFOLDER/fetched-wiki-page" >/dev/null
 
-   test -f "$TMPFOLDER/fetched-wiki-page"
+test -f "$TMPFOLDER/fetched-wiki-page"
 
-   #cat "$TMPFOLDER/fetched-wiki-page"
-   #echo ""
+#cat "$TMPFOLDER/fetched-wiki-page"
+#echo ""
 
-   echo "$0: INFO: Fetch success."
+echo "$0: INFO: Fetch success."
 
-   wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
+wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 
-   WIKI_URL="$DESTINATION_WIKI_URL" \
-      ./edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
-done
+WIKI_URL="$DESTINATION_WIKI_URL" \
+   ./edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"

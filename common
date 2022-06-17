@@ -5,7 +5,13 @@ set -e
 set -o pipefail
 set -o nounset
 
+missing_variable() {
+   echo "$0: ERROR: missing variable '$1'!"
+   exit 1
+}
+
 error_handler() {
+   last_exit_code="$?"
    [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
    [[ -v TITLE ]] || TITLE=""
    [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
@@ -14,7 +20,7 @@ error_handler() {
 $0: ERROR:
 
 BASH_COMMAND: '$BASH_COMMAND'
-failed with exit code '$?'.
+failed with exit code '$last_exit_code'.
 
 WIKI_INDEX: '$WIKI_INDEX'
 TITLE: '$TITLE'

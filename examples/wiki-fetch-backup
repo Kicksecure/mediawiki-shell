@@ -1,10 +1,5 @@
 #!/bin/bash
 
-missing_variable() {
-   echo "$0: ERROR: missing variable '$1'!"
-   exit 1
-}
-
 error_out_maybe() {
    if [ "$wiki_error_on_fetch" = "true" ]; then
       ## error out
@@ -56,11 +51,13 @@ echo "$0: NOTE: wiki_namespace_list is site-specific."
 if ! test -d "$wiki_backup_folder" ; then
    echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
    echo "mkdir --parents '$wiki_backup_folder'"
+   exit 1
 fi
 
 if ! test -w "$wiki_backup_folder" ; then
    echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
    echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+   exit 1
 fi
 
 ## Not required for public wiki.

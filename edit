@@ -1,20 +1,27 @@
 #!/bin/bash
-set -x
+
 set -e
 source common
 source wiki-config
 
 TITLE="$1"
-CONTENTS="$2"
+filename_with_contents="$2"
 
-if [ -z "$CONTENTS" ]; then
+if [ -z "$filename_with_contents" ]; then
   echo "$0: ERROR: Syntax: $0 <page_to_edit> <new_content_file>"
   exit 1
 fi
 
-if [ ! -r "$CONTENTS" ]; then
-  echo "$0: ERROR: File '$CONTENTS' does not exist!"
+if [ ! -r "$filename_with_contents" ]; then
+  echo "$0: ERROR: File '$filename_with_contents' does not exist!"
   exit 2
+fi
+
+file_content="$(cat "$filename_with_contents")"
+
+if [ ! -r "$file_content" ]; then
+  echo "$0: ERROR: File '$filename_with_contents' must not be empty!"
+  exit 3
 fi
 
 echo "$0: INFO: Editing '${WIKI_API}' '$TITLE'..."
@@ -65,7 +72,7 @@ curl \
    --header "Connection: keep-alive" \
    --header "Expect:" \
    --data-urlencode "title=$TITLE" \
-   --data-urlencode "text@$CONTENTS" \
+   --data-urlencode "text@$filename_with_contents" \
    --data-urlencode "token=$EDITTOKEN" \
    --output "${TMPFOLDER}/edit-result.json" \
    --request "POST" \

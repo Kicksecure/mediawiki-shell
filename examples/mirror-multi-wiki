@@ -1,0 +1,109 @@
+#!/bin/bash
+
+missing_variable() {
+   echo "$0: ERROR: missing variable '$1'!"
+   exit 1
+}
+
+error_out_maybe() {
+   if [ "$wiki_error_on_fetch" = "true" ]; then
+      ## error out
+      return 1
+   else
+      ## ignore error
+      return 0
+   fi
+}
+
+echo "$0: START"
+
+set -e
+cd ..
+
+source common
+
+## example:
+[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.kicksecure.com/w'
+[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL=(
+   'https://www.whonix.org/w'
+)
+[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/mirror-multi-wiki"
+
+## These variables should be set by the calling script as environment variables.
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
+[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
+[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
+
+[[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/api.php"
+
+allpages_file="${TMPFOLDER}/allpages.txt"
+rm -f "$allpages_file"
+
+temp_article="${TMPFOLDER}/temp_article.txt"
+
+echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
+echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+echo "$0: INFO: wiki_target_api: $wiki_target_api"
+
+if ! test -d "$wiki_backup_folder" ; then
+   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   echo "mkdir --parents '$wiki_backup_folder'"
+   exit 1
+fi
+
+if ! test -w "$wiki_backup_folder" ; then
+   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+   exit 1
+fi
+
+## Not required for public wiki.
+#./login
+
+all_pages=$(curl \
+   --fail \
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
+   --silent \
+   "${wiki_target_api}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki"
+)
+
+echo "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
+
+test -f "$allpages_file"
+result_test="$(cat "$allpages_file")"
+counter_total="$(cat "$allpages_file" | wc -l)"
+if [ "$result_test" = "" ]; then
+   echo "$0 ERROR: result_test is empty!"
+   exit 1
+fi
+
+pushd examples >/dev/null
+
+counter_currently=0
+while IFS=$'\n' read -r item_from_all_pages ; do
+   counter_currently=$(( $counter_currently + 1 ))
+
+   backup_page_item="$item_from_all_pages"
+   ## remove last letter ("'")
+   backup_page_item="${backup_page_item::-1}"
+   ## remove first letter ("'")
+   backup_page_item="${backup_page_item:1}"
+
+   search=" "
+   replace="_"
+   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+
+   echo "$counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+
+   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+   DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
+   TMPFOLDER="$TMPFOLDER" \
+   copy_wiki_pages_item="$backup_page_item" \
+      ./copy-wiki-pages
+
+   ## TODO: disable
+   break
+
+done < "$allpages_file"

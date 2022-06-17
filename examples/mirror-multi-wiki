@@ -57,8 +57,8 @@ if ! test -w "$wiki_backup_folder" ; then
    exit 1
 fi
 
-## Not required for public wiki.
-#./login
+WIKI_URL="$DESTINATION_WIKI_URL" \
+   ./login
 
 all_pages=$(curl \
    --fail \

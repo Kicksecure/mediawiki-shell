@@ -17,8 +17,8 @@ source common
 [[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
 [[ -v copy_wiki_pages_item ]] || missing_variable copy_wiki_pages_item
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   ./login
+# WIKI_URL="$DESTINATION_WIKI_URL" \
+#    ./login
 
 echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 

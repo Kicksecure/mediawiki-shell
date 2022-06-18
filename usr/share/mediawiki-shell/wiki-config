@@ -25,7 +25,6 @@ WIKI_URL=https://www.whonix.org/w $0
 [[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
 [[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
 
-if test -f credentials ; then
-   source credentials
+if test -f /usr/share/mediawiki-shell/credentials ; then
+   source /usr/share/mediawiki-shell/credentials
 fi
-

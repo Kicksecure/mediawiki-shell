@@ -17,5 +17,5 @@ source /usr/share/mediawiki-shell/common
 
 for DESTINATION_WIKI in ${DESTINATION_WIKI[@]} ; do
    WIKI_URL="$DESTINATION_WIKI"  \
-      ./login
+      mw-login
 done

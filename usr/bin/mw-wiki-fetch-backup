@@ -60,7 +60,7 @@ if ! test -w "$wiki_backup_folder" ; then
 fi
 
 ## Not required for public wiki.
-#./login
+#mw-login
 
 for wiki_namespace_item in $wiki_namespace_list ; do
    echo "$0: INFO: wiki_namespace_item: $wiki_namespace_item"
@@ -155,7 +155,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
 
    for retry_counter in 1 2 3 4 ; do
       WIKI_URL="$SOURCE_WIKI_URL" \
-         ./fetch \
+         mw-fetch \
             "$backup_page_item" | \
             tee "${wiki_backup_folder}/${backup_filename_item}" \
             >/dev/null

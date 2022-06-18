@@ -57,7 +57,7 @@ if ! test -w "$wiki_backup_folder" ; then
 fi
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
-   ./login
+   mw-login
 
 all_pages=$(curl \
    --fail \
@@ -103,7 +103,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    TMPFOLDER="$TMPFOLDER" \
    copy_wiki_pages_item="$backup_page_item" \
    edit_message="mediawiki-shell-bot-mirror-multi-wiki-from-kicksecure-to-whonix" \
-      ./copy-wiki-pages \
+      copy-wiki-pages \
          || { copy_wiki_pages_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_pages_exit_code" = "10" ]; then

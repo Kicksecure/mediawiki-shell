@@ -5,7 +5,7 @@ echo "$0: START"
 set -e
 cd ..
 
-source common
+source /usr/share/mediawiki-shell/common
 
 ## example:
 #SOURCE_WIKI_URL='https://www.kicksecure.com'

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-source common
+source /usr/share/mediawiki-shell/common
 source wiki-config
 
 echo "$0: INFO: Logging out of $WIKI_API..."

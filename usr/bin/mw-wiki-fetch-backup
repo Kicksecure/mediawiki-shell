@@ -113,10 +113,6 @@ else
    fi
 fi
 
-## Using the same format as git-mediawiki was initially useful during development
-## to verify that this script produces the same backup result, i.e. is free of bugs.
-## In the future it might allow for more backup restoration options.
-
 counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
@@ -165,6 +161,6 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    ## || error_out_maybe
 
    ## Same format as git-mediawiki: add newline at the end.
-   echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}" >/dev/null
+   #echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}" >/dev/null
 
 done < "$allpages_file"

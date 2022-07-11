@@ -29,6 +29,6 @@ if test -f /usr/share/mediawiki-shell/credentials ; then
    source /usr/share/mediawiki-shell/credentials
 fi
 
-if test -f ~/credentials ; then
-   source ~/credentials
+if test -f ~/.credentials ; then
+   source ~/.credentials
 fi

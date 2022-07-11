@@ -26,7 +26,7 @@ source /usr/share/mediawiki-shell/common
 [[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL=(
    'https://www.whonix.org/w'
 )
-[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/mirror-multi-wiki"
+[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/mirror-multi-wiki
 
 ## These variables should be set by the calling script as environment variables.
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL

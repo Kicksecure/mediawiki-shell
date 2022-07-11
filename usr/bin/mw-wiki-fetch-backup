@@ -18,7 +18,7 @@ source /usr/share/mediawiki-shell/common
 
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-#[[ -v wiki_backup_folder ]] || wiki_backup_folder="/tmp/whonix-wiki-backup"
+#[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/whonix-wiki-backup"
 
 [[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
 

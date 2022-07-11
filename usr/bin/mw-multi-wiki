@@ -103,7 +103,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    TMPFOLDER="$TMPFOLDER" \
    copy_wiki_pages_item="$backup_page_item" \
    edit_message="mediawiki-shell-bot-mirror-multi-wiki-from-kicksecure-to-whonix" \
-      copy-wiki-pages \
+      mw-copy-wiki-pages \
          || { copy_wiki_pages_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_pages_exit_code" = "10" ]; then

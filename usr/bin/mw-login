@@ -2,7 +2,7 @@
 
 set -e
 source /usr/share/mediawiki-shell/common
-source wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 if [ -z "$WIKI_API_USER_PASS" ]; then
    echo "$0: ERROR: Password not supplied!"

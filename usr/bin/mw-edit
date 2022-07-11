@@ -2,7 +2,7 @@
 
 set -e
 source /usr/share/mediawiki-shell/common
-source wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 TITLE="$1"
 filename_with_contents="$2"

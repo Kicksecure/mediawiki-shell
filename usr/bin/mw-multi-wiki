@@ -111,7 +111,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
       echo "$0: INFO: backup_page_item '$backup_page_item' mirroring success."
    else
-      echo "$0: ERROR: backup_page_item '$backup_page_item' mirroring error!"
+      echo "$0: ERROR: backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
       exit 1
    fi
 

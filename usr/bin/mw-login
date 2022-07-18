@@ -9,7 +9,33 @@ if [ -z "$WIKI_API_USER_PASS" ]; then
    exit 1
 fi
 
-echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'..."
+echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting login token..."
+
+rm -f "${TMPFOLDER}/login-token.json"
+rm -f "${TMPFOLDER}/login-result.json"
+
+$curl \
+   --fail \
+   --silent \
+   --show-error \
+   --location \
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --keepalive-time 60 \
+   --header "Content-Type: application/json" \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --compressed \
+   --output "${TMPFOLDER}/login-token.json" \
+   --request "POST" \
+   "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
+
+echo "$0: INFO: Token received."
+
+TOKEN=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.logintoken')
 
 $curl \
    --fail \
@@ -28,42 +54,18 @@ $curl \
    --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
    --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \
-   --output "${TMPFOLDER}/login.json" \
-   --request "POST" \
-   "${WIKI_API}?action=login&format=json"
-
-RESULT=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.result')
-TOKEN=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.token')
-
-if [ "$RESULT" = "NeedToken" ]; then
-   $curl \
-   --fail \
-   --silent \
-   --show-error \
-   --location \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --keepalive-time 60 \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
-   --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
-   --data-urlencode "lgdomain=${USERDOMAIN}" \
    --data-urlencode "lgtoken=${TOKEN}" \
-   --output "${TMPFOLDER}/login.json2" \
+   --output "${TMPFOLDER}/login-result.json" \
    --request "POST" \
    "${WIKI_API}?action=login&format=json"
 
-   RESULT=$(cat "${TMPFOLDER}/login.json2" | jq -r '.login.result')
-fi
+RESULT=$(cat "${TMPFOLDER}/login-result.json" | jq -r '.login.result')
 
 if [ "$RESULT" = "Success" ]; then
    echo "$0: INFO: Successfully logged in as '$WIKI_API_USER_NAME'."
-else
-   echo "$0: ERROR: Login failed"
-   exit 1
+   exit 0
 fi
+
+cat "${TMPFOLDER}/login-result.json" | jq
+echo "$0: ERROR: Login failed!"
+exit 1

@@ -59,6 +59,9 @@ if ! test -w "$wiki_backup_folder" ; then
 fi
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
+   mw-logout
+
+WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-login
 
 all_pages=$($curl \

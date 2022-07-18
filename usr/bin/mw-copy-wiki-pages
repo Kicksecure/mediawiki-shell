@@ -19,6 +19,8 @@ source /usr/share/mediawiki-shell/common
 [[ -v wiki_source_api ]] || wiki_source_api="${SOURCE_WIKI_URL}/api.php"
 
 # WIKI_URL="$DESTINATION_WIKI_URL" \
+#    mw-logout
+# WIKI_URL="$DESTINATION_WIKI_URL" \
 #    mw-login
 
 echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."

@@ -62,6 +62,7 @@ if ! test -w "$wiki_backup_folder" ; then
 fi
 
 ## Not required for public wiki.
+#mw-logout
 #mw-login
 
 for wiki_namespace_item in $wiki_namespace_list ; do

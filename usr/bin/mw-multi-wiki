@@ -118,7 +118,4 @@ while IFS=$'\n' read -r item_from_all_pages ; do
       exit 1
    fi
 
-   ## TODO: remove
-   break
-
 done < "$allpages_file"

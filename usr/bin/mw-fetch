@@ -32,7 +32,7 @@ true "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 # --data-urlencode "title=$TITLE" \
 # --request "POST" "${WIKI_INDEX}?action=raw"
 
-curl \
+$curl \
    --fail \
    --silent \
    --show-error \

@@ -6,7 +6,7 @@ source /usr/share/mediawiki-shell/wiki-config
 
 echo "$0: INFO: Logging out of $WIKI_API..."
 
-curl \
+$curl \
    --fail \
    --silent \
    --show-error \

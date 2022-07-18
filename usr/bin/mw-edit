@@ -29,7 +29,7 @@ fi
 echo "$0: INFO: Editing '${WIKI_API}' '$TITLE'..."
 #echo "$0: INFO: Fetching edit token..."
 
-curl \
+$curl \
    --fail \
    --silent \
    --show-error \
@@ -64,7 +64,7 @@ fi
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
 
-curl \
+$curl \
    --fail \
    --silent \
    --show-error \

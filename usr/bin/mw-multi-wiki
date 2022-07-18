@@ -61,7 +61,7 @@ fi
 WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-login
 
-all_pages=$(curl \
+all_pages=$($curl \
    --fail \
    --retry-connrefused \
    --retry 3 \

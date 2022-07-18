@@ -11,7 +11,7 @@ fi
 
 echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'..."
 
-curl \
+$curl \
    --fail \
    --silent \
    --show-error \
@@ -36,7 +36,7 @@ RESULT=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.result')
 TOKEN=$(cat "${TMPFOLDER}/login.json" | jq --raw-output '.login.token')
 
 if [ "$RESULT" = "NeedToken" ]; then
-   curl \
+   $curl \
    --fail \
    --silent \
    --show-error \

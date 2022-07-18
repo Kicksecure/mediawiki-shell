@@ -48,7 +48,7 @@ echo "$0: INFO: wiki_source_api: $wiki_source_api"
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
 page_pending_status_json=$(\
-   curl \
+   $curl \
    --fail \
    --retry-connrefused \
    --retry 3 \

@@ -71,7 +71,7 @@ for wiki_namespace_item in $wiki_namespace_list ; do
 
    while true ; do
       all_pages=$(\
-      curl \
+      $curl \
          --fail \
          --retry-connrefused \
          --retry 3 \

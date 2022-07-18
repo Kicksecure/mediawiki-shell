@@ -43,6 +43,7 @@ exit_handler() {
 
 trap exit_handler EXIT
 
+[[ -v curl ]] || curl=curl
 [[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell/temp
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"

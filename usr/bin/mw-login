@@ -59,6 +59,12 @@ $curl \
    --request "POST" \
    "${WIKI_API}?action=login&format=json"
 
+## XXX:
+## If already logged in:
+## "login": {
+## "result": "Aborted",
+## "reason": "Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions."
+
 RESULT=$(cat "${TMPFOLDER}/login-result.json" | jq -r '.login.result')
 
 if [ "$RESULT" = "Success" ]; then

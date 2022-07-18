@@ -33,7 +33,7 @@ source /usr/share/mediawiki-shell/common
 [[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 
-[[ -v wiki_target_api ]] || wiki_target_api="${SOURCE_WIKI_URL}/api.php"
+[[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
@@ -42,7 +42,7 @@ temp_article="${TMPFOLDER}/temp_article.txt"
 
 echo "$0: INFO: TMPFOLDER      : $TMPFOLDER"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
-echo "$0: INFO: wiki_target_api: $wiki_target_api"
+echo "$0: INFO: SOURCE_WIKI_API: $SOURCE_WIKI_API"
 
 mkdir --parents "$wiki_backup_folder"
 
@@ -70,7 +70,7 @@ all_pages=$($curl \
    --retry 3 \
    --retry-delay 5 \
    --silent \
-   "${wiki_target_api}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki"
+   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki"
 )
 
 echo "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null

@@ -40,7 +40,7 @@ rm -f "$allpages_file"
 
 temp_article="${TMPFOLDER}/temp_article.txt"
 
-echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
+echo "$0: INFO: TMPFOLDER      : $TMPFOLDER"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 echo "$0: INFO: wiki_target_api: $wiki_target_api"
 

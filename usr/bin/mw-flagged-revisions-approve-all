@@ -43,24 +43,24 @@ lastrevid=$(echo "$flagged_revs_api_info_result" | jq -r ".query.pages[].lastrev
 
 ## TODO: check lastrevid isnum
 
+## --location not needed and not good?
+## --compressed ?
 $curl \
-      --fail \
-      --silent \
-      --show-error \
-      --location \
-      --retry-connrefused \
-      --retry 3 \
-      --retry-delay 5 \
-      --cookie "$cookie_jar" \
-      --cookie-jar "$cookie_jar" \
-      --keepalive-time 60 \
-      --header "Content-Type: application/json" \
-      --header "Accept-Language: en-GB" \
-      --header "Connection: keep-alive" \
-      --compressed \
-      --output "${TMPFOLDER}/csrf_token.json" \
-      --request "POST" \
-      "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
+   --fail \
+   --silent \
+   --show-error \
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --keepalive-time 60 \
+   --header "Content-Type: application/json" \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --output "${TMPFOLDER}/csrf_token.json" \
+   --request "POST" \
+   "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
 
 echo "$0: INFO: Token received."
 

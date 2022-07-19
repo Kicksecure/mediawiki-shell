@@ -64,11 +64,11 @@ fi
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
 
+## --location not needed and not good?
 $curl \
    --fail \
    --silent \
    --show-error \
-   --location \
    --retry-connrefused \
    --retry 3 \
    --retry-delay 5 \

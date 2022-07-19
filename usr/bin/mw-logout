@@ -8,6 +8,7 @@ echo "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
 
 rm -f "${TMPFOLDER}/logout-token.json"
 
+## --compressed?
 $curl \
    --fail \
    --silent \
@@ -22,7 +23,6 @@ $curl \
    --header "Content-Type: application/json" \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
-   --compressed \
    --output "${TMPFOLDER}/logout-token.json" \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
@@ -31,11 +31,12 @@ echo "$0: INFO: Token received."
 
 csrf_token=$(cat "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')
 
+## --location not needed and not good?
+## --compressed?
 $curl \
    --fail \
    --silent \
    --show-error \
-   --location \
    --retry-connrefused \
    --retry 3 \
    --retry-delay 5 \
@@ -44,7 +45,6 @@ $curl \
    --keepalive-time 60 \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
-   --compressed \
    --data-urlencode "token=${csrf_token}" \
    --output "${TMPFOLDER}/logout.json" \
    --request "POST" \

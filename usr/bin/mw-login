@@ -14,11 +14,12 @@ echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting 
 rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
 
+## --location not needed and not good?
+## --compressed?
 $curl \
    --fail \
    --silent \
    --show-error \
-   --location \
    --retry-connrefused \
    --retry 3 \
    --retry-delay 5 \
@@ -28,7 +29,6 @@ $curl \
    --header "Content-Type: application/json" \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
-   --compressed \
    --output "${TMPFOLDER}/login-token.json" \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
@@ -40,11 +40,12 @@ login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.toke
 ## Sensitive?
 #echo "$0: INFO: login_token: $login_token"
 
+## --location?
+## --compressed?
 $curl \
    --fail \
    --silent \
    --show-error \
-   --location \
    --retry-connrefused \
    --retry 3 \
    --retry-delay 5 \
@@ -53,7 +54,6 @@ $curl \
    --keepalive-time 60 \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
-   --compressed \
    --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
    --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \

@@ -53,6 +53,7 @@ page_pending_status_json=$(\
    $curl \
       --fail \
       --silent \
+      --show-error \
       --retry-connrefused \
       --retry 3 \
       --retry-delay 5 \

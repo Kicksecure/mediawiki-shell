@@ -47,7 +47,7 @@ trap exit_handler EXIT
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || curl=curl
-[[ -v curl_opts ]] || curl=curl_opts="\
+[[ -v curl_opts ]] || curl_opts="\
    --fail \
    --silent \
    --show-error \

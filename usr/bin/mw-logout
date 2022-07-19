@@ -29,7 +29,7 @@ $curl \
 
 echo "$0: INFO: Token received."
 
-TOKEN=$(cat "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')
+csrf_token=$(cat "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')
 
 $curl \
    --fail \
@@ -45,7 +45,7 @@ $curl \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --compressed \
-   --data-urlencode "token=${TOKEN}" \
+   --data-urlencode "token=${csrf_token}" \
    --output "${TMPFOLDER}/logout.json" \
    --request "POST" \
    "${WIKI_API}?action=logout&format=json"

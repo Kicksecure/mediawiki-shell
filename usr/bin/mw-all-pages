@@ -1,0 +1,88 @@
+#!/bin/bash
+
+echo "$0: START"
+
+set -e
+
+source /usr/share/mediawiki-shell/common
+
+## These variables should be set by the calling script as environment variables.
+## example:
+#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
+[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
+[[ -v 1 ]] || missing_variable "parameter 1 needs to be set to the allpages_file name. example: $0 /tmp/allpages.txt"
+
+## https://www.mediawiki.org/wiki/Manual:Namespace
+## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
+## https://www.whonix.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces
+[[ -v wiki_namespace_list_default ]] || wiki_namespace_list_default="0 4 6 8 10 12 14"
+## NOTE to self by Patrick: also set by other script:
+## wiki-backup-with-mediawiki-shell
+## 500: site-specific namespace Moved
+## 274: site-specific namespace Widgets
+#[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra="500 274"
+[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra=""
+
+[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
+
+allpages_file="$1"
+rm -f "$allpages_file"
+
+echo "$0: INFO: allpages_file              : $allpages_file"
+echo "$0: INFO: wiki_namespace_list_default: $wiki_namespace_list_default"
+echo "$0: INFO: wiki_namespace_list_extra  : $wiki_namespace_list_extra"
+echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+
+## Not required for public wiki.
+#mw-logout
+#mw-login
+
+for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_default ; do
+   echo "$0: INFO: wiki_namespace_item: $wiki_namespace_item"
+
+   api_continue_or_not=""
+
+   while true ; do
+      all_pages=$(\
+      $curl \
+         --fail \
+         --retry-connrefused \
+         --retry 3 \
+         --retry-delay 5 \
+         --silent \
+         "${SOURCE_TARGET_API}?action=query&format=json&list=allpages&aplimit=500&apnamespace=${wiki_namespace_item}&apcontinue=${api_continue_or_not}"
+      )
+
+      echo "$all_pages" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
+
+      if ! api_continue_or_not=$(echo "$all_pages" | jq -r ".continue | .apcontinue") ; then
+         break
+      fi
+      if [ "$api_continue_or_not" = "null" ]; then
+         break
+      fi
+   done
+done
+
+test -f "$allpages_file"
+result_test="$(cat "$allpages_file")"
+if [ "$result_test" = "" ]; then
+   echo "$0 ERROR: result_test is empty!" >&2
+   exit 1
+fi
+
+if [ "$wiki_article_must_include_sanity_test" = "" ]; then
+   echo "$0 INFO: wiki_article_must_include_sanity_test not configured, ok."
+else
+   if echo "$result_test" | grep -q -i "$wiki_article_must_include_sanity_test" ; then
+      echo "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
+   else
+      echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'" >&2
+      echo "" >&2
+      echo "$0 result_test: '$result_test'" >&2
+      echo "" >&2
+      exit 1
+   fi
+fi

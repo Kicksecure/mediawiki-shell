@@ -6,7 +6,7 @@ set -o pipefail
 set -o nounset
 
 missing_variable() {
-   echo "$0: ERROR: missing variable '$1'!"
+   echo "$0: ERROR: $@"
    exit 1
 }
 

@@ -9,7 +9,7 @@ if [ -z "$WIKI_API_USER_PASS" ]; then
    exit 1
 fi
 
-echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting login token..."
+echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
 
 rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
@@ -33,9 +33,12 @@ $curl \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
 
-echo "$0: INFO: Token received."
+echo "$0: INFO: Login Token received."
 
-TOKEN=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.logintoken')
+login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.logintoken')
+
+## Sensitive?
+#echo "$0: INFO: login_token: $login_token"
 
 $curl \
    --fail \
@@ -54,7 +57,7 @@ $curl \
    --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
    --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \
-   --data-urlencode "lgtoken=${TOKEN}" \
+   --data-urlencode "lgtoken=${login_token}" \
    --output "${TMPFOLDER}/login-result.json" \
    --request "POST" \
    "${WIKI_API}?action=login&format=json"

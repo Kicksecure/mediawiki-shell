@@ -55,8 +55,6 @@ $curl \
 
 echo "$0: INFO: Token received."
 
-cat ${TMPFOLDER}/csrf_token.json | jq
-
 csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens.csrftoken')
 
 ## not login-token

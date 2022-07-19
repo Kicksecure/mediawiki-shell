@@ -8,18 +8,13 @@ echo "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
 
 rm -f "${TMPFOLDER}/logout-token.json"
 
+## --location?
 ## --compressed?
+## --keepalive-time 60?
 $curl \
-   --fail \
-   --silent \
-   --show-error \
-   --location \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
+   $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
-   --keepalive-time 60 \
    --header "Content-Type: application/json" \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
@@ -33,16 +28,11 @@ csrf_token=$(cat "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.toke
 
 ## --location not needed and not good?
 ## --compressed?
+## --keepalive-time 60?
 $curl \
-   --fail \
-   --silent \
-   --show-error \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
+   $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
-   --keepalive-time 60 \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --data-urlencode "token=${csrf_token}" \

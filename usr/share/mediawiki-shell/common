@@ -43,10 +43,18 @@ exit_handler() {
 
 trap exit_handler EXIT
 
-[[ -v curl ]] || curl=curl
 [[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell/temp
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
+[[ -v curl ]] || curl=curl
+[[ -v curl_opts ]] || curl=curl_opts="\
+   --fail \
+   --silent \
+   --show-error \
+   --retry-connrefused \
+   --retry 3 \
+   --retry-delay 5 \
+"
 
 mkdir -p "$TMPFOLDER"
 chmod og-rw "$TMPFOLDER"

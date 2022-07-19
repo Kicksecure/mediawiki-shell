@@ -51,12 +51,7 @@ echo "$0: INFO: wiki_source_api: $wiki_source_api"
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
 page_pending_status_json=$(\
    $curl \
-      --fail \
-      --silent \
-      --show-error \
-      --retry-connrefused \
-      --retry 3 \
-      --retry-delay 5 \
+      $curl_opts \
       "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
 )
 

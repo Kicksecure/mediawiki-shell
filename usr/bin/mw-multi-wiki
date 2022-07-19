@@ -65,12 +65,7 @@ WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-login
 
 all_pages=$($curl \
-   --fail \
-   --silent \
-   --show-error \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
+   $curl_opts \
    "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki"
 )
 

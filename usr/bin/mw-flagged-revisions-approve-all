@@ -31,11 +31,7 @@ WIKI_URL="$SOURCE_WIKI_URL" mw-login
 ## TODO: Do not hardcode file name
 flagged_revs_api_info_result=$( \
    $curl \
-      --fail \
-      --retry-connrefused \
-      --retry 3 \
-      --retry-delay 5 \
-      --silent \
+      $curl_opts \
       "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=File:10b.png"
 )
 
@@ -46,12 +42,7 @@ lastrevid=$(echo "$flagged_revs_api_info_result" | jq -r ".query.pages[].lastrev
 ## --location not needed and not good?
 ## --compressed ?
 $curl \
-   --fail \
-   --silent \
-   --show-error \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
+   $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --keepalive-time 60 \
@@ -77,10 +68,7 @@ csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens
 comment="mediawiki-shell-bot-flagged-revisions-mass-approve"
 
 $curl \
-   --fail \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
+   $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --output "${TMPFOLDER}/review-result.json" \

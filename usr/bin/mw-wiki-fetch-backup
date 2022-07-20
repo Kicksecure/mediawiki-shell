@@ -60,37 +60,8 @@ counter_total="$(cat "$allpages_file" | wc -l)"
 counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
-
-   backup_page_item="$item_from_all_pages"
-   ## remove last letter ("'")
-   backup_page_item="${backup_page_item::-1}"
-   ## remove first letter ("'")
-   backup_page_item="${backup_page_item:1}"
-
-   search="'\''"
-   replace="'"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
-
-   search="&"
-   replace="%26"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
-
-   ## Same format as git-mediawiki: replace ' ' with '_'.
-   ## Replace spaces with underscore.
-   search=" "
-   replace="_"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
-
-   backup_filename_item="$backup_page_item"
-
-   ## Same format as git-mediawiki: replace '/' with '%2F'.
-   ## Also the file system does not accept files containing '/'.
-   search="/"
-   replace="%2F"
-   backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
-
-   ## Same format as git-mediawiki: add '.mw' file extension.
-   backup_filename_item="${backup_filename_item}.mw"
+   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+   backup_filename_item=$(set_backup_filename_item "$backup_page_item")
    echo "$counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
 
    for retry_counter in 1 2 3 4 ; do
@@ -103,8 +74,5 @@ while IFS=$'\n' read -r item_from_all_pages ; do
 
    ## TODO
    ## || error_out_maybe
-
-   ## Same format as git-mediawiki: add newline at the end.
-   #echo "" | tee -a "${wiki_backup_folder}/${backup_filename_item}" >/dev/null
 
 done < "$allpages_file"

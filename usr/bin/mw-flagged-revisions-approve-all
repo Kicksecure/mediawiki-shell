@@ -36,6 +36,16 @@ test -r "$allpages_file"
 
 counter_total="$(cat "$allpages_file" | wc -l)"
 
-## TODO: loop
+counter_currently=0
+while IFS=$'\n' read -r item_from_all_pages ; do
+   counter_currently=$(( $counter_currently + 1 ))
+   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+   backup_filename_item=$(set_backup_filename_item "$backup_page_item")
+   echo "$counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
+
+   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+      mw-flagged-revisions-approve-page \
+         "$backup_page_item"
+done < "$allpages_file"
 
 echo "$0: END"

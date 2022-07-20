@@ -41,6 +41,50 @@ exit_handler() {
    exit "$exit_code"
 }
 
+set_backup_page_item() {
+   local backup_page_item search replace
+
+   backup_page_item="$1"
+
+   ## remove last letter ("'")
+   backup_page_item="${backup_page_item::-1}"
+   ## remove first letter ("'")
+   backup_page_item="${backup_page_item:1}"
+
+   search="'\''"
+   replace="'"
+   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+
+   search="&"
+   replace="%26"
+   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+
+   ## Same format as git-mediawiki: replace ' ' with '_'.
+   ## Replace spaces with underscore.
+   search=" "
+   replace="_"
+   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+
+   echo "$backup_page_item"
+}
+
+set_backup_filename_item() {
+   local backup_filename_item search replace
+
+   backup_filename_item="$1"
+
+   ## Same format as git-mediawiki: replace '/' with '%2F'.
+   ## Also the file system does not accept files containing '/'.
+   search="/"
+   replace="%2F"
+   backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
+
+   ## Same format as git-mediawiki: add '.mw' file extension.
+   backup_filename_item="${backup_filename_item}.mw"
+
+   echo "$backup_filename_item"
+}
+
 trap exit_handler EXIT
 
 [[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell/temp

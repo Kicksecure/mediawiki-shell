@@ -52,5 +52,3 @@ while IFS=$'\n' read -r item_from_all_pages ; do
       mw-flagged-revisions-approve-page \
          "$backup_page_item"
 done < "$allpages_file"
-
-echo "$0: END"

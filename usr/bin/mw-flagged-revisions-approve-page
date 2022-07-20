@@ -58,7 +58,7 @@ $curl \
    --request "POST" \
    "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
 
-echo "$0: INFO: Token received."
+true "$0: INFO: Token received."
 
 csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens.csrftoken')
 

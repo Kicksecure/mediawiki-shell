@@ -21,8 +21,9 @@ source /usr/share/mediawiki-shell/common
 WIKI_URL="$SOURCE_WIKI_URL"
 source /usr/share/mediawiki-shell/wiki-config
 
-echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+echo "$0: INFO: SOURCE_WIKI_URL      : $SOURCE_WIKI_URL"
+echo "$0: INFO: SOURCE_TARGET_API    : $SOURCE_TARGET_API"
+echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 
 ## XXX
 #WIKI_URL="$SOURCE_WIKI_URL" mw-logout
@@ -87,6 +88,7 @@ $curl \
 #    --data-urlencode "token=${csrf_token}" \
 #    "${SOURCE_TARGET_API}?format=json&action=stabilize&title=${DESTINATION_WIKI_PAGE}&default=stable&&reason=${comment}"
 
+echo "${TMPFOLDER}/review-result.json"
 cat "${TMPFOLDER}/review-result.json" | jq
 
 review_result=$(cat "${TMPFOLDER}/review-result.json" | jq --raw-output '.review.result')
@@ -96,6 +98,14 @@ if [ "$review_result" = "Success" ]; then
    echo "$0: END"
    exit 0
 fi
+
+## Functional.
+# review_error_code=$(cat "${TMPFOLDER}/review-result.json" | jq --raw-output '.error.code')
+# if [ "$review_error_code" = "notreviewable" ]; then
+#    echo "$0: notreviewable"
+#    echo "$0: END"
+#    exit 0
+# fi
 
 echo "$0: Error." >&2
 echo "$0: END" >&2

@@ -41,6 +41,14 @@ exit_handler() {
    exit "$exit_code"
 }
 
+set_curl_binary_default() {
+   if commannd -v scurl &>/dev/null ; then
+      curl=scurl
+   else
+      curl=curl
+   fi
+}
+
 set_backup_page_item() {
    local backup_page_item search replace
 
@@ -90,7 +98,7 @@ trap exit_handler EXIT
 [[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell/temp
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
-[[ -v curl ]] || curl=curl
+[[ -v curl ]] || set_curl_binary_default
 [[ -v curl_opts ]] || curl_opts="\
    --fail \
    --silent \

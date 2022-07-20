@@ -14,8 +14,6 @@ echo "$0: START"
 
 set -e
 
-source /usr/share/mediawiki-shell/common
-
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
 #[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/whonix-wiki-backup"
@@ -24,6 +22,10 @@ source /usr/share/mediawiki-shell/common
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
+
+## XXX
+WIKI_URL="$SOURCE_WIKI_URL"
+source /usr/share/mediawiki-shell/common
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"

@@ -13,8 +13,11 @@ set -e
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
 [[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable TMPFOLDER
 
-## XXX
+## XXX: required by /usr/share/mediawiki-shell/common but not elegant.
 WIKI_URL="$SOURCE_WIKI_URL"
+
+## TODO: abolish need for this and fetch all name spaces instead by default.
+export wiki_namespace_list_extra="500 274"
 
 source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
@@ -40,10 +43,10 @@ counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-   backup_filename_item=$(set_backup_filename_item "$backup_page_item")
-   echo "$counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
+   echo "$counter_currently / $counter_total | $backup_page_item"
 
    SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+   DESTINATION_WIKI_PAGE="$backup_page_item" \
       mw-flagged-revisions-approve-page \
          "$backup_page_item"
 done < "$allpages_file"

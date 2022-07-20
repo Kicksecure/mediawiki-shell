@@ -32,7 +32,7 @@ rm -f "$allpages_file"
 echo "$0: INFO: allpages_file              : $allpages_file"
 echo "$0: INFO: wiki_namespace_list_default: $wiki_namespace_list_default"
 echo "$0: INFO: wiki_namespace_list_extra  : $wiki_namespace_list_extra"
-echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
 echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
 
 ## Not required for public wiki.

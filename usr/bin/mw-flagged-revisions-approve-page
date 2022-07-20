@@ -2,7 +2,7 @@
 
 echo "$0: START"
 
-set -x
+#set -x
 set -e
 
 ## example:
@@ -77,6 +77,15 @@ $curl \
    --silent \
    --data-urlencode "token=${csrf_token}" \
    "${SOURCE_TARGET_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
+
+# $curl \
+#    $curl_opts \
+#    --cookie "$cookie_jar" \
+#    --cookie-jar "$cookie_jar" \
+#    --output "${TMPFOLDER}/review-result.json" \
+#    --silent \
+#    --data-urlencode "token=${csrf_token}" \
+#    "${SOURCE_TARGET_API}?format=json&action=stabilize&title=${DESTINATION_WIKI_PAGE}&default=stable&&reason=${comment}"
 
 cat "${TMPFOLDER}/review-result.json" | jq
 

@@ -29,7 +29,7 @@ echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 #WIKI_URL="$SOURCE_WIKI_URL" mw-logout
 #WIKI_URL="$SOURCE_WIKI_URL" mw-login
 
-echo "$0: INFO: Requesting revid... ${TMPFOLDER}/revid.json"
+echo "$0: INFO: Requesting revid...         ${TMPFOLDER}/revid.json"
 
 $curl \
    $curl_opts \
@@ -45,7 +45,7 @@ else
     exit 1
 fi
 
-echo "$0: INFO: Requesting csrf_token... ${TMPFOLDER}/csrf_token.json"
+echo "$0: INFO: Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
 
 $curl \
    $curl_opts \
@@ -91,7 +91,7 @@ $curl \
 review_result=$(cat "${TMPFOLDER}/review-result.json" | jq --raw-output '.review.result')
 
 if [ "$review_result" = "Success" ]; then
-   echo "$0: Success."
+   echo "$0: INFO: Success."
    exit 0
 fi
 

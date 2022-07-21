@@ -79,6 +79,23 @@ $curl \
    --data-urlencode "token=${csrf_token}" \
    "${SOURCE_TARGET_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
 
+## XXX: Sometimes API login timeout.
+# {
+#   "error": {
+#     "code": "permissiondenied",
+#     "info": "You don't have permission to review revisions.",
+#     "*": "See https://www.kicksecure.com/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-annoueprecations and breaking changes."
+#   }
+# }
+
+# {
+#   "error": {
+#     "code": "internal_api_error_LogicException",
+#     "info": "[1d001d90905f962f0a6548bf] Caught exception of type LogicException",
+#     "errorclass": "LogicException"
+#   }
+# }
+
 # $curl \
 #    $curl_opts \
 #    --cookie "$cookie_jar" \
@@ -102,6 +119,11 @@ review_error_code=$(cat "${TMPFOLDER}/review-result.json" | jq --raw-output '.er
 if [ "$review_error_code" = "notreviewable" ]; then
    echo "$0: notreviewable"
    exit 0
+fi
+
+if [ "$review_error_code" = "permissiondenied" ]; then
+   echo "$0: permissiondenied"
+   exit 254
 fi
 
 echo "$0: Error." >&2

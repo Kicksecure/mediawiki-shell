@@ -28,8 +28,23 @@ echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"
 echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
 echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
 
-WIKI_URL="$SOURCE_WIKI_URL" mw-logout
-WIKI_URL="$SOURCE_WIKI_URL" mw-login
+login_function() {
+   echo "$0: INFO: Logging in..."
+   WIKI_URL="$SOURCE_WIKI_URL" mw-logout
+   WIKI_URL="$SOURCE_WIKI_URL" mw-login
+   echo "$0: INFO: Login ok."
+}
+
+approve_page() {
+   approve_page_exit_code=0
+
+   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+   DESTINATION_WIKI_PAGE="$backup_page_item" \
+      mw-flagged-revisions-approve-page \
+         "$backup_page_item" || { approve_page_exit_code="$?" ; true };
+}
+
+login_function
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
@@ -52,8 +67,13 @@ DESTINATION_WIKI_PAGE='$backup_page_item' \
 mw-flagged-revisions-approve-page \
 '$backup_page_item'"
 
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_PAGE="$backup_page_item" \
-      mw-flagged-revisions-approve-page \
-         "$backup_page_item"
+   approve_page
+   if [ "$approve_page_exit_code" = "254" ]; then
+      echo "$0: INFO: Got exit code 254. Login probably expired."
+      login_function
+      echo "$0: INFO: Try again..."
+      approve_page
+      echo "$0: INFO: Success after second attempt, ok."
+   fi
+
 done < "$allpages_file"

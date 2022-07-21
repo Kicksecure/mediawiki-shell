@@ -69,11 +69,18 @@ mw-flagged-revisions-approve-page \
 
    approve_page
    if [ "$approve_page_exit_code" = "254" ]; then
+      echo "$0: INFO: Success at first attempt, ok."
+      continue
+   elif [ "$approve_page_exit_code" = "254" ]; then
       echo "$0: INFO: Got exit code 254. Login probably expired."
       login_function
       echo "$0: INFO: Try again..."
       approve_page
-      echo "$0: INFO: Success after second attempt, ok."
    fi
 
+   if [ "$approve_page_exit_code" = "0" ]; then
+      echo "$0: INFO: Success after second attempt, ok."
+   else
+      echo "$0: ERROR: Failed!"
+   fi
 done < "$allpages_file"

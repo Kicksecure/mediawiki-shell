@@ -69,7 +69,7 @@ mw-flagged-revisions-approve-page \
 '$backup_page_item'"
 
    approve_page
-   if [ "$approve_page_exit_code" = "254" ]; then
+   if [ "$approve_page_exit_code" = "0" ]; then
       echo "$0: INFO: Success at first attempt, ok."
       continue
    elif [ "$approve_page_exit_code" = "254" ]; then

@@ -49,6 +49,7 @@ login_function
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
 
+QUERY_TYPE=unreviewedpages \
 SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
    mw-all-pages "$allpages_file"
 

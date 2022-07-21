@@ -52,6 +52,7 @@ fi
 #mw-logout
 #mw-login
 
+QUERY_TYPE=allpages \
 SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
    mw-all-pages "$allpages_file"
 

@@ -31,10 +31,10 @@ echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 
 $curl \
    $curl_opts \
+   --output "${TMPFOLDER}/revid.json" \
    "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
 
-
-lastrevid=$(cat "$flagged_revs_api_info_result" | jq -r ".query.pages[].lastrevid")
+lastrevid=$(cat "${TMPFOLDER}/revid.json" | jq -r ".query.pages[].lastrevid")
 
 if echo "$lastrevid" | grep -qE '^[0-9]+$'; then
     true "Valid number."

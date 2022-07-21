@@ -41,7 +41,7 @@ approve_page() {
    SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
    DESTINATION_WIKI_PAGE="$backup_page_item" \
       mw-flagged-revisions-approve-page \
-         "$backup_page_item" || { approve_page_exit_code="$?" ; true };
+         "$backup_page_item" || { approve_page_exit_code="$?" ; true; };
 }
 
 login_function
@@ -57,6 +57,7 @@ test -r "$allpages_file"
 counter_total="$(cat "$allpages_file" | wc -l)"
 
 counter_currently=0
+error_counter=0
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
@@ -81,6 +82,13 @@ mw-flagged-revisions-approve-page \
    if [ "$approve_page_exit_code" = "0" ]; then
       echo "$0: INFO: Success after second attempt, ok."
    else
+      error_counter=$(( $error_counter + 1 ))
       echo "$0: ERROR: Failed!"
    fi
 done < "$allpages_file"
+
+if [ "$error_counter" = "0" ]; then
+   echo "$0: INFO: Success."
+else
+   echo "$0: WARNING: $error_counter error(s) detected."
+fi

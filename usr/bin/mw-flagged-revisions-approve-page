@@ -29,6 +29,8 @@ echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 #WIKI_URL="$SOURCE_WIKI_URL" mw-logout
 #WIKI_URL="$SOURCE_WIKI_URL" mw-login
 
+echo "$0: INFO: Requesting revid... ${TMPFOLDER}/revid.json"
+
 $curl \
    $curl_opts \
    --output "${TMPFOLDER}/revid.json" \
@@ -43,6 +45,8 @@ else
     exit 1
 fi
 
+echo "$0: INFO: Requesting csrf_token... ${TMPFOLDER}/csrf_token.json"
+
 $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
@@ -54,8 +58,6 @@ $curl \
    --request "POST" \
    "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
 
-echo "$0: INFO: Token received. ${TMPFOLDER}/csrf_token.json"
-
 csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens.csrftoken')
 
 ## not login-token
@@ -65,6 +67,8 @@ csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens
 #echo "INFO: XXX csrf_token: $csrf_token"
 
 comment="mediawiki-shell-bot-flagged-revisions-mass-approve"
+
+echo "$0: INFO: Requesting review-result... ${TMPFOLDER}/review-result.json"
 
 $curl \
    $curl_opts \

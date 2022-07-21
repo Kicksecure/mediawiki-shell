@@ -29,7 +29,6 @@ fi
 echo "$0: INFO: Editing '${WIKI_API}' '$TITLE'..."
 #echo "$0: INFO: Fetching edit token..."
 
-## --keepalive-time 60?
 $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
@@ -57,8 +56,6 @@ fi
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
 
-## --location not needed and not good?
-## --keepalive-time 60?
 $curl \
    $curl_opts \
    --cookie "$cookie_jar" \

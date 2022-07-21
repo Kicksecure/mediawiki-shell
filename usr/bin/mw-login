@@ -14,16 +14,12 @@ echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting 
 rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
 
-## --location not needed and not good?
-## --compressed?
-## --keepalive-time 60?
 $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Content-Type: application/json" \
    --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
    --output "${TMPFOLDER}/login-token.json" \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
@@ -35,15 +31,11 @@ login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.toke
 ## Sensitive?
 #echo "$0: INFO: login_token: $login_token"
 
-## --location?
-## --compressed?
-## --keepalive-time 60?
 $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
    --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
    --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
    --data-urlencode "lgdomain=${USERDOMAIN}" \

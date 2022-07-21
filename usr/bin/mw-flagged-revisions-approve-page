@@ -29,13 +29,12 @@ echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 #WIKI_URL="$SOURCE_WIKI_URL" mw-logout
 #WIKI_URL="$SOURCE_WIKI_URL" mw-login
 
-flagged_revs_api_info_result=$( \
-   $curl \
-      $curl_opts \
-      "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
-)
+$curl \
+   $curl_opts \
+   "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
 
-lastrevid=$(echo "$flagged_revs_api_info_result" | jq -r ".query.pages[].lastrevid")
+
+lastrevid=$(cat "$flagged_revs_api_info_result" | jq -r ".query.pages[].lastrevid")
 
 if echo "$lastrevid" | grep -qE '^[0-9]+$'; then
     true "Valid number."
@@ -44,13 +43,10 @@ else
     exit 1
 fi
 
-## --location not needed and not good?
-## --compressed ?
 $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
-   --keepalive-time 60 \
    --header "Content-Type: application/json" \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
@@ -58,7 +54,7 @@ $curl \
    --request "POST" \
    "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
 
-true "$0: INFO: Token received."
+echo "$0: INFO: Token received. ${TMPFOLDER}/csrf_token.json"
 
 csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens.csrftoken')
 

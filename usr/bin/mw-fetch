@@ -18,32 +18,17 @@ trap "" EXIT
 true "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 
 # curl \
-# --fail \
-# --silent \
-# --show-error \
-# --location \
-# --cookie "$cookie_jar" \
-# --cookie-jar "$cookie_jar" \
-# --user-agent "Curl Shell Script" \
-# --keepalive-time 60 \
-# --header "Accept-Language: en-GB" \
-# --header "Connection: keep-alive" \
-# --header "Expect:" \
-# --data-urlencode "title=$TITLE" \
-# --request "POST" "${WIKI_INDEX}?action=raw"
+#    $curl_opts \
+#    --cookie "$cookie_jar" \
+#    --cookie-jar "$cookie_jar" \
+#    --header "Accept-Language: en-GB" \
+#    --header "Expect:" \
+#    --data-urlencode "title=$TITLE" \
+#    --request "POST" "${WIKI_INDEX}?action=raw"
 
 $curl \
-   --fail \
-   --silent \
-   --show-error \
-   --location \
-   --retry-connrefused \
-   --retry 3 \
-   --retry-delay 5 \
-   --user-agent "Curl Shell Script" \
-   --keepalive-time 60 \
+   $curl_opts \
    --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
    --header "Expect:" \
    "${WIKI_INDEX}?title=$TITLE&action=raw"
 

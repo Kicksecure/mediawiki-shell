@@ -66,8 +66,11 @@ WIKI_URL="$DESTINATION_WIKI_URL" \
 
 all_pages=$($curl \
    $curl_opts \
-   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki"
+   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmlimit=500"
 )
+
+## TODO: cmcontinue
+#https://www.kicksecure.com/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmcontinue=page|434f444553454c454354|748
 
 echo "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
 

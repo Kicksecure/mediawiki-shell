@@ -35,6 +35,8 @@ source /usr/share/mediawiki-shell/common
 
 [[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
 
+[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
+
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
 
@@ -43,6 +45,7 @@ temp_article="${TMPFOLDER}/temp_article.txt"
 echo "$0: INFO: TMPFOLDER      : $TMPFOLDER"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 echo "$0: INFO: SOURCE_WIKI_API: $SOURCE_WIKI_API"
+echo "$0: INFO: allpages_file  : $allpages_file"
 
 mkdir --parents "$wiki_backup_folder"
 
@@ -71,6 +74,10 @@ all_pages=$($curl \
 
 ## TODO: cmcontinue
 #https://www.kicksecure.com/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmcontinue=page|434f444553454c454354|748
+
+for wiki_multi_extra_wiki_pages_item in $wiki_multi_extra_wiki_pages_list ; do
+   echo "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
+done
 
 echo "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
 

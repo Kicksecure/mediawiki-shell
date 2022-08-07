@@ -64,5 +64,8 @@ echo "$0: INFO: No pending edits, ok."
 
 wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 
+## Remove trailing spaces.
+wiki_page_content=$(echo "$wiki_page_content" | sed 's/[[:space:]]*$//')
+
 WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"

@@ -4,6 +4,15 @@ echo "$0: START"
 
 set -e
 
+exit_handler() {
+   if [ "$retry_counter" -gt 1 ]; then
+      ## >&2 is correct.
+      echo "$0: success after attempt $retry_counter" >&2
+   fi
+}
+
+trap exit_handler EXIT
+
 do_it() {
    WIKI_URL="$SOURCE_WIKI_URL" \
       mw-fetch \

@@ -22,6 +22,7 @@ set -e
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
+[[ -v mw_api_start_from ]] || mw_api_start_from=""
 
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
@@ -67,13 +68,30 @@ counter_currently=0
 counter_chunk=0
 chunk_max_size=10
 pid_list=""
+start_from_here="not-yet"
+
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
    backup_filename_item=$(set_backup_filename_item "$backup_page_item")
 
    counter_chunk=$(( $counter_chunk + 1 ))
-   echo "$counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+
+   ## TODO: hardcoded
+   mw_api_start_from="File:2.jpg"
+   if [ "$mw_api_start_from" = "" ]; then
+      start_from_here=true
+   else
+      if [ "$backup_page_item" = "$mw_api_start_from" ]; then
+         start_from_here=true
+      fi
+   fi
+
+   if [ "$start_from_here" = "true" ]; then
+      echo "SKIP: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+      continue
+   fi
+   echo "DO: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
 
    TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
    mkdir --parents "$TMPFOLDER_SEPARATE"

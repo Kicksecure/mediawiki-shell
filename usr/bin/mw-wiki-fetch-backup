@@ -14,8 +14,10 @@ exit_handler() {
 trap exit_handler EXIT
 
 do_it() {
+   wiki_backup_file="${wiki_backup_folder}/${backup_filename_item}"
+
    wiki_article_to_fetch="$backup_page_item" \
-   wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
+   wiki_fetch_to_file="$wiki_backup_file" \
    WIKI_URL="$SOURCE_WIKI_URL" \
       mw-fetch
 
@@ -24,19 +26,19 @@ do_it() {
    DESTINATION_WIKI_URL="$WIKI_URL"
 
    ## Remove trailing spaces.
-   sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
+   sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
 
    ## bugfix
-#    if grep -q "rm -f /home/user/mediawiki-shell" "${wiki_backup_folder}/${backup_filename_item}" ; then
+#    if grep -q "rm -f /home/user/mediawiki-shell" "$wiki_backup_file" ; then
 #       ## remove first two lines
-#       tail -n +3 "${wiki_backup_folder}/${backup_filename_item}" > "$TMPFOLDER/tmp-fix.txt"
-#       diff "$TMPFOLDER/tmp-fix.txt" "${wiki_backup_folder}/${backup_filename_item}"
-#       cp "$TMPFOLDER/tmp-fix.txt" "${wiki_backup_folder}/${backup_filename_item}"
+#       tail -n +3 "$wiki_backup_file" > "$TMPFOLDER/tmp-fix.txt"
+#       diff "$TMPFOLDER/tmp-fix.txt" "$wiki_backup_file"
+#       cp "$TMPFOLDER/tmp-fix.txt" "$wiki_backup_file"
 #    fi
 
    edit_message="remove-trailing-spaces" \
    WIKI_URL="$DESTINATION_WIKI_URL" \
-      mw-edit "$backup_page_item" "${wiki_backup_folder}/${backup_filename_item}"
+      mw-edit "$backup_page_item" "$wiki_backup_file"
 }
 
 for retry_counter in $(seq 1 5) ; do

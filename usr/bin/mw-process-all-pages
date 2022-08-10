@@ -78,7 +78,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    counter_chunk=$(( $counter_chunk + 1 ))
 
    ## TODO: hardcoded
-   #mw_api_start_from="Template:Project_onion"
+   mw_api_start_from="Template:Project_onion"
 
    if [ "$mw_api_start_from" = "" ]; then
       start_from_here=true
@@ -104,7 +104,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    backup_page_item="$backup_page_item" \
    wiki_backup_folder="$wiki_backup_folder" \
    backup_filename_item="$backup_filename_item" \
-      mw-wiki-fetch-backup >/dev/null &
+      mw-wiki-fetch-backup &
 
    pid="$!"
    pid_list+=" $pid"

@@ -12,6 +12,8 @@ WIKI_URL="$SOURCE_WIKI_URL" \
 
 ## TODO: XXX
 
+DESTINATION_WIKI_URL="$WIKI_URL"
+
 ## Remove trailing spaces.
 sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
 

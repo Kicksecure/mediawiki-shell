@@ -10,19 +10,19 @@ filename_with_contents="$2"
 [[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-edit-message"
 
 if [ -z "$filename_with_contents" ]; then
-  echo "$0: ERROR: Syntax: $0 <page_to_edit> <new_content_file>"
+  echo "$0: ERROR: Syntax: $0 <page_to_edit> <new_content_file>" >&2
   exit 1
 fi
 
 if [ ! -r "$filename_with_contents" ]; then
-  echo "$0: ERROR: File '$filename_with_contents' does not exist!"
+  echo "$0: ERROR: File '$filename_with_contents' does not exist!" >&2
   exit 2
 fi
 
 file_content="$(cat "$filename_with_contents")"
 
 if [ "$file_content" = "" ]; then
-  echo "$0: ERROR: File '$filename_with_contents' must not be empty!"
+  echo "$0: ERROR: File '$filename_with_contents' must not be empty!" >&2
   exit 3
 fi
 
@@ -48,7 +48,7 @@ csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-
 if [ "${#csrf_token}" = 42 ]; then
    true "$0: INFO: Edit token OK."
 else
-   echo "$0: ERROR: Edit token not set."
+   echo "$0: ERROR: Edit token not set." >&2
    exit 1
 fi
 

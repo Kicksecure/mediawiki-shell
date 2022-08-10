@@ -37,6 +37,6 @@ if [ $(cat "${TMPFOLDER}/logout.json") = "{}" ] ; then
    exit 0
 fi
 
-cat "${TMPFOLDER}/logout.json" | jq
-echo "$0: ERROR: Logout failed!"
+cat "${TMPFOLDER}/logout.json" | jq >&2
+echo "$0: ERROR: Logout failed!" >&2
 exit 1

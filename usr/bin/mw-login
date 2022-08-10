@@ -5,7 +5,7 @@ source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
 if [ -z "$WIKI_API_USER_PASS" ]; then
-   echo "$0: ERROR: Password not supplied!"
+   echo "$0: ERROR: Password not supplied!" >&2
    exit 1
 fi
 
@@ -57,6 +57,6 @@ if [ "$RESULT" = "Success" ]; then
    exit 0
 fi
 
-cat "${TMPFOLDER}/login-result.json" | jq
-echo "$0: ERROR: Login failed!"
+cat "${TMPFOLDER}/login-result.json" | jq >&2
+echo "$0: ERROR: Login failed!" >&2
 exit 1

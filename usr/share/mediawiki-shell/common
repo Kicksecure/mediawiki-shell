@@ -10,28 +10,33 @@ missing_variable() {
    exit 1
 }
 
-error_handler() {
-   last_exit_code="$?"
+error_output() {
+   [[ -v 1 ]] || 1="unset"
+
    [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
    [[ -v TITLE ]] || TITLE=""
    [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
    [[ -v counter_chunk ]] || counter_chunk="unset"
    [[ -v counter_currently ]] || counter_currently="unset"
    [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
-
-   echo "###
-$0: ERROR:
-
-BASH_COMMAND: '$BASH_COMMAND'
+   echo "error_msg: '$1'
+WIKI_INDEX: '$WIKI_INDEX'
+TITLE: '$TITLE'
 TMPFOLDER: '$TMPFOLDER'
 counter_chunk: '$counter_chunk'
 counter_currently: '$counter_currently'
-failed with exit code '$last_exit_code'.
-
-WIKI_INDEX: '$WIKI_INDEX'
-TITLE: '$TITLE'
-
 ###" >&2
+}
+
+error_handler() {
+   last_exit_code="$?"
+   echo "###
+$0: ERROR:
+BASH_COMMAND: '$BASH_COMMAND'
+failed with exit code '$last_exit_code'." >&2
+
+   error_output "called-by-error_handler"
+
    exit 1
 }
 

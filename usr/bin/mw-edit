@@ -21,10 +21,10 @@ fi
 
 file_content="$(cat "$filename_with_contents")"
 
-# if [ "$file_content" = "" ]; then
-#   echo "$0: ERROR: File '$filename_with_contents' must not be empty!" >&2
-#   exit 3
-# fi
+if [ "$file_content" = "" ]; then
+  echo "$0: INFO: File '$filename_with_contents' was empty."
+  exit 0
+fi
 
 echo "$0: INFO: Editing '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
 #echo "$0: INFO: Fetching edit token..."

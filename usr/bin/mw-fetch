@@ -4,14 +4,7 @@ set -e
 source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
-TITLE="$1"
-
-if [ -z "${TITLE:-}" -o -n "${2:-}" ]; then
-  echo "$0: ERROR: Syntax: $0 <page_title>"
-  exit 1
-fi
-
-echo "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
+echo "$0: INFO: Fetching '${WIKI_INDEX}' '$wiki_article_to_fetch'..."
 
 rm -f "$wiki_fetch_to_file"
 touch "$wiki_fetch_to_file"
@@ -23,7 +16,7 @@ test -w "$wiki_fetch_to_file"
 #    --cookie-jar "$cookie_jar" \
 #    --header "Accept-Language: en-GB" \
 #    --header "Expect:" \
-#    --data-urlencode "title=$TITLE" \
+#    --data-urlencode "title=$wiki_article_to_fetch" \
 #    --request "POST" "${WIKI_INDEX}?action=raw"
 
 curl_run \
@@ -31,7 +24,7 @@ curl_run \
    --header "Accept-Language: en-GB" \
    --header "Expect:" \
    --output "$wiki_fetch_to_file" \
-   "${WIKI_INDEX}?title=$TITLE&action=raw"
+   "${WIKI_INDEX}?title=$wiki_article_to_fetch&action=raw"
 
 test -r "$wiki_fetch_to_file"
 

@@ -14,11 +14,10 @@ exit_handler() {
 trap exit_handler EXIT
 
 do_it() {
+   wiki_article_to_fetch="$backup_page_item" \
    wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
    WIKI_URL="$SOURCE_WIKI_URL" \
-      mw-fetch \
-         "$backup_page_item" | \
-         || { mw_fetch_exit_code=$? ; true; };
+      mw-fetch
 
    ## TODO: XXX
 

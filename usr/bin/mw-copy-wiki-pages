@@ -25,10 +25,10 @@ source /usr/share/mediawiki-shell/common
 
 echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 
+wiki_article_to_fetch="$copy_wiki_pages_item" \
 wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
 WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-fetch \
-      "$copy_wiki_pages_item"
+   mw-fetch
 
 echo "$0: INFO: Fetch success."
 

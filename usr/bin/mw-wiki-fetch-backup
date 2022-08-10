@@ -4,19 +4,33 @@ echo "$0: START"
 
 set -e
 
-WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-fetch \
-      "$backup_page_item" | \
-      tee "${wiki_backup_folder}/${backup_filename_item}" \
-      >/dev/null || { mw_fetch_exit_code=$? ; true; };
+do_it() {
+   WIKI_URL="$SOURCE_WIKI_URL" \
+      mw-fetch \
+         "$backup_page_item" | \
+         tee "${wiki_backup_folder}/${backup_filename_item}" \
+         >/dev/null || { mw_fetch_exit_code=$? ; true; };
 
-## TODO: XXX
+   ## TODO: XXX
 
-DESTINATION_WIKI_URL="$WIKI_URL"
+   DESTINATION_WIKI_URL="$WIKI_URL"
 
-## Remove trailing spaces.
-sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
+   ## Remove trailing spaces.
+   sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
 
-edit_message="remove-trailing-spaces" \
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-edit "$backup_page_item" "${wiki_backup_folder}/${backup_filename_item}"
+   edit_message="remove-trailing-spaces" \
+   WIKI_URL="$DESTINATION_WIKI_URL" \
+      mw-edit "$backup_page_item" "${wiki_backup_folder}/${backup_filename_item}"
+}
+
+for retry_counter in $(seq 1 5) ; do
+   if do_it ; then
+      ## Success. Exit success.
+      exit 0
+   fi
+   ## Failed. Wait and try again.
+   sleep 5
+done
+
+## Failed even after retry attempts. Therefore exit non-zero.
+exit 1

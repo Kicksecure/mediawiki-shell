@@ -26,8 +26,11 @@ if [ "$file_content" = "" ]; then
   exit 3
 fi
 
-echo "$0: INFO: Editing '${WIKI_API}' '$TITLE'..."
+echo "$0: INFO: Editing '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
 #echo "$0: INFO: Fetching edit token..."
+
+mw-logout
+mw-login
 
 $curl \
    $curl_opts \

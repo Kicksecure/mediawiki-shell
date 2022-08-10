@@ -11,13 +11,13 @@ if [ -z "${TITLE:-}" -o -n "${2:-}" ]; then
   exit 1
 fi
 
-## NOTE: Do not use 'echo' here as this script writes to stdout which is
-##       processed by other scripts.
-trap "" EXIT
+echo "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 
-true "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
+rm -f "$wiki_fetch_to_file"
+touch "$wiki_fetch_to_file"
+test -w "$wiki_fetch_to_file"
 
-# curl \
+# curl_run \
 #    $curl_opts \
 #    --cookie "$cookie_jar" \
 #    --cookie-jar "$cookie_jar" \
@@ -26,10 +26,13 @@ true "$0: INFO: Fetching '${WIKI_INDEX}' '$TITLE'..."
 #    --data-urlencode "title=$TITLE" \
 #    --request "POST" "${WIKI_INDEX}?action=raw"
 
-$curl \
+curl_run \
    $curl_opts \
    --header "Accept-Language: en-GB" \
    --header "Expect:" \
+   --output "$wiki_fetch_to_file" \
    "${WIKI_INDEX}?title=$TITLE&action=raw"
 
-true "$0: INFO: Fetch success."
+test -r "$wiki_fetch_to_file"
+
+echo "$0: INFO: Fetch success."

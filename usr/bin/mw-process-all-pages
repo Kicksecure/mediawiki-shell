@@ -66,7 +66,7 @@ counter_total="$(cat "$allpages_file" | wc -l)"
 
 counter_currently=0
 counter_chunk=0
-chunk_max_size=10
+chunk_max_size=50
 pid_list=""
 start_from_here="not-yet"
 
@@ -78,7 +78,8 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    counter_chunk=$(( $counter_chunk + 1 ))
 
    ## TODO: hardcoded
-   mw_api_start_from="File:2.jpg"
+   #mw_api_start_from="Template:Project_onion"
+
    if [ "$mw_api_start_from" = "" ]; then
       start_from_here=true
    else

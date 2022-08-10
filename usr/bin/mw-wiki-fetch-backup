@@ -14,11 +14,11 @@ exit_handler() {
 trap exit_handler EXIT
 
 do_it() {
+   wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
    WIKI_URL="$SOURCE_WIKI_URL" \
       mw-fetch \
          "$backup_page_item" | \
-         tee "${wiki_backup_folder}/${backup_filename_item}" \
-         >/dev/null || { mw_fetch_exit_code=$? ; true; };
+         || { mw_fetch_exit_code=$? ; true; };
 
    ## TODO: XXX
 
@@ -26,6 +26,14 @@ do_it() {
 
    ## Remove trailing spaces.
    sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
+
+   ## bugfix
+#    if grep -q "rm -f /home/user/mediawiki-shell" "${wiki_backup_folder}/${backup_filename_item}" ; then
+#       ## remove first two lines
+#       tail -n +3 "${wiki_backup_folder}/${backup_filename_item}" > "$TMPFOLDER/tmp-fix.txt"
+#       diff "$TMPFOLDER/tmp-fix.txt" "${wiki_backup_folder}/${backup_filename_item}"
+#       cp "$TMPFOLDER/tmp-fix.txt" "${wiki_backup_folder}/${backup_filename_item}"
+#    fi
 
    edit_message="remove-trailing-spaces" \
    WIKI_URL="$DESTINATION_WIKI_URL" \

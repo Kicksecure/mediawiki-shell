@@ -14,7 +14,7 @@ echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting 
 rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
 
-if ! $curl \
+curl_run \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
@@ -22,10 +22,7 @@ if ! $curl \
    --header "Accept-Language: en-GB" \
    --output "${TMPFOLDER}/login-token.json" \
    --request "POST" \
-   "${WIKI_API}?action=query&meta=tokens&type=login&format=json" ; then
-      echo "$0: ERROR: curl login failed with exit code $?. ${TMPFOLDER}/login-token.json" >&2
-      cat "${TMPFOLDER}/login-token.json" >&2
-fi
+   "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
 
 echo "$0: INFO: Login Token received."
 
@@ -34,7 +31,7 @@ login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.toke
 ## Sensitive?
 #echo "$0: INFO: login_token: $login_token"
 
-if ! $curl \
+curl_run \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
@@ -45,10 +42,7 @@ if ! $curl \
    --data-urlencode "lgtoken=${login_token}" \
    --output "${TMPFOLDER}/login-result.json" \
    --request "POST" \
-   "${WIKI_API}?action=login&format=json" ; then
-      echo "$0: ERROR: curl result failed with exit code $?. ${TMPFOLDER}/login-result.json" >&2
-      cat "${TMPFOLDER}/login-result.json" >&2
-fi
+   "${WIKI_API}?action=login&format=json"
 
 ## XXX:
 ## If already logged in:

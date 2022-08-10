@@ -68,11 +68,15 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    echo "$counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
 
    for retry_counter in 1 2 3 4 ; do
+      mw_fetch_exit_code=0
       WIKI_URL="$SOURCE_WIKI_URL" \
          mw-fetch \
             "$backup_page_item" | \
             tee "${wiki_backup_folder}/${backup_filename_item}" \
-            >/dev/null
+            >/dev/null || { mw_fetch_exit_code=$? ; true; };
+      if [ "$mw_fetch_exit_code" = "0" ]; then
+         break
+      fi
    done
 
    ## TODO

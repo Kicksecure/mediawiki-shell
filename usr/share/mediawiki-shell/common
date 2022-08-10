@@ -15,11 +15,17 @@ error_handler() {
    [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
    [[ -v TITLE ]] || TITLE=""
    [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
+   [[ -v counter_chunk ]] || counter_chunk="unset"
+   [[ -v counter_currently ]] || counter_currently="unset"
+   [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
 
    echo "###
 $0: ERROR:
 
 BASH_COMMAND: '$BASH_COMMAND'
+TMPFOLDER: '$TMPFOLDER'
+counter_chunk: '$counter_chunk'
+counter_currently: '$counter_currently'
 failed with exit code '$last_exit_code'.
 
 WIKI_INDEX: '$WIKI_INDEX'

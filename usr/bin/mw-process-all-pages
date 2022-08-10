@@ -65,7 +65,7 @@ counter_total="$(cat "$allpages_file" | wc -l)"
 
 counter_currently=0
 counter_chunk=0
-chunk_max_size=50
+chunk_max_size=10
 pid_list=""
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
@@ -78,6 +78,8 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
    mkdir --parents "$TMPFOLDER_SEPARATE"
 
+   counter_currently="$counter_currently" \
+   counter_chunk="$counter_chunk" \
    TMPFOLDER="$TMPFOLDER_SEPARATE" \
    WIKI_URL="$SOURCE_WIKI_URL" \
    backup_page_item="$backup_page_item" \

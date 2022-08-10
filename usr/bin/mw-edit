@@ -81,13 +81,13 @@ edit_result_output="$(cat "${TMPFOLDER}/edit-result.json")"
 
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
-echo "$edit_result_output" | jq
-
 if [ "$edit_result_jq" = "Success" ]; then
+   echo "$edit_result_output" | jq
    echo "$0: INFO: Edit success."
    exit 0
 fi
 
+echo "$edit_result_output" | jq >&2
 echo "$0: ERROR: Edit error." >&2
 
 exit 1

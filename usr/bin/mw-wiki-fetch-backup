@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "$0: START"
+
+set -e
+
+WIKI_URL="$SOURCE_WIKI_URL" \
+   mw-fetch \
+      "$backup_page_item" | \
+      tee "${wiki_backup_folder}/${backup_filename_item}" \
+      >/dev/null || { mw_fetch_exit_code=$? ; true; };
+
+## TODO: XXX
+
+## Remove trailing spaces.
+sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
+
+edit_message="remove-trailing-spaces" \
+WIKI_URL="$DESTINATION_WIKI_URL" \
+   mw-edit "$backup_page_item" "${wiki_backup_folder}/${backup_filename_item}"

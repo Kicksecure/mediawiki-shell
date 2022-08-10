@@ -5,4 +5,4 @@ set -e
 
 SOURCE_WIKI_URL=https://www.kicksecure.com/w \
 wiki_backup_folder=~/derivative-backup/kicksecure-wiki-backup \
-mw-wiki-fetch-backup
+mw-process-all-pages

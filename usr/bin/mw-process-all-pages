@@ -48,6 +48,9 @@ if ! test -w "$wiki_backup_folder" ; then
    exit 1
 fi
 
+# ## XXX
+DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
+
 ## Not required for public wiki.
 #mw-logout
 #mw-login
@@ -61,35 +64,42 @@ test -r "$allpages_file"
 counter_total="$(cat "$allpages_file" | wc -l)"
 
 counter_currently=0
+counter_chunk=0
+chunk_max_size=50
+pid_list=""
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
    backup_filename_item=$(set_backup_filename_item "$backup_page_item")
-   echo "$counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
 
-   for retry_counter in 1 2 3 4 ; do
-      mw_fetch_exit_code=0
-      WIKI_URL="$SOURCE_WIKI_URL" \
-         mw-fetch \
-            "$backup_page_item" | \
-            tee "${wiki_backup_folder}/${backup_filename_item}" \
-            >/dev/null || { mw_fetch_exit_code=$? ; true; };
-      if [ "$mw_fetch_exit_code" = "0" ]; then
-         break
-      fi
-   done
+   if [ "$counter_chunk" = "0" ]; then
+      WIKI_URL="$DESTINATION_WIKI_URL" mw-logout
+      WIKI_URL="$DESTINATION_WIKI_URL" mw-login
+   fi
 
-   ## TODO
-   ## || error_out_maybe
+   counter_chunk=$(( $counter_chunk + 1 ))
+   echo "$counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
 
-   ## Remove trailing spaces.
-   sed -i 's/[[:space:]]*$//' "${wiki_backup_folder}/${backup_filename_item}"
+   WIKI_URL="$SOURCE_WIKI_URL" \
+   backup_page_item="$backup_page_item" \
+   wiki_backup_folder="$wiki_backup_folder" \
+   backup_filename_item="$backup_filename_item" \
+      mw-wiki-fetch-backup >/dev/null &
 
-   ## XXX
-   DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
+   pid="$!"
+   pid_list+=" $pid"
 
-   edit_message="remove-trailing-spaces" \
-   WIKI_URL="$DESTINATION_WIKI_URL" \
-      mw-edit "$backup_page_item" "${wiki_backup_folder}/${backup_filename_item}"
+   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ] ; then
+      counter_chunk=0
+      echo "$0: INFO: wait $pid_list"
+
+      for check_pid in $pid_list ; do
+         if ! wait "$check_pid" ; then
+            error "check_pid failed!"
+         fi
+      done
+
+      pid_list=""
+   fi
 
 done < "$allpages_file"

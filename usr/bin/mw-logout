@@ -8,7 +8,7 @@ echo "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
 
 rm -f "${TMPFOLDER}/logout-token.json"
 
-$curl \
+if ! $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
@@ -16,13 +16,16 @@ $curl \
    --header "Accept-Language: en-GB" \
    --output "${TMPFOLDER}/logout-token.json" \
    --request "POST" \
-   "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
+   "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json" ; then
+      echo "$0: ERROR: curl logout-token failed with exit code $?. ${TMPFOLDER}/login-result.json" >&2
+      cat "${TMPFOLDER}/login-result.json" >&2
+fi
 
 echo "$0: INFO: Token received."
 
 csrf_token=$(cat "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')
 
-$curl \
+if ! $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
@@ -30,7 +33,10 @@ $curl \
    --data-urlencode "token=${csrf_token}" \
    --output "${TMPFOLDER}/logout.json" \
    --request "POST" \
-   "${WIKI_API}?action=logout&format=json"
+   "${WIKI_API}?action=logout&format=json" ; then
+      echo "$0: ERROR: curl logout failed with exit code $?. ${TMPFOLDER}/logout.json" >&2
+      cat "${TMPFOLDER}/logout.json" >&2
+fi
 
 if [ $(cat "${TMPFOLDER}/logout.json") = "{}" ] ; then
    echo "$0: INFO: OK, logged out."

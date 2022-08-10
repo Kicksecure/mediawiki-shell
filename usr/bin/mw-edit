@@ -32,7 +32,7 @@ echo "$0: INFO: Editing '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
 mw-logout
 mw-login
 
-$curl \
+if ! $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
@@ -41,7 +41,10 @@ $curl \
    --compressed \
    --output "${TMPFOLDER}/fetch-edit-token.json" \
    --request "GET" \
-   "${WIKI_API}?action=query&meta=tokens&format=json"
+   "${WIKI_API}?action=query&meta=tokens&format=json" ; then
+      echo "$0: ERROR: curl fetch edit token failed with exit code $?. ${TMPFOLDER}/fetch-edit-token.json:" >&2
+      cat "${TMPFOLDER}/fetch-edit-token.json" >&2
+fi
 
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
@@ -59,7 +62,7 @@ fi
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
 
-$curl \
+if ! $curl \
    $curl_opts \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
@@ -71,7 +74,10 @@ $curl \
    --data-urlencode "token=$csrf_token" \
    --output "${TMPFOLDER}/edit-result.json" \
    --request "POST" \
-   "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
+   "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot" ; then
+      echo "$0: ERROR: curl edit failed with exit code $?. ${TMPFOLDER}/edit-result.json" >&2
+      cat "${TMPFOLDER}/edit-result.json" >&2
+fi
 
 echo "$0: INFO: Network ok."
 

@@ -27,7 +27,7 @@ archive_check() {
    curl_http_status_code=$(curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
-   if [ "$curl_http_status_code" = "302" ]; then
+   if [ "$curl_http_status_code" = "302" ] || [ "$curl_http_status_code" = "000" ]; then
       location=$(echo "$curl_output" | grep '^location:')
       link=$(echo "$location" | awk '{ print $2 }')
       echo "Already archived according to the web archive."

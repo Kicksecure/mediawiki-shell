@@ -57,6 +57,7 @@ size=-3>
 src=
 <blockquote>
 site:
+</code>
 ")
 
 while read -r replace_config_line ; do
@@ -137,6 +138,7 @@ contributor=
 immerda.ch
 action=
 libosinfo
+xmlns:
 xmlns=
 w3.org
 >tinyproxy</a>

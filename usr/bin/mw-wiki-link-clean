@@ -21,7 +21,8 @@ if [ "$link_result_cleaned" = "" ]; then
 fi
 
 ## NOTE: does not support spaces
-## NOTE: double quotes are hardcoded below in the script
+## NOTE: double quotes (") are hardcoded below in the script
+## NOTE: single quotes (') are hardcoded below in the script
 replace_list=$(echo "\
 <pre>http:// http://
 <pre>https:// https://
@@ -87,6 +88,11 @@ done < <( echo "$replace_list" )
 first='"'
 second=""
 link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
+
+first="'"
+second=""
+link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
+
 
 while read -r replace_config_line ; do
    if [ "$replace_config_line" = "" ]; then

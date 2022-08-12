@@ -52,7 +52,8 @@ https://</code>.
 https://</code>
 ),
 |url=
-'
+'''
+''
 <s>
 href=
 |
@@ -148,6 +149,7 @@ xmlns:
 xmlns=
 w3.org
 >tinyproxy</a>
+example.com
 ")
 
 for grep_skip_fixed_string_item in $grep_skip_fixed_string_list ; do

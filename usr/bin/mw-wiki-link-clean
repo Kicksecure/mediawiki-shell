@@ -51,6 +51,7 @@ https://</code>
 ''
 <s>
 href=
+|
 ")
 
 while read -r replace_config_line ; do

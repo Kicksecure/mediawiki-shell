@@ -31,6 +31,12 @@ archive_check() {
    curl_http_status_code=$(curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
+   if [ "$curl_http_status_code" = "404" ]; then
+      echo "Down according to web archive. curl_http_status_code: '$curl_http_status_code'"
+      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
+      return 0
+   fi
+
    location=$(echo "$curl_output" | grep '^location:')
    link=$(echo "$location" | awk '{ print $2 }')
    if echo "$link" | grep --quiet --fixed-strings "https://web.archive.org/web/" ; then
@@ -52,7 +58,7 @@ archive_save() {
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
    if [ "$curl_http_status_code" = "302" ]; then
-      echo "Archived."
+      echo "Archived. Web archive reported that archiving succeeded."
       location=$(echo "$curl_output" | grep '^location:')
       link=$(echo "$location" | awk '{ print $2 }')
       echo "$link"
@@ -68,6 +74,18 @@ archive_save() {
    if [ "$curl_http_status_code" = "429" ]; then
       echo "Web archive server denied request, reported too many requests. Waiting for $wait_if_too_many_requests seconds."
       return 1
+   fi
+
+   if [ "$curl_http_status_code" = "520" ]; then
+      echo "Web archive unknown error."
+      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-unknown-error.txt"
+      return 0
+   fi
+
+   if [ "$curl_http_status_code" = "403" ]; then
+      echo "Excluded from web archive."
+      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
+      return 0
    fi
 
    echo "Unknown case. curl_http_status_code: $curl_http_status_code | curl_output:"
@@ -103,14 +121,17 @@ cat < "$file_name" | while IFS= read -r word; do
    echo "$counter / $total | word: '$word'"
 
    echo "Checking if already archived in locally cached file..."
-   if grep --quiet --fixed-string "$word" "$TMPFOLDER/webarchive/already-archived.txt" ; then
-      echo "Already archived according to locally cached file."
-      continue
-   fi
 
-   echo "Checking if already archived in locally cached file..."
-   if grep --quiet --fixed-string "$word" "$TMPFOLDER/webarchive/already-known-down.txt" ; then
-      echo "Already known down according to locally cached file."
+   do_skip=""
+   for cached_file in $TMPFOLDER/webarchive/already-* ; do
+      if grep --quiet --fixed-string "$word" "$cached_file" ; then
+         echo "Already locally cached file status. cached_file: '$cached_file'"
+         do_skip=true
+         continue
+      fi
+   done
+   if [ "$do_skip" = "true" ]; then
+      do_skip=true
       continue
    fi
 

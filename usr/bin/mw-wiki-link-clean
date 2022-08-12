@@ -23,6 +23,9 @@ fi
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
 replace_list=$(echo "\
+SUPPORT_URL=
+{{scurl
+}}
 <pre>http:// http://
 <pre>https:// https://
 <nowiki>http:// http://
@@ -59,6 +62,8 @@ src=
 site:
 </code>
 support=
+<
+>
 ")
 
 while read -r replace_config_line ; do

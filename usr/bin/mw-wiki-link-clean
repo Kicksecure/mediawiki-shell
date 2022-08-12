@@ -10,6 +10,8 @@
 #set -x
 set -e
 
+command -v str_replace >/dev/null
+
 ## TODO: no root check
 
 link_result_cleaned="$1"
@@ -52,6 +54,8 @@ https://</code>
 <s>
 href=
 |
+size=-3>
+src=
 ")
 
 while read -r replace_config_line ; do

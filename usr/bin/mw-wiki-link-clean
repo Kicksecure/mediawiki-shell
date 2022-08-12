@@ -28,8 +28,6 @@ SUPPORT_URL=
 }}
 <pre>http:// http://
 <pre>https:// https://
-<nowiki>http:// http://
-<nowiki>https:// https://
 <u>[http:// http://
 <u>[https:// https://
 \"[https:// https://
@@ -121,6 +119,8 @@ done < <( echo "$replace_list" )
 
 ## NOTE: does not support spaces?
 grep_skip_fixed_string_list=$(echo "\
+<nowiki>
+</nowiki>
 color=
 Image:
 image:

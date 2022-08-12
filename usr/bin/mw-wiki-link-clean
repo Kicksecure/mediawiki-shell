@@ -58,6 +58,7 @@ src=
 <blockquote>
 site:
 </code>
+support=
 ")
 
 while read -r replace_config_line ; do

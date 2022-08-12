@@ -20,6 +20,10 @@ source /usr/share/mediawiki-shell/common
 
 mkdir --parents "$TMPFOLDER/webarchive"
 touch "$TMPFOLDER/webarchive/already-archived.txt"
+touch "$TMPFOLDER/webarchive/already-known-down.txt"
+
+echo "$TMPFOLDER/webarchive/already-archived.txt"
+echo "$TMPFOLDER/webarchive/already-known-down.txt"
 
 archive_check() {
    echo "Checking if already archived by asking web archive... https://web.archive.org/web/$1"
@@ -27,16 +31,13 @@ archive_check() {
    curl_http_status_code=$(curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
-   if [ "$curl_http_status_code" = "302" ] || [ "$curl_http_status_code" = "000" ]; then
-      location=$(echo "$curl_output" | grep '^location:')
-      link=$(echo "$location" | awk '{ print $2 }')
-      if [ "$link" = "" ]; then
-         true
-      else
-         echo "Already archived according to the web archive."
-         echo "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
-         return 0
-      fi
+   location=$(echo "$curl_output" | grep '^location:')
+   link=$(echo "$location" | awk '{ print $2 }')
+   if echo "$link" | grep --quiet --fixed-strings "https://web.archive.org/web/" ; then
+      echo "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
+      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+      echo "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+      return 0
    fi
 
    echo "Not yet archived. curl_http_status_code: $curl_http_status_code | curl_output:"
@@ -60,6 +61,7 @@ archive_save() {
 
    if [ "$curl_http_status_code" = "523" ]; then
       echo "Origin link down."
+      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
       return 0
    fi
 
@@ -103,6 +105,12 @@ cat < "$file_name" | while IFS= read -r word; do
    echo "Checking if already archived in locally cached file..."
    if grep --quiet --fixed-string "$word" "$TMPFOLDER/webarchive/already-archived.txt" ; then
       echo "Already archived according to locally cached file."
+      continue
+   fi
+
+   echo "Checking if already archived in locally cached file..."
+   if grep --quiet --fixed-string "$word" "$TMPFOLDER/webarchive/already-known-down.txt" ; then
+      echo "Already known down according to locally cached file."
       continue
    fi
 

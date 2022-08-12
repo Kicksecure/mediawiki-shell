@@ -21,6 +21,7 @@ do_it() {
    WIKI_URL="$SOURCE_WIKI_URL" \
       mw-fetch
 
+   ## {{{
    ## TODO: XXX
 
    DESTINATION_WIKI_URL="$WIKI_URL"
@@ -39,6 +40,8 @@ do_it() {
    edit_message="remove-trailing-spaces" \
    WIKI_URL="$DESTINATION_WIKI_URL" \
       mw-edit "$backup_page_item" "$wiki_backup_file"
+
+   ## }}}
 }
 
 for retry_counter in $(seq 1 5) ; do

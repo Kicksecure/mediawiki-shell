@@ -56,6 +56,8 @@ href=
 |
 size=-3>
 src=
+<blockquote>
+site:
 ")
 
 while read -r replace_config_line ; do
@@ -135,6 +137,10 @@ text=
 contributor=
 immerda.ch
 action=
+libosinfo
+xmlns=
+w3.org
+>tinyproxy</a>
 ")
 
 for grep_skip_fixed_string_item in $grep_skip_fixed_string_list ; do

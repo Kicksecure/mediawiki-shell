@@ -5,6 +5,7 @@ set -e
 
 ## TODO: no root check
 
+## TODO: path
 test -d ~/sourcesown/wiki-backup/kicksecure-wiki-backup
 test -d ~/sourcesown/wiki-backup/whonix-wiki-backup
 

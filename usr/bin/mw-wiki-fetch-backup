@@ -25,9 +25,6 @@ do_it() {
 
    DESTINATION_WIKI_URL="$WIKI_URL"
 
-   ## Remove trailing spaces.
-   sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
-
    ## bugfix
 #    if grep -q "rm -f /home/user/mediawiki-shell" "$wiki_backup_file" ; then
 #       ## remove first two lines
@@ -35,6 +32,9 @@ do_it() {
 #       diff "$TMPFOLDER/tmp-fix.txt" "$wiki_backup_file"
 #       cp "$TMPFOLDER/tmp-fix.txt" "$wiki_backup_file"
 #    fi
+
+   ## Remove trailing spaces.
+   sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
 
    edit_message="remove-trailing-spaces" \
    WIKI_URL="$DESTINATION_WIKI_URL" \

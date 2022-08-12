@@ -30,9 +30,13 @@ archive_check() {
    if [ "$curl_http_status_code" = "302" ] || [ "$curl_http_status_code" = "000" ]; then
       location=$(echo "$curl_output" | grep '^location:')
       link=$(echo "$location" | awk '{ print $2 }')
-      echo "Already archived according to the web archive."
-      echo "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
-      return 0
+      if [ "$link" = "" ]; then
+         true
+      else
+         echo "Already archived according to the web archive."
+         echo "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+         return 0
+      fi
    fi
 
    echo "Not yet archived. curl_http_status_code: $curl_http_status_code | curl_output:"

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+## Example:
+## mw-wiki-link-clean "https://en.wikipedia.org/wiki/Atomic_clock"
+## Example:
+## mw-wiki-link-clean "[https://en.wikipedia.org/wiki/Atomic_clock"
+## Example:
+## mw-wiki-link-clean "https://en.wikipedia.org/wiki/Atomic_clock"
+
 #set -x
 set -e
 
@@ -37,6 +44,10 @@ replace_list=$(echo "\
 {{Link|link=
 https://</code>.
 https://</code>
+),
+|url=
+'''
+<s>
 ")
 
 while read -r replace_config_line ; do
@@ -89,6 +100,10 @@ done < <( echo "$replace_list" )
 
 ## NOTE: does not support spaces?
 grep_skip_fixed_string_list=$(echo "\
+Image:
+image:
+File:
+file:
 |image=
 https://web.archive.org
 {{Stable
@@ -102,6 +117,11 @@ load.php
 https://www.whonix.org
 https://www.kicksecure.com
 GPLv3
+onion=
+text=
+contributor=
+immerda.ch
+action=
 ")
 
 for grep_skip_fixed_string_item in $grep_skip_fixed_string_list ; do

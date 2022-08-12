@@ -1,5 +1,12 @@
 #!/bin/bash
 
+## Does not unduplicate. That should be done with a different script.
+
+## example:
+## mw-wiki-to-weblinks > all-links.txt
+##
+## mw-wiki-to-weblinks | tee all-links.txt >/dev/null
+
 #set -x
 set -e
 
@@ -22,12 +29,13 @@ done
 counter=0
 for file_name in $files_list ; do
    counter=$(( counter + 1 ))
-   #echo "$counter / $total | file_name: '$(basename "$file_name")'"
+   echo "## $counter / $total | file_name: '$(basename "$file_name")'"
    test -r "$file_name"
 
-   web_links_list=$(dm-file-to-weblinks "$file_name")
+   web_links_list=$(mw-file-to-weblinks "$file_name")
+
    for web_link_item in $web_links_list ; do
-      web_link_cleaned=$(dm-wiki-link-clean "$web_link_item")
+      web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
       if [ "$web_link_cleaned" = "" ]; then
          continue
       fi
@@ -40,11 +48,10 @@ for file_name in $files_list ; do
       ## https://stackoverflow.com/a/3184819/2605155
       regex='(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
       string="$web_link_cleaned"
-      if [[ $string =~ $regex ]]
-      then
-         true "Link valid: $web_link_cleaned"
+      if [[ $string =~ $regex ]]; then
+         echo "$web_link_cleaned"
       else
-         echo "$counter / $total | file_name: '$(basename "$file_name")' | Link not valid: $web_link_cleaned"
+         echo "## invalid link: $web_link_cleaned"
       fi
 
    done

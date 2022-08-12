@@ -1,5 +1,12 @@
 #!/bin/bash
 
+## Takes a file as an input parameter.
+## Goes through line by line of that file, goes through every line word by word
+## and outputs all links included in that file or nothing.
+##
+## example:
+## mw-file-to-weblinks ~/sourcesown/wiki-backup/kicksecure-wiki-backup/Secure_Downloads.mw
+
 #set -x
 set -e
 

@@ -21,7 +21,7 @@ if [ "$link_result_cleaned" = "" ]; then
 fi
 
 ## NOTE: does not support spaces?
-grep_skip_fixed_string_list=$(echo "\
+grep_skip_fixed_string_list_to_exclude=$(echo "\
 <pre>
 </pre>
 <nowiki>
@@ -59,7 +59,7 @@ example.com
 
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
-replace_list=$(echo "\
+string_replace_tupils_list=$(echo "\
 SUPPORT_URL=
 {{scurl
 }}
@@ -104,7 +104,7 @@ support=
 >
 ")
 
-if echo "$link_result_cleaned" | grep --quiet --ignore-case --fixed-string "$grep_skip_fixed_string_list" ; then
+if echo "$link_result_cleaned" | grep --quiet --ignore-case --fixed-string "$grep_skip_fixed_string_list_to_exclude" ; then
    exit 0
 fi
 
@@ -136,7 +136,7 @@ while read -r replace_config_line ; do
    #fi
 
    link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
-done < <( echo "$replace_list" )
+done < <( echo "$string_replace_tupils_list" )
 
 first='"'
 second=""
@@ -164,7 +164,7 @@ while read -r replace_config_line ; do
    #fi
 
    link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
-done < <( echo "$replace_list" )
+done < <( echo "$string_replace_tupils_list" )
 
 
 

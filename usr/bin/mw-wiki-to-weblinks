@@ -40,8 +40,6 @@ for file_name in $files_list ; do
          continue
       fi
 
-      #echo "$web_link_cleaned"
-
       ## Thanks to:
       ## Dennis Williamson
       ## https://stackoverflow.com/users/26428/dennis-williamson

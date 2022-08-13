@@ -67,6 +67,43 @@ support=
 >
 ")
 
+## NOTE: does not support spaces?
+grep_skip_fixed_string_list=$(echo "\
+<pre>
+</pre>
+<nowiki>
+</nowiki>
+color=
+Image:
+image:
+File:
+file:
+|image=
+archive.org
+{{Stable
+{{project
+tor+https
+tor+http
+https://www.gnu.org/licenses
+load.php
+?useformat=mobile
+?action=purge
+https://www.whonix.org
+https://www.kicksecure.com
+GPLv3
+onion=
+text=
+contributor=
+immerda.ch
+action=
+libosinfo
+xmlns:
+xmlns=
+w3.org
+>tinyproxy</a>
+example.com
+")
+
 while read -r replace_config_line ; do
    if [ "$replace_config_line" = "" ]; then
       echo "ERROR! replace_config_line is empty!"
@@ -118,43 +155,6 @@ while read -r replace_config_line ; do
 
    link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
 done < <( echo "$replace_list" )
-
-## NOTE: does not support spaces?
-grep_skip_fixed_string_list=$(echo "\
-<pre>
-</pre>
-<nowiki>
-</nowiki>
-color=
-Image:
-image:
-File:
-file:
-|image=
-archive.org
-{{Stable
-{{project
-tor+https
-tor+http
-https://www.gnu.org/licenses
-load.php
-?useformat=mobile
-?action=purge
-https://www.whonix.org
-https://www.kicksecure.com
-GPLv3
-onion=
-text=
-contributor=
-immerda.ch
-action=
-libosinfo
-xmlns:
-xmlns=
-w3.org
->tinyproxy</a>
-example.com
-")
 
 if echo "$link_result_cleaned" | grep --quiet --ignore-case --fixed-string "$grep_skip_fixed_string_list" ; then
    exit 0

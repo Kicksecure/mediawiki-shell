@@ -20,6 +20,43 @@ if [ "$link_result_cleaned" = "" ]; then
    exit 1
 fi
 
+## NOTE: does not support spaces?
+grep_skip_fixed_string_list=$(echo "\
+<pre>
+</pre>
+<nowiki>
+</nowiki>
+color=
+Image:
+image:
+File:
+file:
+|image=
+archive.org
+{{Stable
+{{project
+tor+https
+tor+http
+https://www.gnu.org/licenses
+load.php
+?useformat=mobile
+?action=purge
+https://www.whonix.org
+https://www.kicksecure.com
+GPLv3
+onion=
+text=
+contributor=
+immerda.ch
+action=
+libosinfo
+xmlns:
+xmlns=
+w3.org
+>tinyproxy</a>
+example.com
+")
+
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
 replace_list=$(echo "\
@@ -65,43 +102,6 @@ site:
 support=
 <
 >
-")
-
-## NOTE: does not support spaces?
-grep_skip_fixed_string_list=$(echo "\
-<pre>
-</pre>
-<nowiki>
-</nowiki>
-color=
-Image:
-image:
-File:
-file:
-|image=
-archive.org
-{{Stable
-{{project
-tor+https
-tor+http
-https://www.gnu.org/licenses
-load.php
-?useformat=mobile
-?action=purge
-https://www.whonix.org
-https://www.kicksecure.com
-GPLv3
-onion=
-text=
-contributor=
-immerda.ch
-action=
-libosinfo
-xmlns:
-xmlns=
-w3.org
->tinyproxy</a>
-example.com
 ")
 
 if echo "$link_result_cleaned" | grep --quiet --ignore-case --fixed-string "$grep_skip_fixed_string_list" ; then

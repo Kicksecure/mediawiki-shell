@@ -63,6 +63,7 @@ SUPPORT_URL=
 w3.org
 >tinyproxy</a>
 example.com
+.onion
 ")
 
 ## NOTE: does not support spaces

@@ -46,6 +46,7 @@ https://www.whonix.org
 http://mirror.whonix.de
 https://www.kicksecure.com
 (http://pi3.com.pl)
+https://d2cly7j4zqgua7.cloudfront.net/
 gplv3
 http_proxy=
 color=
@@ -65,6 +66,7 @@ xmlns=
 SUPPORT_URL=
 HOME_URL=
 REPO_PROXY=
+socksProxy=
 w3.org
 >tinyproxy</a>
 example.com
@@ -72,6 +74,7 @@ example.com
 10.137.255.254
 10.152.152.11
 .onion
+Qubes_onion
 .i2p
 https://yum.qubes-os.org
 http://HTTPS///

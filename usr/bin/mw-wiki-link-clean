@@ -64,7 +64,12 @@ HOME_URL=
 w3.org
 >tinyproxy</a>
 example.com
+127.0.0.1
 .onion
+https://yum.qubes-os.org
+projectName
+<!--
+scurl-download
 ")
 
 ## NOTE: does not support spaces

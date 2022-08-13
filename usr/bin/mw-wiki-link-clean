@@ -142,32 +142,6 @@ first='"'
 second=""
 link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
 
-while read -r replace_config_line ; do
-   if [ "$replace_config_line" = "" ]; then
-      echo "ERROR! replace_config_line is empty!"
-      exit 1
-   fi
-
-   true "replace_config_line: '$replace_config_line'"
-   read -r first second <<< "$replace_config_line"
-
-   true "first: $first"
-   true "second: $second"
-
-   if [ "$first" = "" ]; then
-      echo "ERROR! first is empty!"
-      exit 1
-   fi
-   #if [ "$second" = "" ]; then
-      #echo "ERROR! second is empty!"
-      #exit 1
-   #fi
-
-   link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
-done < <( echo "$string_replace_tupils_list" )
-
-
-
 if [ "$link_result_cleaned" = "https://" ]; then
    exit 0
 fi

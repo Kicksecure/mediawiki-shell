@@ -31,6 +31,12 @@ archive_check() {
    curl_http_status_code=$(curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
+   if [ "$curl_http_status_code" = "403" ]; then
+      echo "Excluded from web archive."
+      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
+      return 0
+   fi
+
    if [ "$curl_http_status_code" = "404" ]; then
       echo "Down according to web archive. curl_http_status_code: '$curl_http_status_code'"
       echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"

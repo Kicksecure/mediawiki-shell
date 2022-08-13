@@ -64,6 +64,7 @@ xmlns:
 xmlns=
 SUPPORT_URL=
 HOME_URL=
+REPO_PROXY=
 w3.org
 >tinyproxy</a>
 example.com
@@ -71,6 +72,7 @@ example.com
 10.137.255.254
 10.152.152.11
 .onion
+.i2p
 https://yum.qubes-os.org
 http://HTTPS///
 localhost

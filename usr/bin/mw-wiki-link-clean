@@ -26,8 +26,6 @@ replace_list=$(echo "\
 SUPPORT_URL=
 {{scurl
 }}
-<pre>http:// http://
-<pre>https:// https://
 <u>[http:// http://
 <u>[https:// https://
 \"[https:// https://
@@ -123,6 +121,8 @@ done < <( echo "$replace_list" )
 
 ## NOTE: does not support spaces?
 grep_skip_fixed_string_list=$(echo "\
+<pre>
+</pre>
 <nowiki>
 </nowiki>
 color=
@@ -156,11 +156,9 @@ w3.org
 example.com
 ")
 
-for grep_skip_fixed_string_item in $grep_skip_fixed_string_list ; do
-   if echo "$link_result_cleaned" | grep --quiet --fixed-string --ignore-case "$grep_skip_fixed_string_item" ; then
-      exit 0
-   fi
-done
+if echo "$link_result_cleaned" | grep --quiet --ignore-case --fixed-string "$grep_skip_fixed_string_list" ; then
+   exit 0
+fi
 
 ## '<ref name=f_secure>https://blog.f-secure.com/cold-boot-attacks/'
 if echo "$link_result_cleaned" | grep --quiet --fixed-string --ignore-case "name=" ; then

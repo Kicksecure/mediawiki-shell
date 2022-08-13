@@ -47,6 +47,7 @@ http://mirror.whonix.de
 https://www.kicksecure.com
 (http://pi3.com.pl)
 gplv3
+http_proxy=
 color=
 onion=
 text=

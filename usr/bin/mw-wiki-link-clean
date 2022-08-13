@@ -43,7 +43,9 @@ load.php
 ?useformat=mobile
 ?action=purge
 https://www.whonix.org
+http://mirror.whonix.de
 https://www.kicksecure.com
+(http://pi3.com.pl)
 gplv3
 color=
 onion=
@@ -65,8 +67,12 @@ w3.org
 >tinyproxy</a>
 example.com
 127.0.0.1
+10.137.255.254
+10.152.152.11
 .onion
 https://yum.qubes-os.org
+http://HTTPS///
+localhost
 projectName
 <!--
 scurl-download

@@ -27,13 +27,11 @@ grep_skip_fixed_string_list_to_exclude=$(echo "\
 <nowiki>
 </nowiki>
 color=
-Image:
 image:
-File:
 file:
 |image=
 archive.org
-{{Stable
+{{stable
 {{project
 tor+https
 tor+http
@@ -43,7 +41,7 @@ load.php
 ?action=purge
 https://www.whonix.org
 https://www.kicksecure.com
-GPLv3
+gplv3
 onion=
 text=
 contributor=

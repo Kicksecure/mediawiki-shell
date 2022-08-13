@@ -21,6 +21,7 @@ if [ "$link_result_cleaned" = "" ]; then
 fi
 
 ## NOTE: does not support spaces?
+## NOTE: case in-sensitive. No need to capitalization.
 grep_skip_fixed_string_list_to_exclude=$(echo "\
 <pre>
 </pre>
@@ -57,6 +58,7 @@ example.com
 
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
+## NOTE: case-sensitive. Capitalization is important.
 string_replace_tupils_list=$(echo "\
 SUPPORT_URL=
 {{scurl

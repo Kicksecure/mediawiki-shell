@@ -27,6 +27,7 @@ grep_skip_fixed_string_list_to_exclude=$(echo "\
 </pre>
 <code>
 </code>
+{{Code2|
 <nowiki>
 </nowiki>
 image:
@@ -58,6 +59,7 @@ action=
 libosinfo
 xmlns:
 xmlns=
+SUPPORT_URL=
 w3.org
 >tinyproxy</a>
 example.com
@@ -67,9 +69,6 @@ example.com
 ## NOTE: double quotes (") are hardcoded below in the script
 ## NOTE: case-sensitive. Capitalization is important.
 string_replace_tupils_list=$(echo "\
-SUPPORT_URL=
-{{scurl
-}}
 <u>[http:// http://
 <u>[https:// https://
 \"[https:// https://
@@ -81,13 +80,11 @@ SUPPORT_URL=
 [http:// http://
 <ref>http:// http://
 <ref>https:// https://
-<code>http:// http://
-<code>https:// https://
-{{Code2|http:// http://
-{{Code2|https:// https://
 </ref>
 {{link|link=
 {{Link|link=
+{{scurl
+}}
 <s>
 </s>
 ),

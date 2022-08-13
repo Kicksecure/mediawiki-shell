@@ -25,9 +25,10 @@ fi
 grep_skip_fixed_string_list_to_exclude=$(echo "\
 <pre>
 </pre>
+<code>
+</code>
 <nowiki>
 </nowiki>
-color=
 image:
 file:
 |image=
@@ -43,8 +44,14 @@ load.php
 https://www.whonix.org
 https://www.kicksecure.com
 gplv3
+color=
 onion=
 text=
+href=
+src=
+site:
+support=
+size=
 contributor=
 immerda.ch
 action=
@@ -81,9 +88,6 @@ SUPPORT_URL=
 </ref>
 {{link|link=
 {{Link|link=
-https://</code>.
-https://</code>
-</code>
 <s>
 </s>
 ),
@@ -91,15 +95,9 @@ https://</code>
 '''
 ''
 <s>
-href=
 |
-size=-3>
-src=
 <blockquote>
 </blockquote>
-site:
-</code>
-support=
 <
 >
 ")
@@ -130,6 +128,7 @@ while read -r replace_config_line ; do
       echo "ERROR! first is empty!"
       exit 1
    fi
+   ## Second can be empty.
    #if [ "$second" = "" ]; then
       #echo "ERROR! second is empty!"
       #exit 1

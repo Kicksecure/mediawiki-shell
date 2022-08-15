@@ -43,7 +43,7 @@ for file_name in $files_list ; do
       ## Dennis Williamson
       ## https://stackoverflow.com/users/26428/dennis-williamson
       ## https://stackoverflow.com/a/3184819/2605155
-      regex='(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
+      regex='^(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
       string="$web_link_cleaned"
       if [[ $string =~ $regex ]]; then
          echo "$web_link_cleaned"

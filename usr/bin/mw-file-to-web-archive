@@ -133,7 +133,6 @@ cat < "$file_name" | while IFS= read -r word; do
       if grep --quiet --fixed-string "$word" "$cached_file" ; then
          echo "Already locally cached file status. cached_file: '$cached_file'"
          do_skip=true
-         continue
       fi
    done
    if [ "$do_skip" = "true" ]; then

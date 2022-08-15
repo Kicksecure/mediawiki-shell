@@ -28,7 +28,7 @@ echo "$TMPFOLDER/webarchive/already-known-down.txt"
 archive_check() {
    echo "Checking if already archived by asking web archive... https://web.archive.org/web/$1"
 
-   curl_http_status_code=$(curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
+   curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
    if [ "$curl_http_status_code" = "403" ]; then
@@ -60,7 +60,7 @@ archive_check() {
 archive_save() {
    echo "Requesting web archive link... https://web.archive.org/save/$1"
 
-   curl_http_status_code=$(curl $curl_web_archive_opts "https://web.archive.org/save/$1") || true
+   curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/save/$1") || true
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
    if [ "$curl_http_status_code" = "302" ]; then

@@ -159,7 +159,7 @@ curl_run() {
 
 trap exit_handler EXIT
 
-[[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell/temp
+[[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell-temp
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || set_curl_binary_default

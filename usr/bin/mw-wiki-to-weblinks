@@ -2,24 +2,46 @@
 
 ## Does not unduplicate. That should be done with a different script.
 
-## example:
-## mw-wiki-to-weblinks > all-links.txt
-##
-## mw-wiki-to-weblinks | tee all-links.txt >/dev/null
-
 #set -x
 set -e
 
+## XXX
+WIKI_URL=""
+
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
 ## TODO: no root check
+
+mkdir -p "$TMPFOLDER/wiki-links"
 
 ## TODO: path
 test -d ~/sourcesown/wiki-backup/kicksecure-wiki-backup
 test -d ~/sourcesown/wiki-backup/whonix-wiki-backup
 
-wiki_url=https://www.kicksecure.com/wiki \
-wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
-   mw-folder-to-weblinks
+cd ~/sourcesown/wiki-backup/kicksecure-wiki-backup
+git config pull.ff only
+git pull
 
-wiki_url=https://www.kicksecure.com/wiki \
+cd ~/sourcesown/wiki-backup/whonix-wiki-backup
+git config pull.ff only
+git pull
+
+rm -f "$TMPFOLDER/wiki-links/all-links.txt"
+
+echo "INFO: See:"
+echo "tail -f $TMPFOLDER/wiki-links/all-links.txt"
+
+WIKI_WEB=https://www.kicksecure.com/wiki \
+wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
+   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+
+WIKI_WEB=https://www.kicksecure.com/wiki \
 wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
-   mw-folder-to-weblinks
+   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+
+cat "$TMPFOLDER/wiki-links/all-links.txt" | grep --invert-match "## " | tee "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
+cat "$TMPFOLDER/wiki-links/links-without-comments.txt" | sort --unique | tee "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
+
+echo "See:"
+echo "cat $TMPFOLDER/wiki-links/links-sorted.txt"

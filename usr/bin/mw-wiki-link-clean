@@ -43,8 +43,11 @@ load.php
 ?useformat=mobile
 ?action=purge
 https://www.whonix.org
+https://admin.whonix.org
 http://mirror.whonix.de
 https://www.kicksecure.com
+https://admin.kicksecure.com
+https://www.debian-administration.org/users/dkg/weblog/64
 (http://pi3.com.pl)
 https://d2cly7j4zqgua7.cloudfront.net
 gplv3

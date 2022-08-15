@@ -45,9 +45,9 @@ trap error_handler ERR
 exit_handler() {
    local exit_code=$?
    if [ "$exit_code" = "0" ]; then
-      echo "$0: END: with exit code: '$exit_code'"
+      echo "## $0: END: with OK exit code: '$exit_code'"
    else
-      echo "$0: END: with exit code: '$exit_code'"
+      echo "## $0: END: with ERROR exit code: '$exit_code'"
    fi
    exit "$exit_code"
 }

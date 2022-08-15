@@ -8,6 +8,12 @@
 #set -x
 set -e
 
+## XXX
+WIKI_URL=""
+
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
 ## TODO: no root check
 
 files_list+="$wiki_folder"/*.mw
@@ -22,7 +28,7 @@ for file_name in $files_list ; do
    counter=$(( counter + 1 ))
    base_name=$(basename "$file_name")
    without_file_extension=${base_name%.mw}
-   echo "## $counter / $total | file_name: '$base_name' | $wiki_url/$without_file_extension"
+   echo "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
    test -r "$file_name"
 
    web_links_list=$(mw-file-to-weblinks "$file_name")

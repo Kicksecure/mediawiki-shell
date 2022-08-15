@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## Does not unduplicate. That should be done with a different script.
+
+## example:
+## mw-wiki-to-weblinks > all-links.txt
+##
+## mw-wiki-to-weblinks | tee all-links.txt >/dev/null
+
+#set -x
+set -e
+
+## TODO: no root check
+
+## TODO: path
+test -d ~/sourcesown/wiki-backup/kicksecure-wiki-backup
+test -d ~/sourcesown/wiki-backup/whonix-wiki-backup
+
+wiki_url=https://www.kicksecure.com/wiki \
+wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
+   mw-folder-to-weblinks
+
+wiki_url=https://www.kicksecure.com/wiki \
+wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
+   mw-folder-to-weblinks

@@ -83,6 +83,8 @@ https://yum.qubes-os.org
 http://HTTPS///
 localhost
 projectName
+QubesOS_onion
+{{Check.torproject.org}}
 <!--
 scurl-download
 ")

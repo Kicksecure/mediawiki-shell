@@ -104,13 +104,7 @@ set -e
 
 ## TODO: no root check
 
-## TODO
-#file_name="$1"
-
-## TODO: XXX
-#if [ "$file_name" = "" ]; then
-   file_name=~/sourcesown/web-links.txt
-#fi
+file_name="$TMPFOLDER/wiki-links/links-sorted.txt"
 
 test -r "$file_name"
 

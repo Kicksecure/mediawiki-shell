@@ -15,6 +15,7 @@ source /usr/share/mediawiki-shell/common
    --no-progress-meter \
    --retry-connrefused \
    --head \
+   --location \
    -w %{http_code} \
 "
 
@@ -96,7 +97,8 @@ archive_save() {
 
    echo "Unknown case. curl_http_status_code: $curl_http_status_code | curl_output:"
    echo "$curl_output"
-   return 1
+   echo "$1" | tee -a "$TMPFOLDER/webarchive/already-unknown-case-error.txt"
+   return 0
 }
 
 #set -x

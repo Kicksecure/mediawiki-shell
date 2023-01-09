@@ -3,6 +3,9 @@
 set -x
 set -e
 
-SOURCE_WIKI_URL=https://www.kicksecure.com/w \
-wiki_backup_folder=~/derivative-backup/kicksecure-wiki-backup \
+[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL=https://www.kicksecure.com/w
+[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/derivative-backup/kicksecure-wiki-backup
+
+export SOURCE_WIKI_URL wiki_backup_folder
+
 mw-process-all-pages

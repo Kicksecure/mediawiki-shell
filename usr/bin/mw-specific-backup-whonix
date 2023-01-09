@@ -3,6 +3,9 @@
 set -x
 set -e
 
-SOURCE_WIKI_URL=https://www.whonix.org/w \
-wiki_backup_folder=~/derivative-backup/whonix-wiki-backup \
+[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL=https://www.whonix.org/w
+[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/derivative-backup/whonix-wiki-backup
+
+export SOURCE_WIKI_URL wiki_backup_folder
+
 mw-process-all-pages

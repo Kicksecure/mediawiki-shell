@@ -96,8 +96,8 @@ set_backup_filename_item() {
 
    backup_filename_item="$1"
 
-   if [ "$set_backup_filename_item" = "" ]; then
-      error "set_backup_filename_item is empty!"
+   if [ "$backup_filename_item" = "" ]; then
+      error "backup_filename_item is empty!"
    fi
 
    ## Same format as git-mediawiki: replace '/' with '%2F'.

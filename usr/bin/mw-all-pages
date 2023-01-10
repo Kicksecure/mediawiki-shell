@@ -28,6 +28,7 @@ source /usr/share/mediawiki-shell/common
 
 [[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
 
+api_extra_args=""
 if [ "$QUERY_TYPE" = "allpages" ]; then
    list=allpages
    namespace_keyword=apnamespace
@@ -41,8 +42,12 @@ elif [ "$QUERY_TYPE" = "unreviewedpages" ]; then
 elif [ "$QUERY_TYPE" = "querypage" ]; then
    list=querypage
    namespace_keyword=""
-   api_continue_keyword=urstart
+   api_continue_keyword=""
    api_limit_keyword_and_content="qplimit=500"
+   api_extra_args="&qppage=Unusedimages"
+   ## Upstream does not support name spaces for this API call.
+   wiki_namespace_list_extra=""
+   wiki_namespace_list_default=0
    ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
 else
    echo "$0: ERROR: QUERY_TYPE must be set to either QUERY_TYPE=allpages or QUERY_TYPE=unreviewedpages"
@@ -70,7 +75,7 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
 
    while true ; do
       echo "$0: INFO: api_full_link:"
-      api_full_link="${SOURCE_TARGET_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}"
+      api_full_link="${SOURCE_TARGET_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
       echo "$api_full_link"
 
       query_result=$(\
@@ -98,6 +103,10 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
          if [ "$api_continue_or_not" = "null" ]; then
             break
          fi
+      elif [ "$QUERY_TYPE" = "querypage" ]; then
+         echo "$query_result" | jq -r '.query.querypage.results[] | .title' | tee -a "$allpages_file" >/dev/null
+         ## Upstream does not support name spaces for this API call.
+         break
       else
          error "Not implemented!"
          break

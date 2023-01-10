@@ -2,7 +2,7 @@
 
 echo "$0: START"
 
-#set -x
+set -x
 set -e
 
 source /usr/share/mediawiki-shell/common
@@ -13,6 +13,7 @@ source /usr/share/mediawiki-shell/common
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
 [[ -v 1 ]] || missing_variable "parameter 1 needs to be set to the allpages_file name. example: $0 /tmp/allpages.txt"
+[[ -v QUERY_TYPE ]] || missing_variable QUERY_TYPE
 
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 ## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
@@ -37,6 +38,12 @@ elif [ "$QUERY_TYPE" = "unreviewedpages" ]; then
    namespace_keyword=urnamespace
    api_continue_keyword=urstart
    api_limit_keyword_and_content="urlimit=500"
+elif [ "$QUERY_TYPE" = "querypage" ]; then
+   list=querypage
+   namespace_keyword=""
+   api_continue_keyword=urstart
+   api_limit_keyword_and_content="qplimit=500"
+   ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
 else
    echo "$0: ERROR: QUERY_TYPE must be set to either QUERY_TYPE=allpages or QUERY_TYPE=unreviewedpages"
    exit 1
@@ -91,6 +98,9 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
          if [ "$api_continue_or_not" = "null" ]; then
             break
          fi
+      else
+         error "Not implemented!"
+         break
       fi
    done
 done

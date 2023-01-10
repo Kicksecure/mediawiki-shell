@@ -7,6 +7,7 @@ set -e
 source /usr/share/mediawiki-shell/common
 
 exit_handler() {
+   [[ -v retry_counter ]] || retry_counter=0
    if [ "$retry_counter" -gt 1 ]; then
       ## >&2 is correct.
       echo "$0: success after attempt $retry_counter" >&2

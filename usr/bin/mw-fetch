@@ -6,6 +6,11 @@ source /usr/share/mediawiki-shell/wiki-config
 
 echo "$0: INFO: Fetching '${WIKI_INDEX}' '$wiki_article_to_fetch'..."
 
+if test -d "$wiki_fetch_to_file" ; then
+   echo "$0: ERRROR: wiki_fetch_to_file '$wiki_fetch_to_file' is a folder!" >&2
+   exit 1
+fi
+
 rm -f "$wiki_fetch_to_file"
 touch "$wiki_fetch_to_file"
 test -w "$wiki_fetch_to_file"

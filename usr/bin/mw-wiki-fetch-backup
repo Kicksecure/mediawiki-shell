@@ -46,10 +46,10 @@ do_it() {
    ## }}}
 }
 
-[[ -v wiki_backup_folder ]] || missing_variable
-[[ -v backup_filename_item ]] || missing_variable
-[[ -v backup_page_item ]] || missing_variable
-[[ -v SOURCE_WIKI_URL ]] || missing_variable
+[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
+[[ -v backup_filename_item ]] || missing_variable backup_filename_item
+[[ -v backup_page_item ]] || missing_variable backup_page_item
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 
 for retry_counter in $(seq 1 5) ; do
    if do_it ; then

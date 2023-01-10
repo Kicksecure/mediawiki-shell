@@ -65,6 +65,10 @@ set_backup_page_item() {
 
    backup_page_item="$1"
 
+   if [ "$backup_page_item" = "" ]; then
+      error "set_backup_filename_item is empty!"
+   fi
+
    ## remove last letter ("'")
    backup_page_item="${backup_page_item::-1}"
    ## remove first letter ("'")
@@ -91,6 +95,10 @@ set_backup_filename_item() {
    local backup_filename_item search replace
 
    backup_filename_item="$1"
+
+   if [ "$set_backup_filename_item" = "" ]; then
+      error "set_backup_filename_item is empty!"
+   fi
 
    ## Same format as git-mediawiki: replace '/' with '%2F'.
    ## Also the file system does not accept files containing '/'.

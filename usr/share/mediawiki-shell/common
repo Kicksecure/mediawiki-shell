@@ -181,5 +181,6 @@ trap exit_handler EXIT
    --user-agent mediawiki-shell \
 "
 
-mkdir -p "$TMPFOLDER"
+echo $0: INFO: mkdir --parents "$TMPFOLDER"
+mkdir --parents "$TMPFOLDER"
 chmod og-rw "$TMPFOLDER"

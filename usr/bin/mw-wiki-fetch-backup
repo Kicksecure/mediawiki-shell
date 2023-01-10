@@ -4,6 +4,8 @@ echo "$0: START"
 
 set -e
 
+source /usr/share/mediawiki-shell/common
+
 exit_handler() {
    if [ "$retry_counter" -gt 1 ]; then
       ## >&2 is correct.
@@ -43,6 +45,11 @@ do_it() {
 
    ## }}}
 }
+
+[[ -v wiki_backup_folder ]] || missing_variable
+[[ -v backup_filename_item ]] || missing_variable
+[[ -v backup_page_item ]] || missing_variable
+[[ -v SOURCE_WIKI_URL ]] || missing_variable
 
 for retry_counter in $(seq 1 5) ; do
    if do_it ; then

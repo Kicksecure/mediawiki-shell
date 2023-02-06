@@ -43,9 +43,9 @@ curl_run \
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   true "$0: INFO: Edit token OK."
+   true "$0: INFO: Edit token for file OK."
 else
-   echo "$0: ERROR: Edit token not set." >&2
+   echo "$0: ERROR: Edit token for file not set." >&2
    exit 1
 fi
 
@@ -65,7 +65,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
 
-echo "$0: INFO: Network ok."
+echo "$0: INFO: Network for file upload ok."
 
 test -r "${TMPFOLDER}/upload-result.json"
 
@@ -73,7 +73,7 @@ edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
 
 if [ $(echo "$edit_result_output" | jq -r ".error.code") = "fileexists-no-change" ]; then
    #echo "$edit_result_output" | jq
-   echo "$0: INFO: Upload success."
+   echo "$0: INFO: Upload file success."
    exit 0
 fi
 
@@ -81,9 +81,9 @@ edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
    echo "$edit_result_output" | jq
-   echo "$0: INFO: Upload success."
+   echo "$0: INFO: Upload file success."
    exit 0
 fi
 
 echo "$edit_result_output" | jq >&2
-echo "$0: ERROR: Upload error." >&2
+echo "$0: ERROR: Upload file error." >&2

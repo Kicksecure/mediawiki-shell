@@ -22,7 +22,7 @@ wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" wiki
 
 url=$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")
 
-echo "$0: INFO: saving to wiki_remote_file_save_to_path: '$wiki_remote_file_save_to_path'"
+echo "$0: INFO: saving file to wiki_remote_file_save_to_path: '$wiki_remote_file_save_to_path'"
 
 curl_run \
    $curl_opts \
@@ -31,4 +31,4 @@ curl_run \
    --output "$wiki_remote_file_save_to_path" \
    "$url"
 
-echo "$0: INFO: Fetch success."
+echo "$0: INFO: Fetch file success."

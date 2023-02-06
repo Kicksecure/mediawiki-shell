@@ -26,13 +26,13 @@ wiki_remote_file_title="$(echo "$wiki_remote_file_name" | str_replace "File:" ""
 [[ -v wiki_remote_file_name ]] || missing_variable wiki_remote_file_name
 [[ -v wiki_remote_file_save_to_path ]] || missing_variable wiki_remote_file_save_to_path
 
-echo "$0: INFO: Downloading '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'..."
+echo "$0: INFO: Downloading file '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'..."
 
 WIKI_URL="$SOURCE_WIKI_URL" wiki_remote_file_name="$wiki_remote_file_name" wiki_remote_file_save_to_path="$wiki_remote_file_save_to_path" mw-file-download
 
-echo "$0: INFO: Download success."
+echo "$0: INFO: Download file success."
 
-echo "$0: INFO: Checking for pending changes..."
+echo "$0: INFO: Checking for pending changes for file..."
 echo "$0: INFO: wiki_source_api: $wiki_source_api"
 
 ## time-of-check to time-of-use TOCTOU
@@ -51,9 +51,9 @@ if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
    exit 10
 fi
 
-echo "$0: INFO: No pending edits, ok."
+echo "$0: INFO: No pending edits for file, ok."
 
-echo "$0: INFO: Uploading... '$DESTINATION_WIKI_URL' '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'"
+echo "$0: INFO: Uploading file... '$DESTINATION_WIKI_URL' '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'"
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
 wiki_remote_upload_file_title="$wiki_remote_file_title" \
@@ -61,4 +61,4 @@ wiki_remote_file_name="$wiki_remote_file_name" \
 wiki_upload_file_path="$wiki_remote_file_save_to_path" \
 mw-file-upload
 
-echo "$0: INFO: Upload success."
+echo "$0: INFO: Upload file success."

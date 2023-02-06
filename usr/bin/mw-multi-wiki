@@ -22,11 +22,12 @@ set -e
 source /usr/share/mediawiki-shell/common
 
 ## Legacy.
-multiwiki_category=MultiWiki
+#multiwiki_category=MultiWiki
 ## TODO
 #multiwiki_category=MultiWikiFile
 #multiwiki_category=MultiWikiContent
 #multiwiki_category=MultiWikiCode
+[[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
 
 [[ -v multiwiki_category ]] || missing_variable multiwiki_category
 
@@ -44,17 +45,22 @@ multiwiki_category=MultiWiki
 
 [[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
 
-[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
+if [ ! "$multiwiki_category" = "MultiWikiFile" ]; then
+   [[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
+fi
+[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list=""
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
 
 temp_article="${TMPFOLDER}/temp_article.txt"
 
-echo "$0: INFO: TMPFOLDER      : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_WIKI_API: $SOURCE_WIKI_API"
-echo "$0: INFO: allpages_file  : $allpages_file"
+echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
+echo "$0: INFO: SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
+echo "$0: INFO: SOURCE_WIKI_API   : $SOURCE_WIKI_API"
+echo "$0: INFO: allpages_file     : $allpages_file"
+echo "$0: INFO: multiwiki_category: $multiwiki_category"
+echo "$0: INFO: wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
 
 mkdir --parents "$wiki_backup_folder"
 
@@ -120,17 +126,42 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
    TMPFOLDER="$TMPFOLDER" \
    copy_wiki_pages_item="$backup_page_item" \
-   edit_message="mediawiki-shell-bot-mirror-multi-wiki-from-kicksecure-to-whonix" \
+   edit_message="mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix" \
       mw-copy-wiki-pages \
          || { copy_wiki_pages_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_pages_exit_code" = "10" ]; then
-      echo "$0: WARNING: Skipped backup_page_item '$backup_page_item' because of pending edits."
+      echo "$0: WARNING: PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
    elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
-      echo "$0: INFO: backup_page_item '$backup_page_item' mirroring success."
+      echo "$0: INFO: PAGE - backup_page_item '$backup_page_item' mirroring success."
    else
-      echo "$0: ERROR: backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      echo "$0: ERROR: PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
       exit 1
    fi
+
+   if [ ! "$multiwiki_category" = "MultiWikiFile" ]; then
+      continue
+   fi
+
+   copy_wiki_file_exit_code=0
+
+   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+   DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
+   TMPFOLDER="$TMPFOLDER" \
+   wiki_remote_file_name="$backup_page_item" \
+   edit_message="mediawiki-shell-bot-mirror-multi-wiki-file-from-kicksecure-to-whonix" \
+      mw-copy-wiki-file \
+         || { copy_wiki_file_exit_code="$?" ; true; }
+
+   if [ "$copy_wiki_file_exit_code" = "10" ]; then
+      echo "$0: WARNING: FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+   elif [ "$copy_wiki_file_exit_code" = "0" ]; then
+      echo "$0: INFO: FILE - backup_page_item '$backup_page_item' mirroring success."
+   else
+      echo "$0: ERROR: FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
+      exit 1
+   fi
+
+   continue
 
 done < "$allpages_file"

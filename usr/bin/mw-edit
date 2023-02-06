@@ -15,18 +15,18 @@ if [ -z "$filename_with_contents" ]; then
 fi
 
 if [ ! -r "$filename_with_contents" ]; then
-  echo "$0: ERROR: File '$filename_with_contents' does not exist!" >&2
+  echo "$0: ERROR: Local file '$filename_with_contents' does not exist!" >&2
   exit 2
 fi
 
 file_content="$(cat "$filename_with_contents")"
 
 if [ "$file_content" = "" ]; then
-  echo "$0: INFO: File '$filename_with_contents' was empty."
+  echo "$0: INFO: Local file '$filename_with_contents' was empty."
   exit 0
 fi
 
-echo "$0: INFO: Editing '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
+echo "$0: INFO: Editing page '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
 #echo "$0: INFO: Fetching edit token..."
 
 mw-logout
@@ -46,9 +46,9 @@ curl_run \
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   true "$0: INFO: Edit token OK."
+   true "$0: INFO: Edit token for page OK."
 else
-   echo "$0: ERROR: Edit token not set." >&2
+   echo "$0: ERROR: Edit token for page not set." >&2
    exit 1
 fi
 
@@ -73,7 +73,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
 
-echo "$0: INFO: Network ok."
+echo "$0: INFO: Network for edit page ok."
 
 test -r "${TMPFOLDER}/edit-result.json"
 
@@ -83,11 +83,11 @@ edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
    echo "$edit_result_output" | jq
-   echo "$0: INFO: Edit success."
+   echo "$0: INFO: Edit page success."
    exit 0
 fi
 
 echo "$edit_result_output" | jq >&2
-echo "$0: ERROR: Edit error." >&2
+echo "$0: ERROR: Edit page error." >&2
 
 exit 1

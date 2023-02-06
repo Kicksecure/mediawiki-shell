@@ -23,16 +23,16 @@ source /usr/share/mediawiki-shell/common
 # WIKI_URL="$DESTINATION_WIKI_URL" \
 #    mw-login
 
-echo "$0: INFO: Fetching '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
+echo "$0: INFO: Fetching page '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 
 wiki_article_to_fetch="$copy_wiki_pages_item" \
 wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
 WIKI_URL="$SOURCE_WIKI_URL" \
    mw-fetch
 
-echo "$0: INFO: Fetch success."
+echo "$0: INFO: Fetch page success."
 
-echo "$0: INFO: Checking for pending changes..."
+echo "$0: INFO: Checking for pending changes for page..."
 echo "$0: INFO: wiki_source_api: $wiki_source_api"
 
 ## time-of-check to time-of-use TOCTOU
@@ -47,13 +47,15 @@ page_pending_status_json=$(\
 )
 
 if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
-   echo "$0: WARNING: '$SOURCE_WIKI_URL' '$copy_wiki_pages_item' has PENDING EDITS!"
+   echo "$0: WARNING: '$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
    exit 10
 fi
 
-echo "$0: INFO: No pending edits, ok."
+echo "$0: INFO: No pending edits for page, ok."
 
 wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
+
+echo "$0: INFO: Edit page success."

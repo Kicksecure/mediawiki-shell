@@ -59,6 +59,7 @@ curl_run \
 	--form "token=$csrf_token" \
 	--form "filename=$wiki_remote_upload_file_title" \
 	--form "file=@$wiki_upload_file_path" \
+	--form "ignorewarnings=yes" \
    --output "${TMPFOLDER}/upload-result.json" \
    --request "POST" \
    "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"

@@ -1,0 +1,79 @@
+#!/bin/bash
+
+## example:
+## WIKI_URL=https://www.whonix.org/w wiki_upload_file_path=/tmp/a wiki_remote_upload_file_title="File:Ubuntu_software_icon.png" mw-file-upload
+
+set -e
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
+[[ -v wiki_upload_file_path ]] || missing_variable wiki_upload_file_path
+[[ -v wiki_remote_upload_file_title ]] || missing_variable wiki_remote_upload_file_title
+
+[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-upload-message"
+
+echo "$0: INFO: Uploading file '${WIKI_URL}' '$wiki_upload_file_path'..."
+
+if test -d "$wiki_upload_file_path" ; then
+   echo "$0: ERROR: wiki_upload_file_path '$wiki_upload_file_path' is a folder!" >&2
+   exit 1
+fi
+
+if ! test -r "$wiki_upload_file_path" ; then
+   echo "$0: ERROR: wiki_upload_file_path '$wiki_upload_file_path' is not readable!" >&2
+   exit 1
+fi
+
+mw-logout
+mw-login
+
+curl_run \
+   $curl_opts \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --compressed \
+   --output "${TMPFOLDER}/fetch-edit-token.json" \
+   --request "GET" \
+   "${WIKI_API}?action=query&meta=tokens&format=json"
+
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
+
+if [ "${#csrf_token}" = 42 ]; then
+   true "$0: INFO: Edit token OK."
+else
+   echo "$0: ERROR: Edit token not set." >&2
+   exit 1
+fi
+
+curl_run \
+   $curl_opts \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --header "Expect:" \
+	--form "token=$csrf_token" \
+	--form "filename=$wiki_remote_upload_file_title" \
+	--form "file=@$wiki_upload_file_path" \
+   --output "${TMPFOLDER}/upload-result.json" \
+   --request "POST" \
+   "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
+
+echo "$0: INFO: Network ok."
+
+test -r "${TMPFOLDER}/upload-result.json"
+
+edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
+
+edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
+
+if [ "$edit_result_jq" = "Success" ]; then
+   echo "$edit_result_output" | jq
+   echo "$0: INFO: Upload success."
+   exit 0
+fi
+
+echo "$edit_result_output" | jq >&2
+echo "$0: ERROR: Upload error." >&2

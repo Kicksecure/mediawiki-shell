@@ -7,6 +7,8 @@ set -e
 source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
+[[ -v WIKI_URL ]] || missing_variable WIKI_URL
+
 [[ -v wiki_upload_file_path ]] || missing_variable wiki_upload_file_path
 [[ -v wiki_remote_upload_file_title ]] || missing_variable wiki_remote_upload_file_title
 

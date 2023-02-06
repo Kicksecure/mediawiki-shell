@@ -21,6 +21,15 @@ set -e
 
 source /usr/share/mediawiki-shell/common
 
+## Legacy.
+multiwiki_category=MultiWiki
+## TODO
+#multiwiki_category=MultiWikiFile
+#multiwiki_category=MultiWikiContent
+#multiwiki_category=MultiWikiCode
+
+[[ -v multiwiki_category ]] || missing_variable multiwiki_category
+
 ## example:
 [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.kicksecure.com/w'
 [[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL=(
@@ -69,7 +78,7 @@ WIKI_URL="$DESTINATION_WIKI_URL" \
 
 all_pages=$($curl \
    $curl_opts \
-   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmlimit=500"
+   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
 )
 
 ## TODO: cmcontinue

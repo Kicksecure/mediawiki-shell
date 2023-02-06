@@ -118,7 +118,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    replace="_"
    backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   echo "$counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+   echo "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
    copy_wiki_pages_exit_code=0
 
@@ -142,6 +142,8 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    if [ ! "$multiwiki_category" = "MultiWikiFile" ]; then
       continue
    fi
+
+   echo "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
    copy_wiki_file_exit_code=0
 

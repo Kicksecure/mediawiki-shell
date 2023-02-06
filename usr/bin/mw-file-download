@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
+## example:
+#WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name="File:Ubuntu_software_icon.png" wiki_remote_file_save_to_path="/tmp/Ubuntu_software_icon.png" mw-file-download
+
+echo "$0: INFO: Downloading file '${WIKI_INDEX}' '$wiki_remote_file_name'..."
+
+if test -d "$wiki_remote_file_save_to_path" ; then
+   echo "$0: ERRROR: wiki_remote_file_save_to_path '$wiki_remote_file_save_to_path' is a folder!" >&2
+   exit 1
+fi
+
+rm -f "$wiki_remote_file_save_to_path"
+touch "$wiki_remote_file_save_to_path"
+test -w "$wiki_remote_file_save_to_path"
+
+wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" wiki_remote_file_name="$wiki_remote_file_name" mw-file-to-url
+
+url=$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")
+
+curl_run \
+   $curl_opts \
+   --header "Accept-Language: en-GB" \
+   --header "Expect:" \
+   --output "$wiki_remote_file_save_to_path" \
+   "$url"
+
+echo "$0: INFO: Fetch success."

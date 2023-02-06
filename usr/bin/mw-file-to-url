@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## example:
+## WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name_fetch_to_file=/tmp/a wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-file-to-link
+
+set -e
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
+echo "$0: INFO: Fetching file '${WIKI_INDEX}' '$wiki_remote_file_name'..."
+
+if test -d "$wiki_remote_file_name_fetch_to_file" ; then
+   echo "$0: ERRROR: wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!" >&2
+   exit 1
+fi
+
+rm -f "$wiki_remote_file_name_fetch_to_file"
+touch "$wiki_remote_file_name_fetch_to_file"
+test -w "$wiki_remote_file_name_fetch_to_file"
+
+## https://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&titles=File:Limbo%20Royal%20Blood.jpg
+curl_run \
+   $curl_opts \
+   --cookie "$cookie_jar" \
+   --cookie-jar "$cookie_jar" \
+   --header "Accept-Language: en-GB" \
+   --header "Connection: keep-alive" \
+   --compressed \
+   --output "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json" \
+   --request "GET" \
+   "${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=$wiki_remote_file_name"
+
+query_result=$(cat ${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json)
+
+url=$(echo "$query_result" | jq -r ".query.pages[].imageinfo[].url")
+echo "$url" | tee $wiki_remote_file_name_fetch_to_file >/dev/null
+
+test -r "$wiki_remote_file_name_fetch_to_file"
+
+echo "$0: INFO: Fetch success."

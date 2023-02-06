@@ -11,8 +11,7 @@ source /usr/share/mediawiki-shell/common
 
 wiki_remote_file_title="$(echo "$wiki_remote_file_name" | str_replace "File:" "")"
 
-## TODO
-wiki_remote_file_save_to_path="$TMPFOLDER/wiki_remote_file_title"
+[[ -v wiki_remote_file_save_to_path ]] || wiki_remote_file_save_to_path="$TMPFOLDER/wiki_remote_file_title"
 
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 [[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL

@@ -59,10 +59,11 @@ curl_run \
 	--form "token=$csrf_token" \
 	--form "filename=$wiki_remote_upload_file_title" \
 	--form "file=@$wiki_upload_file_path" \
+	--form "comment=$edit_message" \
 	--form "ignorewarnings=yes" \
    --output "${TMPFOLDER}/upload-result.json" \
    --request "POST" \
-   "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
+   "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
 
 echo "$0: INFO: Network ok."
 
@@ -71,7 +72,7 @@ test -r "${TMPFOLDER}/upload-result.json"
 edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
 
 if [ $(echo "$edit_result_output" | jq -r ".error.code") = "fileexists-no-change" ]; then
-   echo "$edit_result_output" | jq
+   #echo "$edit_result_output" | jq
    echo "$0: INFO: Upload success."
    exit 0
 fi

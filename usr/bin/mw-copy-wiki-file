@@ -7,7 +7,7 @@ set -e
 source /usr/share/mediawiki-shell/common
 
 ## example:
-#SOURCE_WIKI_URL='https://www.kicksecure.com/w' DESTINATION_WIKI_URL='https://www.whonix.org/w' wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-copy-wiki-files
+#SOURCE_WIKI_URL='https://www.kicksecure.com/w' DESTINATION_WIKI_URL='https://www.whonix.org/w' wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-copy-wiki-file
 
 wiki_remote_file_title="$(echo "$wiki_remote_file_name" | str_replace "File:" "")"
 

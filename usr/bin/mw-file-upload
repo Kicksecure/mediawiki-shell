@@ -70,6 +70,12 @@ test -r "${TMPFOLDER}/upload-result.json"
 
 edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
 
+if [ $(echo "$edit_result_output" | jq -r ".error.code") = "fileexists-no-change" ]; then
+   echo "$edit_result_output" | jq
+   echo "$0: INFO: Upload success."
+   exit 0
+fi
+
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then

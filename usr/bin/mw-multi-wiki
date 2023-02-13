@@ -21,15 +21,8 @@ set -e
 
 source /usr/share/mediawiki-shell/common
 
-## Legacy.
-#multiwiki_category=MultiWiki
-## TODO
-#multiwiki_category=MultiWikiFile
-#multiwiki_category=MultiWikiContent
-#multiwiki_category=MultiWikiCode
 [[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
-
-[[ -v multiwiki_category ]] || missing_variable multiwiki_category
+[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
 
 ## example:
 [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.kicksecure.com/w'
@@ -44,11 +37,6 @@ source /usr/share/mediawiki-shell/common
 [[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 
 [[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
-
-if [ ! "$multiwiki_category" = "MultiWikiFile" ]; then
-   [[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
-fi
-[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list=""
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
@@ -139,7 +127,8 @@ while IFS=$'\n' read -r item_from_all_pages ; do
       exit 1
    fi
 
-   if [ ! "$multiwiki_category" = "MultiWikiFile" ]; then
+   if ! echo "$backup_page_item" | grep --quiet --ignore-case "File:" ; then
+      echo "FILE | No, not a file, ok."
       continue
    fi
 

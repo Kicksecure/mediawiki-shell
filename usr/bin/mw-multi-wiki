@@ -38,6 +38,8 @@ source /usr/share/mediawiki-shell/common
 
 [[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
 
+[[ -v continue_from_page ]] || continue_from_page=""
+
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
 
@@ -92,6 +94,12 @@ if [ "$result_test" = "" ]; then
    exit 1
 fi
 
+## continue_from_page="Template:VM" mw-multi-wiki
+continue_next=no
+if [ "$continue_from_page" = "" ]; then
+   continue_next=yes
+fi
+
 counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
@@ -107,6 +115,13 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
    echo "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+
+   if [ "$backup_page_item" = "$continue_from_page" ]; then
+      continue_next=yes
+   fi
+   if [ "$continue_next" = "no" ]; then
+      continue
+   fi
 
    copy_wiki_pages_exit_code=0
 

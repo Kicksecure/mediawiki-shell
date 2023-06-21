@@ -53,6 +53,8 @@ https://grsecurity.net/paxctld/paxctld_1.2.1-1_amd64
 https://d2cly7j4zqgua7.cloudfront.net
 gplv3
 http_proxy=
+https_proxy=
+ALL_PROXY=
 color=
 onion=
 text=

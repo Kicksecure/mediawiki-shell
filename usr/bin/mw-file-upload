@@ -87,3 +87,4 @@ fi
 
 echo "$edit_result_output" | jq >&2
 echo "$0: ERROR: Upload file error." >&2
+exit 1

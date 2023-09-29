@@ -1,0 +1,86 @@
+#!/bin/bash
+
+echo "$0: START"
+
+set -e
+
+source /usr/share/mediawiki-shell/common
+
+## example:
+SOURCE_WIKI_URL='https://www.kicksecure.com/w'
+SOURCE_WIKI_URL='https://www.whonix.org/w'
+DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
+
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
+[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
+[[ -v copy_wiki_pages_item ]] || missing_variable copy_wiki_pages_item
+
+[[ -v wiki_source_api ]] || wiki_source_api="${SOURCE_WIKI_URL}/api.php"
+
+# WIKI_URL="$DESTINATION_WIKI_URL" \
+#    mw-logout
+# WIKI_URL="$DESTINATION_WIKI_URL" \
+#    mw-login
+
+echo "$0: INFO: Fetching page '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
+
+wiki_article_to_fetch="$copy_wiki_pages_item" \
+wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
+WIKI_URL="$SOURCE_WIKI_URL" \
+   mw-fetch
+
+echo "$0: INFO: Fetch page success."
+
+echo "$0: INFO: Checking for pending changes for page..."
+echo "$0: INFO: wiki_source_api: $wiki_source_api"
+
+## time-of-check to time-of-use TOCTOU
+## Check for pending edits only after page was fetched.
+## Checking for pending edits before fetching page would leave room for
+## making a pending edit after the page has been fetched.
+## This ensures that the fetched edit was not pending, i.e. confirmed.
+page_pending_status_json=$(\
+   $curl \
+      $curl_opts \
+      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
+)
+
+if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
+   echo "$0: WARNING: '$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
+   exit 10
+fi
+
+echo "$0: INFO: No pending edits for page, ok."
+
+filename="$TMPFOLDER/fetched-wiki-page"
+tempfile="$TMPFOLDER/temp-edit-file"
+
+replace_function() {
+   if ! grep --quiet -n "$search" "$filename" ; then
+      return 0
+   fi
+
+   linenum=$(grep -n "$search" "$filename" | head -n1 | cut -d: -f1)
+
+   # If {{project_name_long}} is found in the file
+   if [ -n "$linenum" ]; then
+      # Print the lines from the beginning of the file to the line number where the first occurrence is found
+      awk -v n="$linenum" 'NR<=n' "$filename" > "$tempfile"
+
+      # Replace subsequent occurrences of {{project_name_long}} with {{project_name_short}}
+      # and append them to the temporary file
+      awk -v n="$linenum" 'NR>n' "$filename" | sed "s/$search/$replace/g" >> "$tempfile"
+
+      # Move the temporary file to the original file
+      mv "$tempfile" "$filename"
+   fi
+}
+
+search="{{project_name_long}}"
+replace="{{project_name_short}}"
+replace_function
+
+WIKI_URL="$DESTINATION_WIKI_URL" \
+   mw-edit "$copy_wiki_pages_item" "$filename"
+
+echo "$0: INFO: Edit page success."

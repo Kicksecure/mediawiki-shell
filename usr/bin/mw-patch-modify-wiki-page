@@ -55,7 +55,7 @@ echo "$0: INFO: No pending edits for page, ok."
 filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"
 
-replace_function() {
+replace_all_except_first() {
    if ! grep --quiet -n "$search" "$filename" ; then
       return 0
    fi
@@ -78,7 +78,27 @@ replace_function() {
 
 search="{{project_name_long}}"
 replace="{{project_name_short}}"
-replace_function
+replace_all_except_first
+
+search="{{project_name_gateway_long}}"
+replace="{{project_name_gateway_short}}"
+replace_all_except_first
+
+search="{{project_name_workstation_long}}"
+replace="{{project_name_workstation_short}}"
+replace_all_except_first
+
+search="{{q_project_name_long}}"
+replace="{{q_project_name_short}}"
+replace_all_except_first
+
+search="{{non_q_project_name_long}}"
+replace="{{non_q_project_name_short}}"
+replace_all_except_first
+
+search="{{project_name_customworkstation_long}}"
+replace="{{project_name_customworkstation_short}}"
+replace_all_except_first
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-edit "$copy_wiki_pages_item" "$filename"

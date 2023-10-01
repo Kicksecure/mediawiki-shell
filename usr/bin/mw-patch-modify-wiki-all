@@ -14,6 +14,8 @@ SOURCE_WIKI_URL="$DESTINATION_WIKI_URL"
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
 [[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable SOURCE_WIKI_URL
 
+[[ -v mw_api_start_from ]] || mw_api_start_from=""
+
 ## XXX: required by /usr/share/mediawiki-shell/common but not elegant.
 WIKI_URL="$SOURCE_WIKI_URL"
 
@@ -42,10 +44,28 @@ counter_total="$(cat "$allpages_file" | wc -l)"
 
 counter_currently=0
 error_counter=0
+start_from_here="not-yet"
+
 while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
    echo "$0: INFO: $counter_currently / $counter_total"
+
+   ## TODO: remove
+   mw_api_start_from="Comparison_of_different_variants"
+
+   if [ "$mw_api_start_from" = "" ]; then
+      start_from_here=true
+   else
+      if [ "$backup_page_item" = "$mw_api_start_from" ]; then
+         start_from_here=true
+      fi
+   fi
+
+   if [ ! "$start_from_here" = "true" ]; then
+      echo "SKIP: $counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
+      continue
+   fi
 
    patch_wiki_pages_item="$backup_page_item" mw-patch-modify-wiki-page
 

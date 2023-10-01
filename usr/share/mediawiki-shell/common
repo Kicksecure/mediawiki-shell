@@ -170,6 +170,12 @@ log_run() {
    "$@"
 }
 
+log_run_background() {
+   echo "running: $@ &"
+   "$@" &
+   pid="$!"
+}
+
 trap exit_handler EXIT
 
 [[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell-temp

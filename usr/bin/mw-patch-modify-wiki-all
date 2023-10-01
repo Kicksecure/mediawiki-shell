@@ -10,9 +10,8 @@ set -e
 SOURCE_WIKI_URL="$DESTINATION_WIKI_URL"
 
 ## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable SOURCE_WIKI_URL! For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
-[[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable SOURCE_WIKI_URL
 
 [[ -v mw_api_start_from ]] || mw_api_start_from=""
 
@@ -52,7 +51,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    echo "$0: INFO: $counter_currently / $counter_total"
 
    ## TODO: remove
-   mw_api_start_from="Comparison_of_different_variants"
+   mw_api_start_from="Media_Mentions"
 
    if [ "$mw_api_start_from" = "" ]; then
       start_from_here=true
@@ -67,7 +66,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
       continue
    fi
 
-   patch_wiki_pages_item="$backup_page_item" mw-patch-modify-wiki-page
+   log_run env patch_wiki_pages_item="$backup_page_item" mw-patch-modify-wiki-page
 
 done < "$allpages_file"
 

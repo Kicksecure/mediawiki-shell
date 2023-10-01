@@ -9,9 +9,8 @@ set -e
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
 
 ## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable SOURCE_WIKI_URL! For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
-[[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable TMPFOLDER
 
 ## XXX: required by /usr/share/mediawiki-shell/common but not elegant.
 WIKI_URL="$SOURCE_WIKI_URL"

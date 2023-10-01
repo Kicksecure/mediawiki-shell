@@ -2,6 +2,7 @@
 
 echo "$0: START"
 
+set -x
 set -e
 
 source /usr/share/mediawiki-shell/common
@@ -20,8 +21,8 @@ echo "$0: INFO: Fetching page '$DESTINATION_WIKI_URL' '$patch_wiki_pages_item'..
 
 wiki_article_to_fetch="$patch_wiki_pages_item" \
 wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-fetch
+
+log_run env WIKI_URL="$DESTINATION_WIKI_URL" mw-fetch
 
 echo "$0: INFO: Fetch page success."
 
@@ -96,7 +97,6 @@ search="{{project_name_customworkstation_long}}"
 replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-edit "$patch_wiki_pages_item" "$filename"
+log_run env WIKI_URL="$DESTINATION_WIKI_URL" mw-edit "$patch_wiki_pages_item" "$filename"
 
 echo "$0: INFO: Edit page success."

@@ -73,7 +73,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
 
-echo "$0: INFO: Network for edit page ok."
+true "$0: INFO: Network for edit page ok."
 
 test -r "${TMPFOLDER}/edit-result.json"
 

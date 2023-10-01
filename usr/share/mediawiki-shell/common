@@ -5,6 +5,8 @@ set -e
 set -o pipefail
 set -o nounset
 
+command -v retry >/dev/null
+
 missing_variable() {
    echo "$0: ERROR: MISSING VARIABLE: $@"
    exit 1

@@ -39,10 +39,9 @@ DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
 #mw-logout
 #mw-login
 
-## TODO: re-enable
 allpages_file="${TMPFOLDER}/allpages.txt"
-#rm -f "$allpages_file"
-#log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
+rm -f "$allpages_file"
+log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -65,7 +64,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
 
    counter_chunk=$(( $counter_chunk + 1 ))
 
-   ## TODO: hardcoded
+   ## TODO: remove
    mw_api_start_from="Network_Time_Synchronization"
 
    if [ "$mw_api_start_from" = "" ]; then

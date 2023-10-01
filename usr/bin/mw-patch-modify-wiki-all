@@ -63,7 +63,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    fi
 
    if [ ! "$start_from_here" = "true" ]; then
-      echo "SKIP: $counter_currently / $counter_total | $backup_page_item | $backup_filename_item"
+      echo "SKIP: $counter_currently / $counter_total | $backup_page_item"
       continue
    fi
 

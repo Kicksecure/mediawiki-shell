@@ -54,7 +54,9 @@ replace_all_except_first() {
       return 0
    fi
 
-   linenum=$(grep -n "$search" "$filename" | head -n1 | cut -d: -f1)
+   linenum=$(grep -n "$search" "$filename")
+   linenum=$(echo "$linenum" | head -n1)
+   linenum=$(echo "$linenum" | cut -d: -f1)
 
    # If {{project_name_long}} is found in the file
    if [ -n "$linenum" ]; then

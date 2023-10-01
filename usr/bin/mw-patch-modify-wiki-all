@@ -1,0 +1,58 @@
+#!/bin/bash
+
+echo "$0: START"
+
+#set -x
+set -e
+
+## example:
+[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL='https://www.whonix.org/w'
+SOURCE_WIKI_URL="$DESTINATION_WIKI_URL"
+
+## These variables should be set by the calling script as environment variables.
+[[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable SOURCE_WIKI_URL! For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
+[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
+[[ -v SOURCE_WIKI_URL ]] || missing_variable missing variable SOURCE_WIKI_URL
+
+## XXX: required by /usr/share/mediawiki-shell/common but not elegant.
+WIKI_URL="$SOURCE_WIKI_URL"
+
+## TODO: abolish need for this and fetch all name spaces instead by default.
+## Namespace 500 (Moved:) is not reviewable.
+## Namespace 500 (Widget:) is not reviewable.
+#export wiki_namespace_list_extra="500 274"
+
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
+echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"
+echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
+echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+
+allpages_file="${TMPFOLDER}/allpages.txt"
+rm -f "$allpages_file"
+
+QUERY_TYPE=allpages \
+SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+   mw-all-pages "$allpages_file"
+
+test -r "$allpages_file"
+
+counter_total="$(cat "$allpages_file" | wc -l)"
+
+counter_currently=0
+error_counter=0
+while IFS=$'\n' read -r item_from_all_pages ; do
+   counter_currently=$(( $counter_currently + 1 ))
+   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+   echo "$0: INFO: $counter_currently / $counter_total"
+
+   patch_wiki_pages_item="$backup_page_item" mw-patch-modify-wiki-page
+
+done < "$allpages_file"
+
+if [ "$error_counter" = "0" ]; then
+   echo "$0: INFO: Success."
+else
+   echo "$0: WARNING: $error_counter error(s) detected."
+fi

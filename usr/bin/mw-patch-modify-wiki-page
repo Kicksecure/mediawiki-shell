@@ -7,22 +7,22 @@ set -e
 
 source /usr/share/mediawiki-shell/common
 
-[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
-[[ -v patch_wiki_pages_item ]] || missing_variable patch_wiki_pages_item
+[[ -v WIKI_URL ]] || missing_variable WIKI_URL
+[[ -v wiki_page_item ]] || missing_variable wiki_page_item
 
-[[ -v wiki_source_api ]] || wiki_source_api="${DESTINATION_WIKI_URL}/api.php"
+[[ -v wiki_source_api ]] || wiki_source_api="${WIKI_URL}/api.php"
 
-# WIKI_URL="$DESTINATION_WIKI_URL" \
+# WIKI_URL="$WIKI_URL" \
 #    mw-logout
-# WIKI_URL="$DESTINATION_WIKI_URL" \
+# WIKI_URL="$WIKI_URL" \
 #    mw-login
 
-echo "$0: INFO: Fetching page '$DESTINATION_WIKI_URL' '$patch_wiki_pages_item'..."
+echo "$0: INFO: Fetching page '$WIKI_URL' '$wiki_page_item'..."
 
-wiki_article_to_fetch="$patch_wiki_pages_item" \
+wiki_article_to_fetch="$wiki_page_item" \
 wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
 
-log_run env WIKI_URL="$DESTINATION_WIKI_URL" mw-fetch
+log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fetch
 
 echo "$0: INFO: Fetch page success."
 
@@ -37,11 +37,11 @@ echo "$0: INFO: wiki_source_api: $wiki_source_api"
 page_pending_status_json=$(\
    $curl \
       $curl_opts \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$patch_wiki_pages_item"
+      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
 )
 
 if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
-   echo "$0: WARNING: '$DESTINATION_WIKI_URL' '$patch_wiki_pages_item' page has PENDING EDITS!"
+   echo "$0: WARNING: '$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
    exit 10
 fi
 
@@ -97,6 +97,6 @@ search="{{project_name_customworkstation_long}}"
 replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
-log_run env WIKI_URL="$DESTINATION_WIKI_URL" mw-edit "$patch_wiki_pages_item" "$filename"
+log_run env WIKI_URL="$WIKI_URL" mw-edit "$wiki_page_item" "$filename"
 
 echo "$0: INFO: Edit page success."

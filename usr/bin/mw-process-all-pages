@@ -14,41 +14,23 @@ echo "$0: START"
 
 set -e
 
+source /usr/share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/wiki-config
+
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-#[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/whonix-wiki-backup"
 
 ## These variables should be set by the calling script as environment variables.
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
 [[ -v wiki_script ]] || missing_variable wiki_script
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 [[ -v mw_api_start_from ]] || mw_api_start_from=""
 
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
-source /usr/share/mediawiki-shell/common
-
-allpages_file="${TMPFOLDER}/allpages.txt"
-rm -f "$allpages_file"
 
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
-
-mkdir -p "$wiki_backup_folder"
-
-if ! test -d "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   echo "mkdir --parents '$wiki_backup_folder'"
-   exit 1
-fi
-
-if ! test -w "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
-fi
 
 # ## XXX
 DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
@@ -57,7 +39,10 @@ DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
 #mw-logout
 #mw-login
 
-log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
+## TODO: re-enable
+allpages_file="${TMPFOLDER}/allpages.txt"
+#rm -f "$allpages_file"
+#log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -73,6 +58,10 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    counter_currently=$(( $counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
    backup_filename_item=$(set_backup_filename_item "$backup_page_item")
+
+   ## XXX
+   wiki_page_item="$backup_page_item"
+   wiki_article_to_fetch="$backup_page_item"
 
    counter_chunk=$(( $counter_chunk + 1 ))
 
@@ -103,8 +92,9 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          TMPFOLDER="$TMPFOLDER_SEPARATE" \
          WIKI_URL="$SOURCE_WIKI_URL" \
          backup_page_item="$backup_page_item" \
-         wiki_backup_folder="$wiki_backup_folder" \
          backup_filename_item="$backup_filename_item" \
+         wiki_page_item="$wiki_page_item" \
+         wiki_article_to_fetch="$wiki_article_to_fetch" \
          $wiki_script
 
    pid_list+=" $pid"

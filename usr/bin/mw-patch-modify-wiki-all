@@ -5,6 +5,8 @@ echo "$0: START"
 #set -x
 set -e
 
+source /usr/share/mediawiki-shell/common
+
 ## example:
 [[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL='https://www.whonix.org/w'
 SOURCE_WIKI_URL="$DESTINATION_WIKI_URL"
@@ -30,48 +32,7 @@ echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"
 echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
 echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
 
-allpages_file="${TMPFOLDER}/allpages.txt"
-rm -f "$allpages_file"
+wiki_script=mw-patch-modify-wiki-page
+export WIKI_URL SOURCE_WIKI_URL wiki_script
 
-QUERY_TYPE=allpages \
-SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-all-pages "$allpages_file"
-
-test -r "$allpages_file"
-
-counter_total="$(cat "$allpages_file" | wc -l)"
-
-counter_currently=0
-error_counter=0
-start_from_here="not-yet"
-
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( $counter_currently + 1 ))
-   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-   echo "$0: INFO: $counter_currently / $counter_total"
-
-   ## TODO: remove
-   mw_api_start_from="Media_Mentions"
-
-   if [ "$mw_api_start_from" = "" ]; then
-      start_from_here=true
-   else
-      if [ "$backup_page_item" = "$mw_api_start_from" ]; then
-         start_from_here=true
-      fi
-   fi
-
-   if [ ! "$start_from_here" = "true" ]; then
-      echo "SKIP: $counter_currently / $counter_total | $backup_page_item"
-      continue
-   fi
-
-   log_run env patch_wiki_pages_item="$backup_page_item" mw-patch-modify-wiki-page
-
-done < "$allpages_file"
-
-if [ "$error_counter" = "0" ]; then
-   echo "$0: INFO: Success."
-else
-   echo "$0: WARNING: $error_counter error(s) detected."
-fi
+mw-process-all-pages

@@ -166,12 +166,12 @@ curl_run() {
 }
 
 log_run() {
-   echo "running: $@"
+   echo "$0 running: $@"
    "$@"
 }
 
 log_run_background() {
-   echo "running: $@ &"
+   echo "$0 running: $@ &"
    "$@" &
    pid="$!"
 }

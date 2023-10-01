@@ -52,6 +52,22 @@ do_it() {
 [[ -v backup_page_item ]] || missing_variable backup_page_item
 [[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
 
+echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
+
+mkdir -p "$wiki_backup_folder"
+
+if ! test -d "$wiki_backup_folder" ; then
+   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   echo "mkdir --parents '$wiki_backup_folder'"
+   exit 1
+fi
+
+if ! test -w "$wiki_backup_folder" ; then
+   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+   exit 1
+fi
+
 for retry_counter in $(seq 1 5) ; do
    if do_it ; then
       ## Success. Exit success.

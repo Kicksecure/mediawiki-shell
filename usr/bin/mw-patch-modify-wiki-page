@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "$0: START"
-
 set -e
 
 source /usr/share/mediawiki-shell/common
@@ -16,17 +14,10 @@ source /usr/share/mediawiki-shell/common
 # WIKI_URL="$WIKI_URL" \
 #    mw-login
 
-echo "$0: INFO: Fetching page '$WIKI_URL' '$wiki_page_item'..."
-
 wiki_article_to_fetch="$wiki_page_item" \
 wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
 
 log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fetch
-
-echo "$0: INFO: Fetch page success."
-
-echo "$0: INFO: Checking for pending changes for page..."
-echo "$0: INFO: wiki_source_api: $wiki_source_api"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
@@ -43,8 +34,6 @@ if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
    echo "$0: WARNING: '$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
    exit 10
 fi
-
-echo "$0: INFO: No pending edits for page, ok."
 
 filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"
@@ -97,5 +86,3 @@ replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
 log_run env WIKI_URL="$WIKI_URL" mw-edit "$wiki_page_item" "$filename"
-
-echo "$0: INFO: Edit page success."

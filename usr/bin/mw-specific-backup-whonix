@@ -5,7 +5,8 @@ set -e
 
 [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL=https://www.whonix.org/w
 [[ -v wiki_backup_folder ]] || wiki_backup_folder=~/derivative-backup/whonix-wiki-backup
+[[ -v wiki_script ]] || wiki_script=mw-wiki-fetch-backup
 
-export SOURCE_WIKI_URL wiki_backup_folder
+export SOURCE_WIKI_URL wiki_backup_folder wiki_script
 
 mw-process-all-pages

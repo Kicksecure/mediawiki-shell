@@ -95,7 +95,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          backup_filename_item="$backup_filename_item" \
          wiki_page_item="$wiki_page_item" \
          wiki_article_to_fetch="$wiki_article_to_fetch" \
-         $wiki_script
+         retry --times=5 --delay=3 $wiki_script
 
    pid_list+=" $pid"
 

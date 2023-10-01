@@ -18,7 +18,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
 
-echo "$0: INFO: Token received."
+true "$0: INFO: Token received."
 
 csrf_token=$(cat "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')
 

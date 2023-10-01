@@ -9,7 +9,7 @@ if [ -z "$WIKI_API_USER_PASS" ]; then
    exit 1
 fi
 
-echo "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
+true "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
 
 rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
@@ -24,7 +24,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
 
-echo "$0: INFO: Login Token received."
+true "$0: INFO: Login Token received."
 
 login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.logintoken')
 

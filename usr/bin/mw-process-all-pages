@@ -1,17 +1,5 @@
 #!/bin/bash
 
-error_out_maybe() {
-   if [ "$wiki_error_on_fetch" = "true" ]; then
-      ## error out
-      return 1
-   else
-      ## ignore error
-      return 0
-   fi
-}
-
-echo "$0: START"
-
 set -e
 
 source /usr/share/mediawiki-shell/common
@@ -85,6 +73,8 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
    mkdir --parents "$TMPFOLDER_SEPARATE"
 
+   ## using 'retry' with '< /dev/null' due to upstream bug:
+   ## https://github.com/minfrin/retry/issues/20
    log_run_background \
       env \
          counter_currently="$counter_currently" \
@@ -95,7 +85,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          backup_filename_item="$backup_filename_item" \
          wiki_page_item="$wiki_page_item" \
          wiki_article_to_fetch="$wiki_article_to_fetch" \
-         retry --times=5 --delay=3 -- $wiki_script
+         retry --times=5 --delay=3 -- $wiki_script < /dev/null
 
    pid_list+=" $pid"
 

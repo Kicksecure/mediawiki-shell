@@ -8,7 +8,7 @@ set -e
 source /usr/share/mediawiki-shell/common
 
 ## example:
-[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL='https://www.whonix.org/w'
+[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL='https://www.kicksecure.com/w'
 SOURCE_WIKI_URL="$DESTINATION_WIKI_URL"
 
 ## These variables should be set by the calling script as environment variables.

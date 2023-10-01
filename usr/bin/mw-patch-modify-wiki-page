@@ -2,7 +2,6 @@
 
 echo "$0: START"
 
-set -x
 set -e
 
 source /usr/share/mediawiki-shell/common

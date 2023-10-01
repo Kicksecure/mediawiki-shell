@@ -66,7 +66,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    counter_chunk=$(( $counter_chunk + 1 ))
 
    ## TODO: hardcoded
-   #mw_api_start_from="Template:Share"
+   mw_api_start_from="Network_Time_Synchronization"
 
    if [ "$mw_api_start_from" = "" ]; then
       start_from_here=true

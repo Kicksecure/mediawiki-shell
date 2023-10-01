@@ -53,7 +53,7 @@ curl_run \
 RESULT=$(cat "${TMPFOLDER}/login-result.json" | jq -r '.login.result')
 
 if [ "$RESULT" = "Success" ]; then
-   echo "$0: INFO: Successfully logged in as '$WIKI_API_USER_NAME'."
+   true "$0: INFO: Successfully logged in as '$WIKI_API_USER_NAME'."
    exit 0
 fi
 

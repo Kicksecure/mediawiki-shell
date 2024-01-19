@@ -3,7 +3,6 @@
 set -e
 
 source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
 
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
@@ -17,6 +16,8 @@ source /usr/share/mediawiki-shell/wiki-config
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
 
+source /usr/share/mediawiki-shell/wiki-config
+
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
 echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 
@@ -28,9 +29,9 @@ DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
 #mw-login
 
 allpages_file="${TMPFOLDER}/allpages.txt"
-## TODO: re-enable
-#rm -f "$allpages_file"
-#log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
+
+rm -f "$allpages_file"
+log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
 
 test -r "$allpages_file"
 

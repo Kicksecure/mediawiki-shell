@@ -35,7 +35,7 @@ log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages 
 
 test -r "$allpages_file"
 
-counter_total="$(cat "$allpages_file" | wc -l)"
+counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 counter_currently=0
 counter_chunk=0

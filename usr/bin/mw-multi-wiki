@@ -89,7 +89,8 @@ echo "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$a
 
 test -f "$allpages_file"
 result_test="$(cat "$allpages_file")"
-counter_total="$(cat "$allpages_file" | wc -l)"
+counter_total="$(awk 'END {print NR}' "$allpages_file")"
+
 if [ "$result_test" = "" ]; then
    echo "$0 ERROR: result_test is empty!"
    exit 1

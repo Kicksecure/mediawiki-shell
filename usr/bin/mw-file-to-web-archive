@@ -110,7 +110,7 @@ file_name="$TMPFOLDER/wiki-links/links-sorted.txt"
 
 test -r "$file_name"
 
-total=$(cat "$file_name" | wc -l)
+total="$(awk 'END {print NR}' "$file_name")"
 
 counter=0
 

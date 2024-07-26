@@ -54,7 +54,7 @@ SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
 
 test -r "$allpages_file"
 
-counter_total="$(cat "$allpages_file" | wc -l)"
+counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 counter_currently=0
 error_counter=0

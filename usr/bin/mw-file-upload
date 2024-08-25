@@ -80,21 +80,18 @@ fi
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-   echo "$edit_result_output" | jq
    echo "$0: INFO: Upload (edit) file success."
    exit 0
 fi
 
-upload_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
+upload_result_jq="$(echo "$edit_result_output" | jq -r ".upload.result")"
 
-upload_result_output="$(echo "$upload_result_output" | jq -r ".upload.result")"
-
-if [ "$edit_result_jq" = "Success" ]; then
-   echo "$edit_result_output" | jq
+if [ "$upload_result_jq" = "Success" ]; then
    echo "$0: INFO: Upload (upload) file success."
    exit 0
 fi
 
+echo "${TMPFOLDER}/upload-result.json"
 echo "$edit_result_output" | jq >&2
 echo "$0: ERROR: Upload file error." >&2
 exit 1

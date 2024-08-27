@@ -1,3 +1,15 @@
+commit 0f0f8db5d621fb27cf9d42757726edb65d09800f
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Tue Aug 27 17:55:22 2024 -0400
+
+    .
+
+commit 79befc107a7938ffd0f7cdede21551096ae63aad
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sun Aug 25 14:33:08 2024 +0000
+
+    bumped changelog version
+
 commit ac454efe341869a6cc895204d82656ac85d63011
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sun Aug 25 10:29:02 2024 -0400

@@ -82,7 +82,7 @@ edit_result_output="$(cat "${TMPFOLDER}/edit-result.json")"
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-   echo "$edit_result_output" | jq
+   #echo "$edit_result_output" | jq
    exit 0
 fi
 

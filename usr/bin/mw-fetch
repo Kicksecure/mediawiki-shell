@@ -5,6 +5,8 @@ set -e
 source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
+check_vars_exist "WIKI_INDEX" "wiki_article_to_fetch" "wiki_fetch_to_file"
+
 true "$0: INFO: Fetching '${WIKI_INDEX}' '$wiki_article_to_fetch' '$wiki_fetch_to_file'..."
 
 if test -d "$wiki_fetch_to_file" ; then

@@ -130,7 +130,7 @@ curl_get_output_parameter() {
    loop_counter=0
 
    while true ; do
-      loop_counter=$(( loop_counter + 1))
+      loop_counter=$(( loop_counter + 1 ))
       if [ "$loop_counter" -ge 50 ]; then
          error "loop_max reached!"
          exit 1
@@ -153,9 +153,7 @@ curl_run() {
    ## helper function so it stays local there and unchanged here.
    curl_get_output_parameter "$@"
 
-   #echo "$0: INFO: output_file: '$output_file'"
-
-   if [ "$output_file" = "" ]; then
+   if [ -z "$output_file" ]; then
       error "output_file is empty!"
       exit 1
    fi
@@ -163,13 +161,17 @@ curl_run() {
    rm -f "$output_file"
    touch "$output_file"
 
+   local args url encoded_url
+   url="${@: -1}"
+   encoded_url="$(mw-urlencode "$url")"
+
+   # Rebuild the arguments excluding the last parameter, then append the encoded URL
+   args=("${@:1:$#-1}" "$encoded_url")
+
    curl_exit_code=0
 
-   $curl \
-      "$@" \
-      || { curl_exit_code=$? ; true; };
-
-   #echo "$0: INFO: curl result  exit code '$curl_exit_code'. output_file: $output_file"
+   # Run curl with the modified arguments
+   $curl "${args[@]}" || { curl_exit_code=$?; true; }
 
    if [ ! "$curl_exit_code" = "0" ]; then
       echo "$0: ERROR: curl result failed with exit code '$curl_exit_code'. output_file: $output_file" >&2

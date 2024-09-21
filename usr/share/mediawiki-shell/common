@@ -66,7 +66,7 @@ exit_handler() {
 }
 
 set_curl_binary_default() {
-   if commannd -v scurl &>/dev/null ; then
+   if command -v scurl &>/dev/null ; then
       curl=scurl
    else
       curl=curl

@@ -19,8 +19,8 @@ set -e
 #[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/whonix-wiki-backup"
 
 ## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
+check_vars_exist SOURCE_WIKI_URL wiki_backup_folder
+
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 
 ## XXX

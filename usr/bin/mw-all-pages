@@ -10,10 +10,10 @@ source /usr/share/mediawiki-shell/common
 ## These variables should be set by the calling script as environment variables.
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
+check_vars_exist SOURCE_WIKI_URL QUERY_TYPE
+
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
 [[ -v 1 ]] || missing_variable "parameter 1 needs to be set to the allpages_file name. example: $0 /tmp/allpages.txt"
-[[ -v QUERY_TYPE ]] || missing_variable QUERY_TYPE
 
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 ## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces

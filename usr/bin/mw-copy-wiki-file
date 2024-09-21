@@ -23,8 +23,7 @@ wiki_remote_file_title="$(echo "$wiki_remote_file_name" | str_replace "File:" ""
 # WIKI_URL="$DESTINATION_WIKI_URL" \
 #    mw-login
 
-[[ -v wiki_remote_file_name ]] || missing_variable wiki_remote_file_name
-[[ -v wiki_remote_file_save_to_path ]] || missing_variable wiki_remote_file_save_to_path
+check_vars_exist wiki_remote_file_name wiki_remote_file_save_to_path
 
 echo "$0: INFO: Downloading file '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'..."
 

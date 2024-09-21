@@ -8,8 +8,8 @@ source /usr/share/mediawiki-shell/common
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
 
 ## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v wiki_script ]] || missing_variable wiki_script
+check_vars_exist SOURCE_WIKI_URL wiki_script
+
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 [[ -v mw_api_start_from ]] || mw_api_start_from=""
 

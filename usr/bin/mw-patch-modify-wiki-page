@@ -4,8 +4,7 @@ set -e
 
 source /usr/share/mediawiki-shell/common
 
-[[ -v WIKI_URL ]] || missing_variable WIKI_URL
-[[ -v wiki_page_item ]] || missing_variable wiki_page_item
+check_vars_exist WIKI_URL wiki_page_item
 
 [[ -v wiki_source_api ]] || wiki_source_api="${WIKI_URL}/api.php"
 

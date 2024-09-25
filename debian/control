@@ -14,7 +14,7 @@ Rules-Requires-Root: no
 
 Package: mediawiki-shell
 Architecture: all
-Depends: helper-scripts, jq, retry, ${misc:Depends}
+Depends: helper-scripts, jq, retry, python3, ${misc:Depends}
 Description: bash shell scripts for usage of MediaWiki API
  Description here.
  .

@@ -1,3 +1,15 @@
+commit c1fe75e1808baa148a80983b57a88533264cb2f2
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Tue Sep 24 21:01:20 2024 -0400
+
+    Depends: python3
+
+commit 84dc1a3cf805caecc94edc3df53b2e4fdb40692a
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Tue Sep 24 05:00:13 2024 +0000
+
+    bumped changelog version
+
 commit 30b7023cc352c75f7610ac2421b5ee3feb17b79c
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat Sep 21 07:45:26 2024 -0400

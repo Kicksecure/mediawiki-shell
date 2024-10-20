@@ -19,7 +19,7 @@ touch "$wiki_remote_file_save_to_path"
 test -w "$wiki_remote_file_save_to_path"
 
 ## mw-file-to-url gets already encoded URL from MediaWiki API.
-wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" mw-retry-wrapper wiki_remote_file_name="$wiki_remote_file_name" mw-file-to-url
+wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" wiki_remote_file_name="$wiki_remote_file_name" mw-file-to-url
 
 url=$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")
 ## url contains encoded URL.
@@ -28,7 +28,6 @@ url=$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")
 
 echo "$0: INFO: saving file to wiki_remote_file_save_to_path: '$wiki_remote_file_save_to_path'"
 
-## TODO: bug: broken because curl_run encodes the URL but wiki_remote_file_name_fetch_to_file is already encoded.
 curl_run_no_encode=true \
    curl_run \
       $curl_opts \

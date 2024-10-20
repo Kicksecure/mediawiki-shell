@@ -36,6 +36,9 @@ echo "$0: INFO: Network for imageinfo ok."
 
 query_result=$(cat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 
+## example query_result in case of error:
+## {"error":{"code":"internal_api_error_DBConnectionError","info":"[98c54e341525482101c71b32] Caught exception of type Wikimedia\\Rdbms\\DBConnectionError","errorclass":"Wikimedia\\Rdbms\\DBConnectionError"}}
+
 echo "$0: INFO: Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
 
 url=$(echo "$query_result" | jq -r ".query.pages[].imageinfo[].url")

@@ -34,7 +34,7 @@ curl_run \
 
 echo "$0: INFO: Network for imageinfo ok."
 
-query_result=$(cat ${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json)
+query_result=$(cat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 
 echo "$0: INFO: Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
 

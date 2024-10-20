@@ -164,6 +164,8 @@ curl_run() {
    local args url encoded_url
    url="${@: -1}"
 
+   [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
+
    if [ "$curl_run_no_encode" = "true" ]; then
       encoded_url="$url"
    else

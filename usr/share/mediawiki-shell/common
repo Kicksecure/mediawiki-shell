@@ -163,7 +163,12 @@ curl_run() {
 
    local args url encoded_url
    url="${@: -1}"
-   encoded_url="$(mw-urlencode "$url")"
+
+   if [ "$curl_run_no_encode" = "true" ]; then
+      encoded_url="$url"
+   else
+      encoded_url="$(mw-urlencode "$url")"
+   fi
 
    # Rebuild the arguments excluding the last parameter, then append the encoded URL
    args=("${@:1:$#-1}" "$encoded_url")

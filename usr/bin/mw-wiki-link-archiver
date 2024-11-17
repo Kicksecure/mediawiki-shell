@@ -123,10 +123,18 @@ wiki_link_archiver() {
          ## Ensure the page exists and the site is up before trying to archive
          ## NOTE! scurl **cannot** be used here, as it will fail on links that
          ## have a less secure HTTPS configuration.
-         2>/dev/null >/dev/null curl --location --fail "${raw_link}" || {
-            append-once "${error_link_list_file}" "${raw_link}"
-            continue
-         }
+         if [[ "${raw_link}" =~ \.onion$ ]]; then
+            # Route onion links through Tor, assumes that tor is running
+            2>/dev/null >/dev/null curl --proxy socks5h://127.0.0.1:9050 --location --fail "${raw_link}" || {
+               append-once "${error_link_list_file}" "${raw_link}"
+               continue
+            }
+         else
+            2>/dev/null >/dev/null curl --location --fail "${raw_link}" || {
+               append-once "${error_link_list_file}" "${raw_link}"
+               continue
+            }
+         fi
 
          ## Try to archive the page, prompting the user for a new CAPTCHA
          ## cookie if the archival attempt fails

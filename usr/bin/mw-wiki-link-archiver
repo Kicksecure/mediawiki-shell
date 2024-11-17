@@ -107,6 +107,11 @@ wiki_link_archiver() {
          continue
       fi
 
+      ## Skip archive.org Wayback Machine links.
+      if [[ "${raw_link}" =~ ^https://web\.archive\.org/ ]]; then
+         continue
+      fi
+
       ## Search for links in the archive, if something is already archived,
       ## skip it
       archive_today_exit_code='0'

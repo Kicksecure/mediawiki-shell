@@ -111,6 +111,10 @@ wiki_link_archiver() {
       if [[ "${raw_link}" =~ ^https://web\.archive\.org/ ]]; then
          continue
       fi
+      ## Skip links that are already in archive.today.
+      if [[ "${raw_link}" =~ ^https://archive\.today/|^https://archive\.fo/|^https://archive\.is/|^https://archive\.li/|^https://archive\.md/|^https://archive\.ph/|^https://archive\.vn/ ]]; then
+         continue
+      fi
 
       ## Search for links in the archive, if something is already archived,
       ## skip it

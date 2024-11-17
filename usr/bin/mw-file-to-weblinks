@@ -12,12 +12,6 @@ set -e
 
 ## TODO: no root check
 
-## NOTE: case in-sensitive. No need to capitalization.
-grep_links_fixed_strings=$(echo "\
-http://
-https://
-")
-
 file_name="$1"
 test -r "$file_name"
 
@@ -28,7 +22,9 @@ tr -s '[:blank:]' '[\n*]' < "$file_name" | while IFS= read -r word; do
       continue
    fi
 
-   if link_result_orig=$(echo "$word" | grep --fixed-strings "$grep_links_fixed_strings") ; then
-      echo "$link_result_orig"
+   [[ "$word" =~ .*https?://.* ]] || true
+
+   if [ -n "${BASH_REMATCH[0]}" ]; then
+      echo "${BASH_REMATCH[0]}"
    fi
 done

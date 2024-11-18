@@ -1,3 +1,46 @@
+commit d96bd08ea04fdc96243fbda56ed3d24bcf3d2edf
+Merge: 72da52e 3559a3d
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon Nov 18 06:30:12 2024 -0500
+
+    Merge remote-tracking branch 'ArrayBolt3/arraybolt3/wiki-link-archiver'
+
+commit 3559a3db1eefd721de5fa74a0cbde5ec68d1b319
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Nov 17 13:30:41 2024 -0600
+
+    Don't try to re-archive archive.today links in archiver script
+
+commit 3d372da955ff9702f841f921d9436993692ca646
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Nov 17 12:19:58 2024 -0600
+
+    Handle onion links properly in the archiver script
+
+commit 9da26f63ee7a58e4112a4f2ed082560f0adf32e0
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Nov 17 11:13:49 2024 -0600
+
+    Skip archive.org Wayback Machine links in link archiver
+
+commit 40d83dbb68047f7b36fd95157461f2bc327ac724
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Nov 17 03:02:06 2024 -0600
+
+    Add wiki link archiver tool
+
+commit 47a8c3b61ffb044c78ee089203180a2dddb98820
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Nov 17 01:04:58 2024 -0600
+
+    Use Bash regex matching for filtering out links in mw-file-to-weblinks
+
+commit 72da52efb175db53fc04465d9a92277439f92188
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Oct 23 09:55:45 2024 +0000
+
+    bumped changelog version
+
 commit 985f0426428977a11add344a60359c2eb470ac4b
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sun Oct 20 16:00:22 2024 -0400

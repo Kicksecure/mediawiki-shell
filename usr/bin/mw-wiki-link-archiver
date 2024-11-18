@@ -1,0 +1,190 @@
+#!/bin/bash
+
+## Copyright (C) 2024 - 2024 ENCRYPTED SUPPORT LP <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -x
+set -e
+set -o errtrace
+set -o pipefail
+set -o nounset
+
+true "$0: INFO: START"
+
+ensure_dir_exists() {
+   local dir_path
+
+   dir_path="${1:-}"
+   test -n "${dir_path}"
+
+   if [ ! -d "${dir_path}" ]; then
+      if [ -e "${dir_path}" ]; then
+         echo "FATAL ERROR: ${dir_path} exists but is not a directory!"
+         exit 1
+      fi
+      mkdir -p "${dir_path}" || {
+         echo "FATAL ERROR: Could not create a directory at ${dir_path}!"
+         exit 1
+      }
+   fi
+}
+
+ensure_file_exists() {
+   local file_path file_dir
+
+   file_path="${1:-}"
+   test -n "${file_path}"
+   file_dir="$(dirname "${file_path}")"
+
+   ensure_dir_exists "${file_dir}"
+   touch "${file_path}" || {
+     echo "FATAL ERROR: Could not touch ${file_path}!"
+     exit 1
+   }
+}
+
+ensure_wiki_git_up_to_date() {
+   local wiki_path wiki_git_repo archive_today_exit_code
+
+   wiki_path="${1:-}"
+   wiki_git_repo="${2:-}"
+   test -n "${wiki_path}"
+   test -n "${wiki_git_repo}"
+
+   pushd "${wiki_path}" >/dev/null
+
+   if [ -d '.git' ]; then
+      git pull
+   else
+      if [ -z "$(find . -mindepth 1 -maxdepth 1)" ]; then
+         pushd .. >/dev/null
+         git clone --depth=1 "${wiki_git_repo}"
+         popd >/dev/null
+      else
+         echo "FATAL ERROR: ${wiki_path} has contents, but is not a Git repo!"
+         exit 1
+      fi
+   fi
+
+   popd >/dev/null
+}
+
+wiki_link_archiver() {
+   local full_link_list archived_link_list captcha_cookie raw_link \
+      archived_link link_in_archived_list captcha_cookie_refresh_response
+
+   ensure_file_exists "${full_link_list_file}"
+   ensure_file_exists "${archived_link_list_file}"
+   ensure_file_exists "${error_link_list_file}"
+   ensure_dir_exists "${kicksecure_wiki_path}"
+   ensure_dir_exists "${whonix_wiki_path}"
+   ensure_wiki_git_up_to_date "${kicksecure_wiki_path}" "${kicksecure_wiki_git_repo}"
+   ensure_wiki_git_up_to_date "${whonix_wiki_path}" "${whonix_wiki_git_repo}"
+
+   echo 'Please paste in the CAPTCHA cookie obtained from your web browser.'
+   echo 'Press Enter to begin archiving.'
+   read -r captcha_cookie
+
+   # Generates full list of links, this takes a long time so any user input
+   # querying that can be moved before this line should be.
+   if [ "${skip_link_compilation}" = 'n' ]; then
+      mw-wiki-to-weblinks
+   fi
+
+   readarray -t full_link_list < "${full_link_list_file}"
+   readarray -t archived_link_list < "${archived_link_list_file}"
+
+   for raw_link in "${full_link_list[@]}"; do
+      ## Skip links that we already know are archived.
+      link_in_archived_list='n'
+      for archived_link in "${archived_link_list[@]}"; do
+         if [ "${raw_link}" = "${archived_link}" ]; then
+            link_in_archived_list='y'
+            break
+         fi
+      done
+      if [ "${link_in_archived_list}" = 'y' ]; then
+         continue
+      fi
+
+      ## Skip archive.org Wayback Machine links.
+      if [[ "${raw_link}" =~ ^https://web\.archive\.org/ ]]; then
+         continue
+      fi
+      ## Skip links that are already in archive.today.
+      if [[ "${raw_link}" =~ ^https://archive\.today/|^https://archive\.fo/|^https://archive\.is/|^https://archive\.li/|^https://archive\.md/|^https://archive\.ph/|^https://archive\.vn/ ]]; then
+         continue
+      fi
+
+      ## Search for links in the archive, if something is already archived,
+      ## skip it
+      archive_today_exit_code='0'
+      archive.today --find --url "${raw_link}" --captcha-cookie "${captcha_cookie}" || archive_today_exit_code="$?"
+      sleep $(( ( RANDOM % 11 ) + 5 ))
+      if [ "${archive_today_exit_code}" = '0' ]; then
+         true
+      else
+         ## Ensure the page exists and the site is up before trying to archive
+         ## NOTE! scurl **cannot** be used here, as it will fail on links that
+         ## have a less secure HTTPS configuration.
+         if [[ "${raw_link}" =~ \.onion$ ]]; then
+            # Route onion links through Tor, assumes that tor is running
+            2>/dev/null >/dev/null curl --proxy socks5h://127.0.0.1:9050 --location --fail "${raw_link}" || {
+               append-once "${error_link_list_file}" "${raw_link}"
+               continue
+            }
+         else
+            2>/dev/null >/dev/null curl --location --fail "${raw_link}" || {
+               append-once "${error_link_list_file}" "${raw_link}"
+               continue
+            }
+         fi
+
+         ## Try to archive the page, prompting the user for a new CAPTCHA
+         ## cookie if the archival attempt fails
+         while true; do
+            archive_today_exit_code='0'
+            archive.today --archive --url "${raw_link}" --captcha-cookie "${captcha_cookie}" || archive_today_exit_code="$?"
+            sleep $(( ( RANDOM % 11 ) + 5 ))
+            if [ "${archive_today_exit_code}" = '0' ]; then
+               break
+            else
+               echo 'NOTICE: New CAPTCHA cookie required!'
+               echo 'Please paste in the CAPTCHA cookie obtained from your web browser.'
+               echo 'Alternatively, press N to skip this link without changing the cookie.'
+               echo 'Press Enter to continue.'
+               read -r captcha_cookie_refresh_response
+               if [ "${captcha_cookie_refresh_response,,}" = 'n' ]; then
+                  break
+               else
+                  captcha_cookie="${captcha_cookie_refresh_response}"
+               fi
+            fi
+         done
+      fi
+
+      archived_link_list+=( "${raw_link}" )
+      append-once "${archived_link_list_file}" "${raw_link}"
+   done
+}
+
+## Set global tunables
+## These paths are taken from mw-wiki-to-weblinks.
+kicksecure_wiki_path="${HOME}/sourcesown/wiki-backup/kicksecure-wiki-backup"
+whonix_wiki_path="${HOME}/sourcesown/wiki-backup/whonix-wiki-backup"
+## Both SSH and HTTPS variants of the repo links are provided for convenience,
+## uncomment whichever ones you want to use
+#kicksecure_wiki_git_repo='git@github.com:Kicksecure/kicksecure-wiki-backup.git'
+#whonix_wiki_git_repo='git@github.com:Whonix/whonix-wiki-backup.git'
+kicksecure_wiki_git_repo='https://github.com/Kicksecure/kicksecure-wiki-backup.git'
+whonix_wiki_git_repo='https://github.com/Whonix/whonix-wiki-backup.git'
+full_link_list_file="${HOME}/mediawiki-shell-temp/wiki-links/links-sorted.txt"
+archived_link_list_file="${HOME}/sourcesown/wiki-backup/wiki-archived-link-list"
+error_link_list_file="${HOME}/sourcesown/wiki-backup/wiki-error-link-list"
+## Set this to 'y' if you want to skip running mw-wiki-to-weblinks.
+skip_link_compilation='n'
+
+## Main function call
+wiki_link_archiver "$@"
+
+true "$0: INFO: END"

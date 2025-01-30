@@ -159,12 +159,12 @@ while read -r replace_config_line ; do
       #exit 1
    #fi
 
-   link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
+   link_result_cleaned=$(echo "$link_result_cleaned" | str_replace "$first" "$second" 2>/dev/null)
 done < <( echo "$string_replace_tupils_list" )
 
 first='"'
 second=""
-link_result_cleaned=$(echo "$link_result_cleaned" | LANG=C str_replace "$first" "$second" 2>/dev/null)
+link_result_cleaned=$(echo "$link_result_cleaned" | str_replace "$first" "$second" 2>/dev/null)
 
 if [ "$link_result_cleaned" = "https://" ]; then
    exit 0

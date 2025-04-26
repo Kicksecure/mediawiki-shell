@@ -37,6 +37,11 @@ if [ "$(cat -- "${TMPFOLDER}/logout.json")" = "{}" ] ; then
    exit 0
 fi
 
+if [ "$(cat -- "${TMPFOLDER}/logout.json" | jq -r '.warnings.logout."*"')" = "You must be logged in." ] ; then
+   true "$0: INFO: OK, logged out."
+   exit 0
+fi
+
 cat -- "${TMPFOLDER}/logout.json" | jq >&2
 echo "$0: ERROR: Logout failed!" >&2
 exit 1

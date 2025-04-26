@@ -21,7 +21,7 @@ test -w "$wiki_remote_file_save_to_path"
 ## mw-file-to-url gets already encoded URL from MediaWiki API.
 wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" wiki_remote_file_name="$wiki_remote_file_name" mw-file-to-url
 
-url=$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")
+url="$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")"
 ## url contains encoded URL.
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg

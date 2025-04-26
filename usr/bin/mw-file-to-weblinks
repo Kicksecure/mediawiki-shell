@@ -16,7 +16,7 @@ file_name="$1"
 test -r "$file_name"
 
 tr -s '[:blank:]' '[\n*]' < "$file_name" | while IFS= read -r word; do
-   #echo "word: '$word'"
+   #printf "%s\n" "word: '$word'"
 
    if [ "$word" = "" ]; then
       continue
@@ -25,6 +25,6 @@ tr -s '[:blank:]' '[\n*]' < "$file_name" | while IFS= read -r word; do
    [[ "$word" =~ .*https?://.* ]] || true
 
    if [ -n "${BASH_REMATCH[0]}" ]; then
-      echo "${BASH_REMATCH[0]}"
+      printf "%s\n" "${BASH_REMATCH[0]}"
    fi
 done

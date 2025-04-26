@@ -1,7 +1,7 @@
 #!/bin/bash
 
 missing_variable() {
-   echo "$0: ERROR: missing variable '$1'!"
+   stecho "$0: ERROR: missing variable '$1'!"
    exit 1
 }
 
@@ -15,7 +15,7 @@ error_out_maybe() {
    fi
 }
 
-echo "$0: START"
+stecho "$0: START"
 
 set -e
 
@@ -42,28 +42,28 @@ source /usr/share/mediawiki-shell/common
 [[ -v continue_from_page ]] || continue_from_page=""
 
 allpages_file="${TMPFOLDER}/allpages.txt"
-rm -f "$allpages_file"
+safe-rm -f -- "$allpages_file"
 
 temp_article="${TMPFOLDER}/temp_article.txt"
 
-echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_WIKI_API   : $SOURCE_WIKI_API"
-echo "$0: INFO: allpages_file     : $allpages_file"
-echo "$0: INFO: multiwiki_category: $multiwiki_category"
-echo "$0: INFO: wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
+stecho "$0: INFO: TMPFOLDER         : $TMPFOLDER"
+stecho "$0: INFO: SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
+stecho "$0: INFO: SOURCE_WIKI_API   : $SOURCE_WIKI_API"
+stecho "$0: INFO: allpages_file     : $allpages_file"
+stecho "$0: INFO: multiwiki_category: $multiwiki_category"
+stecho "$0: INFO: wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
 
 mkdir --parents "$wiki_backup_folder"
 
 if ! test -d "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   echo "mkdir --parents '$wiki_backup_folder'"
+   stecho "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   stecho "mkdir --parents '$wiki_backup_folder'"
    exit 1
 fi
 
 if ! test -w "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+   stecho "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   stecho "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
    exit 1
 fi
 
@@ -73,26 +73,26 @@ WIKI_URL="$DESTINATION_WIKI_URL" \
 WIKI_URL="$DESTINATION_WIKI_URL" \
    mw-login
 
-all_pages=$($curl \
+all_pages="$($curl \
    $curl_opts \
    "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
-)
+)"
 
 ## TODO: cmcontinue
 #https://www.kicksecure.com/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmcontinue=page|434f444553454c454354|748
 
 for wiki_multi_extra_wiki_pages_item in $wiki_multi_extra_wiki_pages_list ; do
-   echo "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
+   stecho "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
 done
 
-echo "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
+stecho "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
 
 test -f "$allpages_file"
-result_test="$(cat "$allpages_file")"
+result_test="$(stcat "$allpages_file")"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 if [ "$result_test" = "" ]; then
-   echo "$0 ERROR: result_test is empty!"
+   stecho "$0 ERROR: result_test is empty!"
    exit 1
 fi
 
@@ -114,9 +114,9 @@ while IFS=$'\n' read -r item_from_all_pages ; do
 
    search=" "
    replace="_"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
-   echo "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+   stecho "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
    if [ "$backup_page_item" = "$continue_from_page" ]; then
       continue_next=yes
@@ -136,20 +136,20 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          || { copy_wiki_pages_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_pages_exit_code" = "10" ]; then
-      echo "$0: WARNING: PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      stecho "$0: WARNING: PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
    elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
-      echo "$0: INFO: PAGE - backup_page_item '$backup_page_item' mirroring success."
+      stecho "$0: INFO: PAGE - backup_page_item '$backup_page_item' mirroring success."
    else
-      echo "$0: ERROR: PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      stecho "$0: ERROR: PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
       exit 1
    fi
 
-   if ! echo "$backup_page_item" | grep --quiet --ignore-case "File:" ; then
-      echo "FILE | No, not a file, ok."
+   if ! stecho "$backup_page_item" | grep --quiet --ignore-case -- "File:" ; then
+      stecho "FILE | No, not a file, ok."
       continue
    fi
 
-   echo "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+   stecho "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
    copy_wiki_file_exit_code=0
 
@@ -162,11 +162,11 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          || { copy_wiki_file_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_file_exit_code" = "10" ]; then
-      echo "$0: WARNING: FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      stecho "$0: WARNING: FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
    elif [ "$copy_wiki_file_exit_code" = "0" ]; then
-      echo "$0: INFO: FILE - backup_page_item '$backup_page_item' mirroring success."
+      stecho "$0: INFO: FILE - backup_page_item '$backup_page_item' mirroring success."
    else
-      echo "$0: ERROR: FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
+      stecho "$0: ERROR: FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
       exit 1
    fi
 

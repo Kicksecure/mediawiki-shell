@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "$0: START"
+stecho "$0: START"
 
 set -x
 set -e
@@ -50,33 +50,33 @@ elif [ "$QUERY_TYPE" = "querypage" ]; then
    wiki_namespace_list_default=0
    ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
 else
-   echo "$0: ERROR: QUERY_TYPE must be set to either QUERY_TYPE=allpages or QUERY_TYPE=unreviewedpages"
+   stecho "$0: ERROR: QUERY_TYPE must be set to either QUERY_TYPE=allpages or QUERY_TYPE=unreviewedpages"
    exit 1
 fi
 
 allpages_file="$1"
-rm -f "$allpages_file"
+safe-rm -f -- "$allpages_file"
 
-echo "$0: INFO: allpages_file              : $allpages_file"
-echo "$0: INFO: wiki_namespace_list_default: $wiki_namespace_list_default"
-echo "$0: INFO: wiki_namespace_list_extra  : $wiki_namespace_list_extra"
-echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
-echo "$0: INFO: QUERY_TYPE: $QUERY_TYPE"
+stecho "$0: INFO: allpages_file              : $allpages_file"
+stecho "$0: INFO: wiki_namespace_list_default: $wiki_namespace_list_default"
+stecho "$0: INFO: wiki_namespace_list_extra  : $wiki_namespace_list_extra"
+stecho "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
+stecho "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+stecho "$0: INFO: QUERY_TYPE: $QUERY_TYPE"
 
 ## Not required for public wiki.
 #mw-logout
 #mw-login
 
 for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_default ; do
-   echo "$0: INFO: wiki_namespace_item: $wiki_namespace_item"
+   stecho "$0: INFO: wiki_namespace_item: $wiki_namespace_item"
 
    api_continue_or_not=""
 
    while true ; do
-      echo "$0: INFO: api_full_link:"
+      stecho "$0: INFO: api_full_link:"
       api_full_link="${SOURCE_TARGET_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
-      echo "$api_full_link"
+      stecho "$api_full_link"
 
       query_result=$(\
          $curl \
@@ -85,10 +85,10 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
       )
 
       if [ "$QUERY_TYPE" = "allpages" ]; then
-         echo "$query_result" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
+         stecho "$query_result" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
          ## If curl exits non-zero, consider no longer API continue.
          ## If curl exits zero, set variable api_continue_or_not.
-         if ! api_continue_or_not=$(echo "$query_result" | jq -r ".continue | .apcontinue") ; then
+         if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue | .apcontinue")" ; then
             break
          fi
          ## If api_continue_or_not is set to "null", we're done.
@@ -96,15 +96,15 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
             break
          fi
       elif [ "$QUERY_TYPE" = "unreviewedpages" ]; then
-         echo "$query_result" | jq -r '.query.unreviewedpages[] | .title | @sh' | tee -a "$allpages_file" >/dev/null
-         if ! api_continue_or_not=$(echo "$query_result" | jq -r ".continue.urstart") ; then
+         stecho "$query_result" | jq -r '.query.unreviewedpages[] | .title | @sh' | tee -a "$allpages_file" >/dev/null
+         if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue.urstart")" ; then
             break
          fi
          if [ "$api_continue_or_not" = "null" ]; then
             break
          fi
       elif [ "$QUERY_TYPE" = "querypage" ]; then
-         echo "$query_result" | jq -r '.query.querypage.results[] | .title' | tee -a "$allpages_file" >/dev/null
+         stecho "$query_result" | jq -r '.query.querypage.results[] | .title' | tee -a "$allpages_file" >/dev/null
          ## Upstream does not support name spaces for this API call.
          break
       else
@@ -115,23 +115,23 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
 done
 
 test -f "$allpages_file"
-result_test="$(cat "$allpages_file")"
+result_test="$(stcat "$allpages_file")"
 if [ "$result_test" = "" ]; then
-   echo "$0 ERROR: result_test is empty!" >&2
+   stecho "$0 ERROR: result_test is empty!" >&2
    exit 1
 fi
 
 if [ "$wiki_article_must_include_sanity_test" = "" ]; then
-   echo "$0 INFO: wiki_article_must_include_sanity_test not configured, ok."
+   stecho "$0 INFO: wiki_article_must_include_sanity_test not configured, ok."
 else
-   ## TODO: echo too much. ARG_MAX potentially hit. grep based on file instead.
-   if echo "$result_test" | grep -q -i "$wiki_article_must_include_sanity_test" ; then
-      echo "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
+   ## TODO: stecho too much. ARG_MAX potentially hit. grep based on file instead.
+   if stecho "$result_test" | grep -q -i -- "$wiki_article_must_include_sanity_test" ; then
+      stecho "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
    else
-      echo "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'" >&2
-      echo "" >&2
-      echo "$0 result_test: '$result_test'" >&2
-      echo "" >&2
+      stecho "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'" >&2
+      stecho "" >&2
+      stecho "$0 result_test: '$result_test'" >&2
+      stecho "" >&2
       exit 1
    fi
 fi

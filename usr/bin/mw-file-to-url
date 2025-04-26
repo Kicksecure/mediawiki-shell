@@ -7,15 +7,15 @@ set -e
 source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
-echo "$0: INFO: Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
+stecho "$0: INFO: Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
 
 if test -d "$wiki_remote_file_name_fetch_to_file" ; then
-   echo "$0: ERRROR: wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!" >&2
+   stecho "$0: ERRROR: wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!" >&2
    exit 1
 fi
 
-rm -f "$wiki_remote_file_name_fetch_to_file"
-touch "$wiki_remote_file_name_fetch_to_file"
+safe-rm -f -- "$wiki_remote_file_name_fetch_to_file"
+touch -- "$wiki_remote_file_name_fetch_to_file"
 test -w "$wiki_remote_file_name_fetch_to_file"
 
 ## https://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&titles=File:Limbo%20Royal%20Blood.jpg
@@ -33,22 +33,22 @@ curl_run \
    --request "GET" \
    "$api_link"
 
-echo "$0: INFO: Network for imageinfo ok."
+stecho "$0: INFO: Network for imageinfo ok."
 
-query_result=$(cat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
+query_result=$(stcat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 
 ## example query_result in case of error:
 ## {"error":{"code":"internal_api_error_DBConnectionError","info":"[98c54e341525482101c71b32] Caught exception of type Wikimedia\\Rdbms\\DBConnectionError","errorclass":"Wikimedia\\Rdbms\\DBConnectionError"}}
 
-echo "$0: INFO: Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
+stecho "$0: INFO: Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
 
-url="$(echo "$query_result" | jq -r ".query.pages[].imageinfo[].url")"
+url="$(stecho "$query_result" | jq -r ".query.pages[].imageinfo[].url")"
 ## url contains encoded URL.
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg
 
-echo "$url" | tee "$wiki_remote_file_name_fetch_to_file" >/dev/null
+overwrite "$wiki_remote_file_name_fetch_to_file" "$url"
 
 test -r "$wiki_remote_file_name_fetch_to_file"
 
-echo "$0: INFO: Fetch imageinfo success."
+stecho "$0: INFO: Fetch imageinfo success."

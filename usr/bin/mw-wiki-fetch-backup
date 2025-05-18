@@ -35,8 +35,12 @@ do_it() {
    sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
 
    edit_message="remove-trailing-spaces" \
-   WIKI_URL="$DESTINATION_WIKI_URL" \
-      mw-edit "$backup_page_item" "$wiki_backup_file"
+
+   if ! WIKI_URL="$DESTINATION_WIKI_URL" \
+      mw-edit "$backup_page_item" "$wiki_backup_file" ; then
+         echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
+         return 1
+   fi
 
    ## }}}
 }

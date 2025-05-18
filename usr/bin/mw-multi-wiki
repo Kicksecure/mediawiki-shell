@@ -118,7 +118,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
 
    stecho "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
-   if [ "$backup_page_item" = "$continue_from_page" ]; then
+   if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
       continue_next=yes
    fi
    if [ "$continue_next" = "no" ]; then

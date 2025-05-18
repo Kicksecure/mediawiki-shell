@@ -42,54 +42,54 @@ do_it() {
 #          return 1
 #    fi
 
-  file_name="$wiki_backup_file"
-
-
-  ## Ignore pages without header.
-  if ! grep --ignore-case --fixed-strings --quiet -e "{{header" -- "$file_name"; then
-    return 0
-  fi
-
-  ## Ignore redirects.
-  if grep --ignore-case --fixed-strings --quiet -e "#redirect [[" -- "$file_name"; then
-    return 0
-  fi
-
-  ## TODO: remove '!'
-  ## Ignore pages without SEO.
-  if ! grep --ignore-case --fixed-strings --quiet -e "{{#seo:" -- "$file_name"; then
-    return 0
-  fi
-
-  ## Ignore pages that already have a title.
-  if grep --ignore-case --fixed-strings --quiet -e "{{title|" -- "$file_name"; then
-    return 0
-  fi
-
-  if grep --ignore-case --fixed-strings --quiet -e "title=" -- "$file_name"; then
-    return 0
-  fi
-
-  title="$backup_page_item"
-  title="$(echo "$title" | str_replace ".mw" "")"
-  title="$(echo "$title" | str_replace "_" " ")"
-
-   search="{{#seo:"
-   replace="\
-{{title|title=
-$title
-}}
-{{#seo:"
-
-   str_replace "$search" "$replace" "$wiki_backup_file"
-
-   if ! \
-      WIKI_URL="$DESTINATION_WIKI_URL" \
-      edit_message="add-title" \
-      mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-         echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
-         return 1
-   fi
+#   file_name="$wiki_backup_file"
+#
+#
+#   ## Ignore pages without header.
+#   if ! grep --ignore-case --fixed-strings --quiet -e "{{header" -- "$file_name"; then
+#     return 0
+#   fi
+#
+#   ## Ignore redirects.
+#   if grep --ignore-case --fixed-strings --quiet -e "#redirect [[" -- "$file_name"; then
+#     return 0
+#   fi
+#
+#   ## TODO: remove '!'
+#   ## Ignore pages without SEO.
+#   if ! grep --ignore-case --fixed-strings --quiet -e "{{#seo:" -- "$file_name"; then
+#     return 0
+#   fi
+#
+#   ## Ignore pages that already have a title.
+#   if grep --ignore-case --fixed-strings --quiet -e "{{title|" -- "$file_name"; then
+#     return 0
+#   fi
+#
+#   if grep --ignore-case --fixed-strings --quiet -e "title=" -- "$file_name"; then
+#     return 0
+#   fi
+#
+#   title="$backup_page_item"
+#   title="$(echo "$title" | str_replace ".mw" "")"
+#   title="$(echo "$title" | str_replace "_" " ")"
+#
+#    search="{{#seo:"
+#    replace="\
+# {{title|title=
+# $title
+# }}
+# {{#seo:"
+#
+#    str_replace "$search" "$replace" "$wiki_backup_file"
+#
+#    if ! \
+#       WIKI_URL="$DESTINATION_WIKI_URL" \
+#       edit_message="add-title" \
+#       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
+#          echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
+#          return 1
+#    fi
 
    ## }}}
 }

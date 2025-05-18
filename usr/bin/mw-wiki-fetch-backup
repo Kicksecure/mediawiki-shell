@@ -34,9 +34,10 @@ do_it() {
    ## Remove trailing spaces.
    sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
 
-   edit_message="remove-trailing-spaces" \
 
-   if ! WIKI_URL="$DESTINATION_WIKI_URL" \
+   if ! \
+      WIKI_URL="$DESTINATION_WIKI_URL" \
+      edit_message="remove-trailing-spaces" \
       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
          echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
          return 1

@@ -27,9 +27,9 @@ do_it() {
    ## {{{
    ## XXX
 
-   #DESTINATION_WIKI_URL="$WIKI_URL"
-
    ## TODO: Should probably be done in mw-patch-modify-wiki-page
+
+   DESTINATION_WIKI_URL="$WIKI_URL"
 
    ## Remove trailing spaces.
    sed -i 's/[[:space:]]*$//' "$wiki_backup_file"

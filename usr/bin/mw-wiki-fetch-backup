@@ -27,22 +27,16 @@ do_it() {
    ## {{{
    ## XXX
 
-  # DESTINATION_WIKI_URL="$WIKI_URL"
+   #DESTINATION_WIKI_URL="$WIKI_URL"
 
-   ## bugfix
-#    if grep -q "rm -f /home/user/mediawiki-shell" "$wiki_backup_file" ; then
-#       ## remove first two lines
-#       tail -n +3 "$wiki_backup_file" > "$TMPFOLDER/tmp-fix.txt"
-#       diff "$TMPFOLDER/tmp-fix.txt" "$wiki_backup_file"
-#       cp "$TMPFOLDER/tmp-fix.txt" "$wiki_backup_file"
-#    fi
+   ## TODO: Should probably be done in mw-patch-modify-wiki-page
 
    ## Remove trailing spaces.
-   #sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
+   sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
 
-   #edit_message="remove-trailing-spaces" \
-   #WIKI_URL="$DESTINATION_WIKI_URL" \
-      #mw-edit "$backup_page_item" "$wiki_backup_file"
+   edit_message="remove-trailing-spaces" \
+   WIKI_URL="$DESTINATION_WIKI_URL" \
+      mw-edit "$backup_page_item" "$wiki_backup_file"
 
    ## }}}
 }

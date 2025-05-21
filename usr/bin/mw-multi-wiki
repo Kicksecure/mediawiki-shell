@@ -144,7 +144,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
       exit 1
    fi
 
-   if ! stecho "$backup_page_item" | grep --quiet --ignore-case -- "File:" ; then
+   if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>/dev/null; then
       stecho "FILE | No, not a file, ok."
       continue
    fi

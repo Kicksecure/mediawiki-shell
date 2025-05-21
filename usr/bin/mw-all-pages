@@ -125,7 +125,7 @@ if [ "$wiki_article_must_include_sanity_test" = "" ]; then
    stecho "$0 INFO: wiki_article_must_include_sanity_test not configured, ok."
 else
    ## TODO: stecho too much. ARG_MAX potentially hit. grep based on file instead.
-   if stecho "$result_test" | grep -q -i -- "$wiki_article_must_include_sanity_test" ; then
+   if stecho "$result_test" | grep -i -- "$wiki_article_must_include_sanity_test" >/dev/null 2>/dev/null; then
       stecho "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
    else
       stecho "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'" >&2

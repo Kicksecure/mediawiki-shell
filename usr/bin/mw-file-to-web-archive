@@ -44,12 +44,12 @@ archive_check() {
       return 0
    fi
 
-   location=$(echo "$curl_output" | grep '^location:')
-   link=$(echo "$location" | awk '{ print $2 }')
-   if echo "$link" | grep --quiet --fixed-strings "https://web.archive.org/web/" ; then
-      echo "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
-      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
-      echo "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+   location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
+   link=$(printf '%s\n' "$location" | awk '{ print $2 }')
+   if printf '%s\n' "$link" | grep --fixed-strings -- "https://web.archive.org/web/" >/dev/null 2>/dev/null; then
+      printf '%s\n' "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
+      printf '%s\n' "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+      printf '%s\n' "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
       return 0
    fi
 
@@ -65,10 +65,10 @@ archive_save() {
    curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
    if [ "$curl_http_status_code" = "302" ]; then
-      echo "Archived. Web archive reported that archiving succeeded."
-      location=$(echo "$curl_output" | grep '^location:')
-      link=$(echo "$location" | awk '{ print $2 }')
-      echo "$link"
+      printf '%s\n' "Archived. Web archive reported that archiving succeeded."
+      location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
+      link=$(printf '%s\n' "$location" | awk '{ print $2 }')
+      printf '%s\n' "$link"
       return 0
    fi
 
@@ -126,7 +126,7 @@ cat < "$file_name" | while IFS= read -r word; do
 
    do_skip=""
    for cached_file in $TMPFOLDER/webarchive/already-* ; do
-      if grep --quiet --fixed-string "$word" "$cached_file" ; then
+      if grep --fixed-string -- "$word" "$cached_file" >/dev/null 2>/dev/null ; then
          echo "Already locally cached file status. cached_file: '$cached_file'"
          do_skip=true
       fi

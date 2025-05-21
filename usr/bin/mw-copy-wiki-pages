@@ -44,7 +44,7 @@ page_pending_status_json=$(\
       "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
 )
 
-if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
+if printf '%s\n' "$page_pending_status_json" | jq | grep -- pending_since >/dev/null 2>/dev/null; then
    echo "$0: WARNING: '$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
    exit 10
 fi

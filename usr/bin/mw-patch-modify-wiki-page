@@ -29,8 +29,8 @@ page_pending_status_json=$(\
       "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
 )
 
-if echo "$page_pending_status_json" | jq | grep -q pending_since ; then
-   echo "$0: WARNING: '$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
+if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>/dev/null; then
+   printf '%s\n' "$0: WARNING: '$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
    exit 10
 fi
 
@@ -38,13 +38,13 @@ filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"
 
 replace_all_except_first() {
-   if ! grep --quiet -n "$search" "$filename" ; then
+   if ! grep --line-number -- "$search" "$filename" >/dev/null 2>/dev/null; then
       return 0
    fi
 
-   linenum=$(grep -n "$search" "$filename")
-   linenum=$(echo "$linenum" | head -n1)
-   linenum=$(echo "$linenum" | cut -d: -f1)
+   linenum=$(grep --line-number -- "$search" "$filename")
+   linenum=$(printf '%s\n' "$linenum" | head -n1)
+   linenum=$(printf '%s\n' "$linenum" | cut -d: -f1)
 
    # If {{project_name_long}} is found in the file
    if [ -n "$linenum" ]; then

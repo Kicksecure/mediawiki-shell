@@ -126,7 +126,7 @@ cat < "$file_name" | while IFS= read -r word; do
 
    do_skip=""
    for cached_file in $TMPFOLDER/webarchive/already-* ; do
-      if grep --fixed-string -- "$word" "$cached_file" >/dev/null 2>/dev/null ; then
+      if grep --fixed-strings -- "$word" "$cached_file" >/dev/null 2>/dev/null ; then
          echo "Already locally cached file status. cached_file: '$cached_file'"
          do_skip=true
       fi

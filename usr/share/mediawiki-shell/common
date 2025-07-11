@@ -6,7 +6,7 @@ log_level=info
 source /usr/libexec/helper-scripts/log_run_die.sh
 source /usr/libexec/helper-scripts/has.sh
 
-for cmd in retry curl jq; do
+for cmd in retry curl jq safe-rm; do
   if ! has "$cmd"; then
     die 1 "'${cmd}' command is unavailable!" >&2
   fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 missing_variable() {
-   stecho "$0: ERROR: missing variable '$1'!"
+   log error "missing variable '$1'!"
    exit 1
 }
 
@@ -16,7 +16,7 @@ error_out_maybe() {
    fi
 }
 
-stecho "$0: START"
+log info "START"
 
 set -e
 
@@ -47,23 +47,23 @@ safe-rm -f -- "$allpages_file"
 
 temp_article="${TMPFOLDER}/temp_article.txt"
 
-stecho "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-stecho "$0: INFO: SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
-stecho "$0: INFO: SOURCE_WIKI_API   : $SOURCE_WIKI_API"
-stecho "$0: INFO: allpages_file     : $allpages_file"
-stecho "$0: INFO: multiwiki_category: $multiwiki_category"
-stecho "$0: INFO: wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
+log info "TMPFOLDER         : $TMPFOLDER"
+log info "SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
+log info "SOURCE_WIKI_API   : $SOURCE_WIKI_API"
+log info "allpages_file     : $allpages_file"
+log info "multiwiki_category: $multiwiki_category"
+log info "wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
 
 mkdir --parents "$wiki_backup_folder"
 
 if ! test -d "$wiki_backup_folder" ; then
-   stecho "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
    stecho "mkdir --parents '$wiki_backup_folder'"
    exit 1
 fi
 
 if ! test -w "$wiki_backup_folder" ; then
-   stecho "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
    stecho "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
    exit 1
 fi
@@ -93,7 +93,7 @@ result_test="$(stcat "$allpages_file")"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 if [ "$result_test" = "" ]; then
-   stecho "$0 ERROR: result_test is empty!"
+   log error "result_test is empty!"
    exit 1
 fi
 
@@ -137,11 +137,11 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          || { copy_wiki_pages_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_pages_exit_code" = "10" ]; then
-      stecho "$0: WARNING: PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      log warning "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
    elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
-      stecho "$0: INFO: PAGE - backup_page_item '$backup_page_item' mirroring success."
+      log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
    else
-      stecho "$0: ERROR: PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      log error "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
       exit 1
    fi
 
@@ -163,11 +163,11 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          || { copy_wiki_file_exit_code="$?" ; true; }
 
    if [ "$copy_wiki_file_exit_code" = "10" ]; then
-      stecho "$0: WARNING: FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      log warning "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
    elif [ "$copy_wiki_file_exit_code" = "0" ]; then
-      stecho "$0: INFO: FILE - backup_page_item '$backup_page_item' mirroring success."
+      log info "FILE - backup_page_item '$backup_page_item' mirroring success."
    else
-      stecho "$0: ERROR: FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
+      log error "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
       exit 1
    fi
 

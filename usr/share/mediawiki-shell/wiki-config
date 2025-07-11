@@ -13,11 +13,10 @@
 ## UNLESS YOU KNOW WHAT YOU ARE DOING!
 
 error_message_if_missing_wiki_url_variable() {
-   echo "ERROR: environment variable WIKI_URL missing! Run for example:
+   die 1 "environment variable WIKI_URL missing! Run for example:
 
-WIKI_URL=https://www.whonix.org/w $0
-" >&2
-   exit 1
+WIKI_URL=https://www.whonix.org/w ${0##*/}
+"
 }
 
 [[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable

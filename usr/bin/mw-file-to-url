@@ -10,10 +10,10 @@ source /usr/share/mediawiki-shell/common
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-stecho "$0: INFO: Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
+log info "Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
 
 if test -d "$wiki_remote_file_name_fetch_to_file" ; then
-   stecho "$0: ERRROR: wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!" >&2
+   log error "wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!"
    exit 1
 fi
 
@@ -36,14 +36,14 @@ curl_run \
    --request "GET" \
    "$api_link"
 
-stecho "$0: INFO: Network for imageinfo ok."
+log info "Network for imageinfo ok."
 
 query_result=$(stcat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 
 ## example query_result in case of error:
 ## {"error":{"code":"internal_api_error_DBConnectionError","info":"[98c54e341525482101c71b32] Caught exception of type Wikimedia\\Rdbms\\DBConnectionError","errorclass":"Wikimedia\\Rdbms\\DBConnectionError"}}
 
-stecho "$0: INFO: Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
+log info "Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
 
 url="$(stecho "$query_result" | jq -r ".query.pages[].imageinfo[].url")"
 ## url contains encoded URL.
@@ -54,4 +54,4 @@ overwrite "$wiki_remote_file_name_fetch_to_file" "$url"
 
 test -r "$wiki_remote_file_name_fetch_to_file"
 
-stecho "$0: INFO: Fetch imageinfo success."
+log info "Fetch imageinfo success."

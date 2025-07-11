@@ -31,7 +31,7 @@ git pull
 
 rm -f "$TMPFOLDER/wiki-links/all-links.txt"
 
-echo "INFO: See:"
+log info "See:"
 echo "tail -f $TMPFOLDER/wiki-links/all-links.txt"
 
 WIKI_WEB=https://www.kicksecure.com/wiki \

@@ -14,15 +14,15 @@ check_vars_exist WIKI_URL wiki_upload_file_path wiki_remote_upload_file_title
 
 [[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-upload-message"
 
-echo "$0: INFO: Uploading file '${WIKI_URL}' '$wiki_upload_file_path'..."
+log info "Uploading file '${WIKI_URL}' '$wiki_upload_file_path'..."
 
 if test -d "$wiki_upload_file_path" ; then
-   echo "$0: ERROR: wiki_upload_file_path '$wiki_upload_file_path' is a folder!" >&2
+   log error "wiki_upload_file_path '$wiki_upload_file_path' is a folder!"
    exit 1
 fi
 
 if ! test -r "$wiki_upload_file_path" ; then
-   echo "$0: ERROR: wiki_upload_file_path '$wiki_upload_file_path' is not readable!" >&2
+   log error "wiki_upload_file_path '$wiki_upload_file_path' is not readable!"
    exit 1
 fi
 
@@ -43,9 +43,9 @@ curl_run \
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   true "$0: INFO: Edit token for file OK."
+   log info "Edit token for file OK."
 else
-   echo "$0: ERROR: Edit token for file not set." >&2
+   log error "Edit token for file not set."
    exit 1
 fi
 
@@ -65,7 +65,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
 
-echo "$0: INFO: Network for file upload ok."
+log info "Network for file upload ok."
 
 test -r "${TMPFOLDER}/upload-result.json"
 
@@ -73,25 +73,25 @@ edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
 
 if [ "$(echo "$edit_result_output" | jq -r ".error.code")" = "fileexists-no-change" ]; then
    #echo "$edit_result_output" | jq
-   echo "$0: INFO: Upload file success."
+   log info "Upload file success."
    exit 0
 fi
 
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-   echo "$0: INFO: Upload (edit) file success."
+   log info "Upload (edit) file success."
    exit 0
 fi
 
 upload_result_jq="$(echo "$edit_result_output" | jq -r ".upload.result")"
 
 if [ "$upload_result_jq" = "Success" ]; then
-   echo "$0: INFO: Upload (upload) file success."
+   log info "Upload (upload) file success."
    exit 0
 fi
 
 echo "${TMPFOLDER}/upload-result.json"
 echo "$edit_result_output" | jq >&2
-echo "$0: ERROR: Upload file error." >&2
+log error "Upload file error."
 exit 1

@@ -7,7 +7,7 @@ source /usr/share/mediawiki-shell/common
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-true "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
+log info "Logging out of $WIKI_API... Requesting CSRF token..."
 
 rm -f -- "${TMPFOLDER}/logout-token.json"
 
@@ -21,7 +21,7 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
 
-true "$0: INFO: Token received."
+log info "Token received."
 
 csrf_token="$(cat -- "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')"
 
@@ -36,15 +36,15 @@ curl_run \
    "${WIKI_API}?action=logout&format=json"
 
 if [ "$(cat -- "${TMPFOLDER}/logout.json")" = "{}" ] ; then
-   true "$0: INFO: OK, logged out."
+   log info "OK, logged out."
    exit 0
 fi
 
 if [ "$(cat -- "${TMPFOLDER}/logout.json" | jq -r '.warnings.logout."*"')" = "You must be logged in." ] ; then
-   true "$0: INFO: OK, logged out."
+   log info "OK, logged out."
    exit 0
 fi
 
 cat -- "${TMPFOLDER}/logout.json" | jq >&2
-echo "$0: ERROR: Logout failed!" >&2
+log error "Logout failed!"
 exit 1

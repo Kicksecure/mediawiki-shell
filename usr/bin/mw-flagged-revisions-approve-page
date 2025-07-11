@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "$0: START"
+log info "START"
 
 #set -x
 set -e
@@ -22,15 +22,15 @@ WIKI_URL="$SOURCE_WIKI_URL"
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-echo "$0: INFO: SOURCE_WIKI_URL      : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_TARGET_API    : $SOURCE_TARGET_API"
-echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
+log info "SOURCE_WIKI_URL      : $SOURCE_WIKI_URL"
+log info "SOURCE_TARGET_API    : $SOURCE_TARGET_API"
+log info "DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 
 ## XXX
 #WIKI_URL="$SOURCE_WIKI_URL" mw-logout
 #WIKI_URL="$SOURCE_WIKI_URL" mw-login
 
-echo "$0: INFO: Requesting revid...         ${TMPFOLDER}/revid.json"
+log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 
 $curl \
    "${curl_opts[@]}" \
@@ -42,11 +42,11 @@ lastrevid=$(jq -r ".query.pages[].lastrevid" "${TMPFOLDER}/revid.json")
 if printf '%s\n' "$lastrevid" | grep -E -- '^[0-9]+$' >/dev/null 2>/dev/null; then
     true "Valid number."
 else
-    echo "$0 ERROR: lastrev not numeric!" >&2
+    log error "lastrev not numeric!"
     exit 1
 fi
 
-echo "$0: INFO: Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
+log info "Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
 
 $curl \
    "${curl_opts[@]}" \
@@ -65,11 +65,11 @@ csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/csrf_token.
 #csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/login-token.json")
 
 ## Sensitive?
-#echo "INFO: XXX csrf_token: $csrf_token"
+#log info "XXX csrf_token: $csrf_token"
 
 comment="mediawiki-shell-bot-flagged-revisions-mass-approve"
 
-echo "$0: INFO: Requesting review-result... ${TMPFOLDER}/review-result.json"
+log info "Requesting review-result... ${TMPFOLDER}/review-result.json"
 
 $curl \
    "${curl_opts[@]}" \
@@ -109,7 +109,7 @@ $curl \
 review_result=$(jq --raw-output '.review.result' "${TMPFOLDER}/review-result.json")
 
 if [ "$review_result" = "Success" ]; then
-   echo "$0: INFO: Success."
+   log info "Success."
    exit 0
 fi
 
@@ -118,14 +118,13 @@ jq "${TMPFOLDER}/review-result.json"
 
 review_error_code=$(jq --raw-output '.error.code' "${TMPFOLDER}/review-result.json")
 if [ "$review_error_code" = "notreviewable" ]; then
-   echo "$0: notreviewable"
+   log notice "notreviewable"
    exit 0
 fi
 
 if [ "$review_error_code" = "permissiondenied" ]; then
-   echo "$0: permissiondenied"
-   exit 254
+   die 254 "permissiondenied"
 fi
 
-echo "$0: Error." >&2
+log bug "Error."
 exit 1

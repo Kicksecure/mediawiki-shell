@@ -16,7 +16,7 @@ command -v str_replace >/dev/null
 
 link_result_cleaned="$1"
 if [ "$link_result_cleaned" = "" ]; then
-   echo "$0: ERROR: No link given!"
+   log error "No link given!"
    exit 1
 fi
 
@@ -139,7 +139,7 @@ fi
 
 while read -r replace_config_line ; do
    if [ "$replace_config_line" = "" ]; then
-      echo "ERROR! replace_config_line is empty!"
+      log error "replace_config_line is empty!"
       exit 1
    fi
 
@@ -150,12 +150,12 @@ while read -r replace_config_line ; do
    true "second: $second"
 
    if [ "$first" = "" ]; then
-      echo "ERROR! first is empty!"
+      log error "first is empty!"
       exit 1
    fi
    ## Second can be empty.
    #if [ "$second" = "" ]; then
-      #echo "ERROR! second is empty!"
+      #log error "second is empty!"
       #exit 1
    #fi
 

@@ -11,7 +11,7 @@ error_out_maybe() {
    fi
 }
 
-echo "$0: START"
+log info "START"
 
 set -e
 
@@ -32,20 +32,20 @@ source /usr/share/mediawiki-shell/common
 allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
 
-echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
-echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+log info "TMPFOLDER         : $TMPFOLDER"
+log info "wiki_backup_folder: $wiki_backup_folder"
+log info "SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 
 mkdir -p "$wiki_backup_folder"
 
 if ! test -d "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
    echo "mkdir --parents '$wiki_backup_folder'"
    exit 1
 fi
 
 if ! test -w "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
    echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
    exit 1
 fi
@@ -54,8 +54,7 @@ mw-logout
 mw-login
 
 ## TODO
-echo "ERROR: UNFINISHED SCRIPT!"
-exit 1
+die 1 "ERROR: UNFINISHED SCRIPT!"
 
 ## Remove trailing spaces.
 # shellcheck disable=SC2001,SC2317

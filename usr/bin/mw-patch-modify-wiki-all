@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "$0: START"
+log info "START"
 
 #set -x
 set -e
@@ -21,9 +21,9 @@ WIKI_URL="$SOURCE_WIKI_URL"
 source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
-echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+log info "TMPFOLDER        : $TMPFOLDER"
+log info "SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
+log info "SOURCE_TARGET_API: $SOURCE_TARGET_API"
 
 wiki_script=mw-patch-modify-wiki-page
 export WIKI_URL SOURCE_WIKI_URL wiki_script

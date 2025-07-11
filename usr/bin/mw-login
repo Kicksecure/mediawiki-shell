@@ -7,12 +7,12 @@ source /usr/share/mediawiki-shell/common
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-if [ -z "$WIKI_API_USER_PASS" ]; then
-   echo "$0: ERROR: Password not supplied!" >&2
+if [ -z "${WIKI_API_USER_PASS-}" ]; then
+   log error "Password not supplied!"
    exit 1
 fi
 
-true "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
+log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
 
 rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
@@ -27,12 +27,12 @@ curl_run \
    --request "POST" \
    "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
 
-true "$0: INFO: Login Token received."
+log info "Login Token received."
 
-login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.logintoken')
+login_token="$(jq --raw-output '.query.tokens.logintoken' < "${TMPFOLDER}/login-token.json")"
 
 ## Sensitive?
-#echo "$0: INFO: login_token: $login_token"
+#log info "login_token: $login_token"
 
 curl_run \
    "${curl_opts[@]}" \
@@ -53,13 +53,13 @@ curl_run \
 ## "result": "Aborted",
 ## "reason": "Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions."
 
-RESULT=$(cat "${TMPFOLDER}/login-result.json" | jq -r '.login.result')
+RESULT="$(jq -r '.login.result' < "${TMPFOLDER}/login-result.json")"
 
 if [ "$RESULT" = "Success" ]; then
-   true "$0: INFO: Successfully logged in as '$WIKI_API_USER_NAME'."
+   log info "Successfully logged in as '$WIKI_API_USER_NAME'."
    exit 0
 fi
 
-cat "${TMPFOLDER}/login-result.json" | jq >&2
-echo "$0: ERROR: Login failed!" >&2
+jq "${TMPFOLDER}/login-result.json" >&2
+log error "Login failed!"
 exit 1

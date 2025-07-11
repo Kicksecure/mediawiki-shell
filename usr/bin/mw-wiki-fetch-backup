@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "$0: START"
+log info "START"
 
 set -e
 
@@ -12,7 +12,7 @@ exit_handler() {
    [[ -v retry_counter ]] || retry_counter=0
    if [ "$retry_counter" -gt 1 ]; then
       ## >&2 is correct.
-      echo "$0: success after attempt $retry_counter" >&2
+      log notice "success after attempt $retry_counter"
    fi
 }
 
@@ -40,7 +40,7 @@ do_it() {
 #       WIKI_URL="$DESTINATION_WIKI_URL" \
 #       edit_message="remove-trailing-spaces" \
 #       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-#          echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
+#          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
 #          return 1
 #    fi
 
@@ -89,7 +89,7 @@ do_it() {
 #       WIKI_URL="$DESTINATION_WIKI_URL" \
 #       edit_message="add-title" \
 #       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-#          echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
+#          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
 #          return 1
 #    fi
 
@@ -98,18 +98,18 @@ do_it() {
 
 check_vars_exist wiki_backup_folder backup_filename_item backup_page_item SOURCE_WIKI_URL
 
-echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
+log info "wiki_backup_folder: $wiki_backup_folder"
 
 mkdir -p "$wiki_backup_folder"
 
 if ! test -d "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
    echo "mkdir --parents '$wiki_backup_folder'"
    exit 1
 fi
 
 if ! test -w "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
    echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
    exit 1
 fi

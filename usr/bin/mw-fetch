@@ -9,10 +9,10 @@ source /usr/share/mediawiki-shell/wiki-config
 
 check_vars_exist "WIKI_INDEX" "wiki_article_to_fetch" "wiki_fetch_to_file"
 
-true "$0: INFO: Fetching '${WIKI_INDEX}' '$wiki_article_to_fetch' '$wiki_fetch_to_file'..."
+log info "Fetching '${WIKI_INDEX}' '$wiki_article_to_fetch' '$wiki_fetch_to_file'..."
 
 if test -d "$wiki_fetch_to_file" ; then
-   echo "$0: ERRROR: wiki_fetch_to_file '$wiki_fetch_to_file' is a folder!" >&2
+   log error "wiki_fetch_to_file '$wiki_fetch_to_file' is a folder!"
    exit 1
 fi
 
@@ -38,4 +38,4 @@ curl_run \
 
 test -r "$wiki_fetch_to_file"
 
-true "$0: INFO: Fetch success."
+log info "Fetch success."

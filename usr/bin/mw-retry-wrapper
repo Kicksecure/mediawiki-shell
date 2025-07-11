@@ -9,7 +9,11 @@
 execute_command() {
    "$@"
    local exit_code=$?
-   echo "$0: Command exited with status: $exit_code"
+   if [ $exit_code -eq 0 ]; then
+      log info "Command exited with status: $exit_code"
+   else
+      log warning "Command exited with status: $exit_code"
+   fi
    return $exit_code
 }
 
@@ -21,18 +25,18 @@ attempt_command() {
     local exit_code
 
     for retry_counter in $(seq 1 "$max_retries") ; do
-       echo "$0: Attempt $retry_counter of $max_retries..."
+       log info "Attempt $retry_counter of $max_retries..."
        execute_command "$@"
        exit_code=$?
        if [ $exit_code -eq 0 ] ; then
-          echo "$0: Command succeeded on attempt $retry_counter."
+          log info "Command succeeded on attempt $retry_counter."
           return 0
        fi
-       echo "$0: Command failed on attempt $retry_counter. Retrying in $retry_delay seconds..."
+       log warning "Command failed on attempt $retry_counter. Retrying in $retry_delay seconds..."
        sleep "$retry_delay"
     done
 
-    echo "$0: Command failed after $max_retries attempts."
+    log error "Command failed after $max_retries attempts."
     return $exit_code
 }
 

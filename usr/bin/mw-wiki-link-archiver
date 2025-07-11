@@ -9,7 +9,7 @@ set -o errtrace
 set -o pipefail
 set -o nounset
 
-true "$0: INFO: START"
+log info "START"
 
 ensure_dir_exists() {
    local dir_path
@@ -19,11 +19,11 @@ ensure_dir_exists() {
 
    if [ ! -d "${dir_path}" ]; then
       if [ -e "${dir_path}" ]; then
-         echo "FATAL ERROR: ${dir_path} exists but is not a directory!"
+         log error "${dir_path} exists but is not a directory!"
          exit 1
       fi
       mkdir -p "${dir_path}" || {
-         echo "FATAL ERROR: Could not create a directory at ${dir_path}!"
+         log error "Could not create a directory at ${dir_path}!"
          exit 1
       }
    fi
@@ -38,7 +38,7 @@ ensure_file_exists() {
 
    ensure_dir_exists "${file_dir}"
    touch "${file_path}" || {
-     echo "FATAL ERROR: Could not touch ${file_path}!"
+     log error "Could not touch ${file_path}!"
      exit 1
    }
 }
@@ -61,7 +61,7 @@ ensure_wiki_git_up_to_date() {
          git clone --depth=1 "${wiki_git_repo}"
          popd >/dev/null
       else
-         echo "FATAL ERROR: ${wiki_path} has contents, but is not a Git repo!"
+         log error "${wiki_path} has contents, but is not a Git repo!"
          exit 1
       fi
    fi
@@ -149,10 +149,10 @@ wiki_link_archiver() {
             if [ "${archive_today_exit_code}" = '0' ]; then
                break
             else
-               echo 'NOTICE: New CAPTCHA cookie required!'
-               echo 'Please paste in the CAPTCHA cookie obtained from your web browser.'
-               echo 'Alternatively, press N to skip this link without changing the cookie.'
-               echo 'Press Enter to continue.'
+               log warning "New CAPTCHA cookie required!"
+               log warning "Please paste in the CAPTCHA cookie obtained from your web browser."
+               log warning "Alternatively, press N to skip this link without changing the cookie."
+               log warning "Press Enter to continue."
                read -r captcha_cookie_refresh_response
                if [ "${captcha_cookie_refresh_response,,}" = 'n' ]; then
                   break
@@ -187,4 +187,4 @@ skip_link_compilation='n'
 ## Main function call
 wiki_link_archiver "$@"
 
-true "$0: INFO: END"
+log info "END"

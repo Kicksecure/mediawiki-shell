@@ -20,8 +20,8 @@ WIKI_URL="$SOURCE_WIKI_URL"
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+log info "TMPFOLDER         : $TMPFOLDER"
+log info "SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 
 # ## XXX
 DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
@@ -68,10 +68,10 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    fi
 
    if [ ! "$start_from_here" = "true" ]; then
-      echo "SKIP: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+      log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
       continue
    fi
-   echo "DO: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+   log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
 
    if [ "$backup_page_item" = "Changelog" ]; then
       continue
@@ -80,7 +80,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
    mkdir --parents "$TMPFOLDER_SEPARATE"
 
-   log_run_background \
+   run_background=1 log_run \
       env \
          counter_currently="$counter_currently" \
          counter_chunk="$counter_chunk" \
@@ -92,11 +92,11 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          wiki_article_to_fetch="$wiki_article_to_fetch" \
          mw-retry-wrapper "$wiki_script"
 
-   pid_list+=" $pid"
+   pid_list+=" $background_pid"
 
    if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ] ; then
       counter_chunk=0
-      echo "$0: INFO: wait $pid_list"
+      log info "wait $pid_list"
 
       for check_pid in $pid_list ; do
          if ! wait "$check_pid" ; then

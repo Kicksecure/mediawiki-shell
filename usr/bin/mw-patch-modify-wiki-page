@@ -31,7 +31,7 @@ page_pending_status_json=$(\
 )
 
 if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>/dev/null; then
-   printf '%s\n' "$0: WARNING: '$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
+   log warning "'$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
    exit 10
 fi
 

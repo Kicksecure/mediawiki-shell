@@ -11,47 +11,49 @@ set -e
 ## XXX
 WIKI_URL=""
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 ## TODO: no root check
 
-files_list+="$wiki_folder"/*.mw
+files_list+=("$wiki_folder"/*.mw)
 
 total=0
-for file_name in $files_list ; do
-   total=$(( total + 1 ))
+for file_name in "${files_list[@]}"; do
+  total=$((total + 1))
 done
 
 counter=0
-for file_name in $files_list ; do
-   counter=$(( counter + 1 ))
-   base_name=$(basename "$file_name")
-   without_file_extension=${base_name%.mw}
-   echo "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
-   test -r "$file_name"
+for file_name in "${files_list[@]}"; do
+  counter=$((counter + 1))
+  base_name=$(basename "$file_name")
+  without_file_extension=${base_name%.mw}
+  echo "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
+  test -r "$file_name"
 
-   web_links_list=$(mw-file-to-weblinks "$file_name")
+  web_links_list=$(mw-file-to-weblinks "$file_name")
 
-   for web_link_item in $web_links_list ; do
-      web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
-      if [ "$web_link_cleaned" = "" ]; then
-         continue
-      fi
+  for web_link_item in $web_links_list; do
+    web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
+    if [ "$web_link_cleaned" = "" ]; then
+      continue
+    fi
 
-      ## Thanks to:
-      ## Dennis Williamson
-      ## https://stackoverflow.com/users/26428/dennis-williamson
-      ## https://stackoverflow.com/a/3184819/2605155
-      regex='^(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
-      string="$web_link_cleaned"
-      if [[ $string =~ $regex ]]; then
-         echo "$web_link_cleaned"
-      else
-         echo "## invalid link: $web_link_cleaned"
-      fi
+    ## Thanks to:
+    ## Dennis Williamson
+    ## https://stackoverflow.com/users/26428/dennis-williamson
+    ## https://stackoverflow.com/a/3184819/2605155
+    regex='^(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
+    string="$web_link_cleaned"
+    if [[ $string =~ $regex ]]; then
+      echo "$web_link_cleaned"
+    else
+      echo "## invalid link: $web_link_cleaned"
+    fi
 
-   done
-   #echo ""
+  done
+  #echo ""
 
 done

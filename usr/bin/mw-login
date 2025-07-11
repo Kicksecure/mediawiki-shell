@@ -1,7 +1,10 @@
 #!/bin/bash
 
 set -e
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 if [ -z "$WIKI_API_USER_PASS" ]; then
@@ -15,7 +18,7 @@ rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Content-Type: application/json" \
@@ -32,7 +35,7 @@ login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.toke
 #echo "$0: INFO: login_token: $login_token"
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \

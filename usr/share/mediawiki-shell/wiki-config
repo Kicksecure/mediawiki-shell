@@ -25,10 +25,8 @@ WIKI_URL=https://www.whonix.org/w $0
 [[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
 [[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
 
-if test -f /usr/share/mediawiki-shell/credentials ; then
-   source /usr/share/mediawiki-shell/credentials
-fi
-
-if test -f ~/.credentials ; then
-   source ~/.credentials
-fi
+for f in /usr/share/mediawiki-shell/credentials ~/.credentials; do
+   test -f "$f" || continue
+   # shellcheck source=credentials disable=SC1090,SC1091
+   source "$f"
+done

@@ -4,7 +4,10 @@
 ## WIKI_URL=https://www.whonix.org/w wiki_upload_file_path=/tmp/a wiki_remote_upload_file_title="File:Ubuntu_software_icon.png" mw-file-upload
 
 set -e
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 check_vars_exist WIKI_URL wiki_upload_file_path wiki_remote_upload_file_title
@@ -27,7 +30,7 @@ mw-logout
 mw-login
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \
@@ -47,17 +50,17 @@ else
 fi
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \
    --header "Connection: keep-alive" \
    --header "Expect:" \
-	--form "token=$csrf_token" \
-	--form "filename=$wiki_remote_upload_file_title" \
-	--form "file=@$wiki_upload_file_path" \
-	--form "comment=$edit_message" \
-	--form "ignorewarnings=yes" \
+   --form "token=$csrf_token" \
+   --form "filename=$wiki_remote_upload_file_title" \
+   --form "file=@$wiki_upload_file_path" \
+   --form "comment=$edit_message" \
+   --form "ignorewarnings=yes" \
    --output "${TMPFOLDER}/upload-result.json" \
    --request "POST" \
    "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"

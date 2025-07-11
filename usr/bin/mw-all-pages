@@ -5,6 +5,7 @@ stecho "$0: START"
 set -x
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 ## These variables should be set by the calling script as environment variables.
@@ -80,7 +81,7 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
 
       query_result=$(\
          $curl \
-            $curl_opts \
+            "${curl_opts[@]}" \
             "$api_full_link"
       )
 

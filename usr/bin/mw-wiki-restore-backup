@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
    if [ "$wiki_error_on_fetch" = "true" ]; then
       ## error out
@@ -25,6 +26,7 @@ check_vars_exist SOURCE_WIKI_URL wiki_backup_folder
 
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 allpages_file="${TMPFOLDER}/allpages.txt"
@@ -56,4 +58,5 @@ echo "ERROR: UNFINISHED SCRIPT!"
 exit 1
 
 ## Remove trailing spaces.
-wiki_page_content=$(echo "$wiki_page_content" | sed 's/[[:space:]]*$//')
+# shellcheck disable=SC2001,SC2317
+wiki_page_content="$(sed 's/[[:space:]]*$//' <<<"$wiki_page_content")"

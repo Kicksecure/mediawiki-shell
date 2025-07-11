@@ -5,6 +5,7 @@
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 [[ -v wait_if_too_many_requests ]] || wait_if_too_many_requests=10

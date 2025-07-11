@@ -11,20 +11,22 @@ set -e
 ## XXX
 WIKI_URL=""
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 ## TODO: no root check
 
-files_list+="$wiki_folder"/*.mw
+files_list+=("$wiki_folder"/*.mw)
 
 total=0
-for file_name in $files_list ; do
+for file_name in "${files_list[@]}"; do
    total=$(( total + 1 ))
 done
 
 counter=0
-for file_name in $files_list ; do
+for file_name in "${files_list[@]}"; do
    counter=$(( counter + 1 ))
    base_name=$(basename "$file_name")
    without_file_extension=${base_name%.mw}

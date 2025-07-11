@@ -1,7 +1,10 @@
 #!/bin/bash
 
 set -e
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 TITLE="$1"
@@ -33,7 +36,7 @@ mw-logout
 mw-login
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \
@@ -60,7 +63,7 @@ fi
 ## https://www.whonix.org/wiki/Special:Tags
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \

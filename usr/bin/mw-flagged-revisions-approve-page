@@ -9,15 +9,17 @@ set -e
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
 
 ## XXX
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 ## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w' $0
+[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w' "$0"
 [[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
-[[ -v DESTINATION_WIKI_PAGE ]] || missing_variable DESTINATION_WIKI_PAGE For example: DESTINATION_WIKI_PAGE=File:10b.png $0
+[[ -v DESTINATION_WIKI_PAGE ]] || missing_variable DESTINATION_WIKI_PAGE For example: DESTINATION_WIKI_PAGE=File:10b.png "$0"
 
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 echo "$0: INFO: SOURCE_WIKI_URL      : $SOURCE_WIKI_URL"
@@ -31,11 +33,11 @@ echo "$0: INFO: DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 echo "$0: INFO: Requesting revid...         ${TMPFOLDER}/revid.json"
 
 $curl \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --output "${TMPFOLDER}/revid.json" \
    "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
 
-lastrevid=$(cat "${TMPFOLDER}/revid.json" | jq -r ".query.pages[].lastrevid")
+lastrevid=$(jq -r ".query.pages[].lastrevid" "${TMPFOLDER}/revid.json")
 
 if printf '%s\n' "$lastrevid" | grep -E -- '^[0-9]+$' >/dev/null 2>/dev/null; then
     true "Valid number."
@@ -47,7 +49,7 @@ fi
 echo "$0: INFO: Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
 
 $curl \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Content-Type: application/json" \
@@ -57,10 +59,10 @@ $curl \
    --request "POST" \
    "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
 
-csrf_token=$(cat "${TMPFOLDER}/csrf_token.json" | jq --raw-output '.query.tokens.csrftoken')
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/csrf_token.json")
 
 ## not login-token
-#csrf_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.csrftoken')
+#csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/login-token.json")
 
 ## Sensitive?
 #echo "INFO: XXX csrf_token: $csrf_token"
@@ -70,7 +72,7 @@ comment="mediawiki-shell-bot-flagged-revisions-mass-approve"
 echo "$0: INFO: Requesting review-result... ${TMPFOLDER}/review-result.json"
 
 $curl \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --output "${TMPFOLDER}/review-result.json" \
@@ -96,7 +98,7 @@ $curl \
 # }
 
 # $curl \
-#    $curl_opts \
+#    "${curl_opts[@]}" \
 #    --cookie "$cookie_jar" \
 #    --cookie-jar "$cookie_jar" \
 #    --output "${TMPFOLDER}/review-result.json" \
@@ -104,7 +106,7 @@ $curl \
 #    --data-urlencode "token=${csrf_token}" \
 #    "${SOURCE_TARGET_API}?format=json&action=stabilize&title=${DESTINATION_WIKI_PAGE}&default=stable&&reason=${comment}"
 
-review_result=$(cat "${TMPFOLDER}/review-result.json" | jq --raw-output '.review.result')
+review_result=$(jq --raw-output '.review.result' "${TMPFOLDER}/review-result.json")
 
 if [ "$review_result" = "Success" ]; then
    echo "$0: INFO: Success."
@@ -112,9 +114,9 @@ if [ "$review_result" = "Success" ]; then
 fi
 
 echo "${TMPFOLDER}/review-result.json"
-cat "${TMPFOLDER}/review-result.json" | jq
+jq "${TMPFOLDER}/review-result.json"
 
-review_error_code=$(cat "${TMPFOLDER}/review-result.json" | jq --raw-output '.error.code')
+review_error_code=$(jq --raw-output '.error.code' "${TMPFOLDER}/review-result.json")
 if [ "$review_error_code" = "notreviewable" ]; then
    echo "$0: notreviewable"
    exit 0

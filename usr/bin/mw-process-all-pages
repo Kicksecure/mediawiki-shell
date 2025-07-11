@@ -2,6 +2,7 @@
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 ## example:
@@ -16,6 +17,7 @@ check_vars_exist SOURCE_WIKI_URL wiki_script
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
 
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
@@ -44,7 +46,7 @@ pid_list=""
 start_from_here="not-yet"
 
 while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( $counter_currently + 1 ))
+   counter_currently=$(( counter_currently + 1 ))
    backup_page_item=$(set_backup_page_item "$item_from_all_pages")
    backup_filename_item=$(set_backup_filename_item "$backup_page_item")
 
@@ -52,7 +54,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
    wiki_page_item="$backup_page_item"
    wiki_article_to_fetch="$backup_page_item"
 
-   counter_chunk=$(( $counter_chunk + 1 ))
+   counter_chunk=$(( counter_chunk + 1 ))
 
    ## TODO:
    #continue_from_page="Network_Time_Synchronization"
@@ -88,7 +90,7 @@ while IFS=$'\n' read -r item_from_all_pages ; do
          backup_filename_item="$backup_filename_item" \
          wiki_page_item="$wiki_page_item" \
          wiki_article_to_fetch="$wiki_article_to_fetch" \
-         mw-retry-wrapper $wiki_script
+         mw-retry-wrapper "$wiki_script"
 
    pid_list+=" $pid"
 

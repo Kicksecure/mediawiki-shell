@@ -2,6 +2,7 @@
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 check_vars_exist WIKI_URL wiki_page_item
@@ -25,7 +26,7 @@ log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fet
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
 page_pending_status_json=$(\
    $curl \
-      $curl_opts \
+      "${curl_opts[@]}" \
       "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
 )
 

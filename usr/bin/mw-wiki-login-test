@@ -4,18 +4,15 @@ echo "$0: START"
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-# DESTINATION_WIKI=(
-#    'https://www.kicksecure.com/w'
-#    'https://www.whonix.org/w'
-# )
-
 [[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
+   # 'https://www.kicksecure.com/w'
    'https://www.whonix.org/w'
 )
 
-for DESTINATION_WIKI in ${DESTINATION_WIKI[@]} ; do
+for DESTINATION_WIKI in "${DESTINATION_WIKI[@]}"; do
    WIKI_URL="$DESTINATION_WIKI"  \
       mw-logout
    WIKI_URL="$DESTINATION_WIKI"  \

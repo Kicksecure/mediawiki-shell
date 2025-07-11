@@ -1,7 +1,10 @@
 #!/bin/bash
 
 set -e
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 ## example:
@@ -30,7 +33,7 @@ echo "$0: INFO: saving file to wiki_remote_file_save_to_path: '$wiki_remote_file
 
 curl_run_no_encode=true \
    curl_run \
-      $curl_opts \
+      "${curl_opts[@]}" \
       --header "Accept-Language: en-GB" \
       --header "Expect:" \
       --output "$wiki_remote_file_save_to_path" \

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail
-set -o nounset
+set -euo pipefail -o errtrace
+
+log_level=info
+source /usr/libexec/helper-scripts/log_run_die.sh
 
 if ! command -v retry >/dev/null ; then
    echo "ERROR: 'retry' command unavailable! Probably 'retry' package is not installed." >&2
@@ -19,20 +19,18 @@ check_vars_exist() {
 }
 
 missing_variable() {
-   echo "$0: ERROR: MISSING VARIABLE: $@"
+   echo "$0: ERROR: MISSING VARIABLE: $*"
    exit 1
 }
 
 error_output() {
-   [[ -v 1 ]] || 1="unset"
-
    [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
    [[ -v TITLE ]] || TITLE=""
    [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
    [[ -v counter_chunk ]] || counter_chunk="unset"
    [[ -v counter_currently ]] || counter_currently="unset"
    [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
-   echo "error_msg: '$1'
+   echo "error_msg: '${1:-unset}'
 WIKI_INDEX: '$WIKI_INDEX'
 TITLE: '$TITLE'
 TMPFOLDER: '$TMPFOLDER'
@@ -56,7 +54,8 @@ failed with exit code '$last_exit_code'." >&2
 trap error_handler ERR
 
 exit_handler() {
-   local exit_code=$?
+   trap - INT HUP ABRT QUIT EXIT
+   local exit_code=$1
    if [ "$exit_code" = "0" ]; then
       echo "## $0: END: with OK exit code: '$exit_code'"
    else
@@ -129,7 +128,7 @@ curl_get_output_parameter() {
    local loop_counter
    loop_counter=0
 
-   while true ; do
+   while true; do
       loop_counter=$(( loop_counter + 1 ))
       if [ "$loop_counter" -ge 50 ]; then
          error "loop_max reached!"
@@ -162,6 +161,7 @@ curl_run() {
    touch "$output_file"
 
    local args url encoded_url
+   # shellcheck disable=SC2124,SC1126
    url="${@: -1}"
 
    [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
@@ -187,33 +187,22 @@ curl_run() {
    fi
 }
 
-log_run() {
-   echo "$0 running: $@"
-   "$@"
-}
-
-log_run_background() {
-   echo "$0 running: $@ &"
-   "$@" &
-   pid="$!"
-}
-
-trap exit_handler EXIT
+trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
 
 [[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell-temp
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || set_curl_binary_default
-[[ -v curl_opts ]] || curl_opts="\
-   --fail \
-   --no-progress-meter \
-   --show-error \
-   --retry-connrefused \
-   --retry 10 \
-   --retry-delay 5 \
-   --cookie nocache=true \
-   --user-agent mediawiki-shell \
-"
+[[ -v curl_opts ]] || curl_opts=(
+   "--fail"
+   "--no-progress-meter"
+   "--show-error"
+   "--retry-connrefused"
+   "--retry" "10"
+   "--retry-delay" "5"
+   "--cookie" "nocache=true"
+   "--user-agent" "mediawiki-shell"
+)
 
 mkdir --parents "$TMPFOLDER"
 chmod og-rw "$TMPFOLDER"

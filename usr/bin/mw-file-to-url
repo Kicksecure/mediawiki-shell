@@ -4,7 +4,10 @@
 ## WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name_fetch_to_file=/tmp/a wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-file-to-link
 
 set -e
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 stecho "$0: INFO: Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
@@ -23,7 +26,7 @@ api_link="${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=
 
 ## MediaWiki API return json, which contains an already encoded URL.
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \

@@ -4,8 +4,10 @@ echo "$0: START"
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
+# shellcheck disable=SC2317
 exit_handler() {
    [[ -v retry_counter ]] || retry_counter=0
    if [ "$retry_counter" -gt 1 ]; then

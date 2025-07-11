@@ -8,7 +8,9 @@ set -e
 ## XXX
 WIKI_URL=""
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 ## TODO: no root check
@@ -40,8 +42,8 @@ WIKI_WEB=https://www.kicksecure.com/wiki \
 wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
    mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
 
-cat "$TMPFOLDER/wiki-links/all-links.txt" | grep --invert-match "## " | tee "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
-cat "$TMPFOLDER/wiki-links/links-without-comments.txt" | sort --unique | tee "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
+grep --invert-match -- "## " "$TMPFOLDER/wiki-links/all-links.txt" | tee "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
+sort --unique "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
 
 echo "See:"
 echo "cat $TMPFOLDER/wiki-links/links-sorted.txt"

@@ -20,7 +20,9 @@ WIKI_URL="$SOURCE_WIKI_URL"
 ## Namespace 500 (Widget:) is not reviewable.
 #export wiki_namespace_list_extra="500 274"
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"

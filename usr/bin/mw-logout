@@ -1,7 +1,10 @@
 #!/bin/bash
 
 set -e
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 true "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
@@ -9,7 +12,7 @@ true "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
 rm -f -- "${TMPFOLDER}/logout-token.json"
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Content-Type: application/json" \
@@ -23,7 +26,7 @@ true "$0: INFO: Token received."
 csrf_token="$(cat -- "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')"
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --cookie "$cookie_jar" \
    --cookie-jar "$cookie_jar" \
    --header "Accept-Language: en-GB" \

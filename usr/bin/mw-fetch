@@ -2,7 +2,9 @@
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
 check_vars_exist "WIKI_INDEX" "wiki_article_to_fetch" "wiki_fetch_to_file"
@@ -19,7 +21,7 @@ touch "$wiki_fetch_to_file"
 test -w "$wiki_fetch_to_file"
 
 # curl_run \
-#    $curl_opts \
+#    "${curl_opts[@]}" \
 #    --cookie "$cookie_jar" \
 #    --cookie-jar "$cookie_jar" \
 #    --header "Accept-Language: en-GB" \
@@ -28,7 +30,7 @@ test -w "$wiki_fetch_to_file"
 #    --request "POST" "${WIKI_INDEX}?action=raw"
 
 curl_run \
-   $curl_opts \
+   "${curl_opts[@]}" \
    --header "Accept-Language: en-GB" \
    --header "Expect:" \
    --output "$wiki_fetch_to_file" \

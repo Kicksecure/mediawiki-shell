@@ -22,7 +22,7 @@ fi
 
 ## NOTE: does not support spaces?
 ## NOTE: case in-sensitive. No need to capitalization.
-grep_skip_fixed_string_list_to_exclude=$(echo "\
+grep_skip_fixed_string_list_to_exclude="\
 <pre>
 </pre>
 <code>
@@ -91,12 +91,12 @@ QubesOS_onion
 {{Check.torproject.org}}
 <!--
 scurl-download
-")
+"
 
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
 ## NOTE: case-sensitive. Capitalization is important.
-string_replace_tupils_list=$(echo "\
+string_replace_tupils_list="\
 <u>[http:// http://
 <u>[https:// https://
 \"[https:// https://
@@ -125,7 +125,7 @@ string_replace_tupils_list=$(echo "\
 </blockquote>
 <
 >
-")
+"
 
 if printf '%s\n' "$link_result_cleaned" | grep --ignore-case --fixed-strings "$grep_skip_fixed_string_list_to_exclude" >/dev/null 2>/dev/null ; then
    exit 0
@@ -134,7 +134,7 @@ fi
 ## '<ref name=f_secure>https://blog.f-secure.com/cold-boot-attacks/'
 if printf '%s\n' "$link_result_cleaned" | grep --fixed-strings --ignore-case "name=" >/dev/null 2>/dev/null ; then
    longest_match_after_character=">"
-   link_result_cleaned="${link_result_cleaned#*$longest_match_after_character}"
+   link_result_cleaned="${link_result_cleaned#*"${longest_match_after_character}"}"
 fi
 
 while read -r replace_config_line ; do

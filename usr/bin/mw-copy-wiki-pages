@@ -4,6 +4,7 @@ echo "$0: START"
 
 set -e
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 ## example:
@@ -40,7 +41,7 @@ echo "$0: INFO: wiki_source_api: $wiki_source_api"
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
 page_pending_status_json=$(\
    $curl \
-      $curl_opts \
+      "${curl_opts[@]}" \
       "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
 )
 

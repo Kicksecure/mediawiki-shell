@@ -13,7 +13,7 @@
 ## UNLESS YOU KNOW WHAT YOU ARE DOING!
 
 error_message_if_missing_wiki_url_variable() {
-   die 1 "environment variable WIKI_URL missing! Run for example:
+  die 1 "environment variable WIKI_URL missing! Run for example:
 
 WIKI_URL=https://www.whonix.org/w ${0##*/}
 "
@@ -25,7 +25,7 @@ WIKI_URL=https://www.whonix.org/w ${0##*/}
 [[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
 
 for f in /usr/share/mediawiki-shell/credentials ~/.credentials; do
-   test -f "$f" || continue
-   # shellcheck source=credentials disable=SC1090,SC1091
-   source "$f"
+  test -f "$f" || continue
+  # shellcheck source=credentials disable=SC1090,SC1091
+  source "$f"
 done

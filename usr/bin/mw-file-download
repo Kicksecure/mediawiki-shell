@@ -12,9 +12,9 @@ source /usr/share/mediawiki-shell/wiki-config
 
 log info "Downloading file '${WIKI_INDEX}' '$wiki_remote_file_name'..."
 
-if test -d "$wiki_remote_file_save_to_path" ; then
-   log error "wiki_remote_file_save_to_path '$wiki_remote_file_save_to_path' is a folder!"
-   exit 1
+if test -d "$wiki_remote_file_save_to_path"; then
+  log error "wiki_remote_file_save_to_path '$wiki_remote_file_save_to_path' is a folder!"
+  exit 1
 fi
 
 rm -f "$wiki_remote_file_save_to_path"
@@ -32,11 +32,11 @@ url="$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")"
 log info "saving file to wiki_remote_file_save_to_path: '$wiki_remote_file_save_to_path'"
 
 curl_run_no_encode=true \
-   curl_run \
-      "${curl_opts[@]}" \
-      --header "Accept-Language: en-GB" \
-      --header "Expect:" \
-      --output "$wiki_remote_file_save_to_path" \
-      "$url"
+  curl_run \
+  "${curl_opts[@]}" \
+  --header "Accept-Language: en-GB" \
+  --header "Expect:" \
+  --output "$wiki_remote_file_save_to_path" \
+  "$url"
 
 log info "Fetch file success."

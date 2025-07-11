@@ -30,19 +30,22 @@ log info "SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
 log info "SOURCE_TARGET_API: $SOURCE_TARGET_API"
 
 login_function() {
-   log info "Logging in..."
-   WIKI_URL="$SOURCE_WIKI_URL" mw-logout
-   WIKI_URL="$SOURCE_WIKI_URL" mw-login
-   log info "Login ok."
+  log info "Logging in..."
+  WIKI_URL="$SOURCE_WIKI_URL" mw-logout
+  WIKI_URL="$SOURCE_WIKI_URL" mw-login
+  log info "Login ok."
 }
 
 approve_page() {
-   approve_page_exit_code=0
+  approve_page_exit_code=0
 
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_PAGE="$backup_page_item" \
-      mw-flagged-revisions-approve-page \
-         "$backup_page_item" || { approve_page_exit_code="$?" ; true; };
+  SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+    DESTINATION_WIKI_PAGE="$backup_page_item" \
+    mw-flagged-revisions-approve-page \
+    "$backup_page_item" || {
+    approve_page_exit_code="$?"
+    true
+  }
 }
 
 login_function
@@ -51,8 +54,8 @@ allpages_file="${TMPFOLDER}/allpages.txt"
 rm -f "$allpages_file"
 
 QUERY_TYPE=unreviewedpages \
-SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-all-pages "$allpages_file"
+  SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+  mw-all-pages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -60,37 +63,37 @@ counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 counter_currently=0
 error_counter=0
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( $counter_currently + 1 ))
-   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-   log info "$counter_currently / $counter_total"
-   echo "\
+while IFS=$'\n' read -r item_from_all_pages; do
+  counter_currently=$((counter_currently + 1))
+  backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+  log info "$counter_currently / $counter_total"
+  echo "\
 SOURCE_WIKI_URL='$SOURCE_WIKI_URL' \
 DESTINATION_WIKI_PAGE='$backup_page_item' \
 mw-flagged-revisions-approve-page \
 '$backup_page_item'"
 
-   approve_page
-   if [ "$approve_page_exit_code" = "0" ]; then
-      log info "Success at first attempt, ok."
-      continue
-   elif [ "$approve_page_exit_code" = "254" ]; then
-      log info "Got exit code 254. Login probably expired."
-      login_function
-      log info "Try again..."
-      approve_page
-   fi
+  approve_page
+  if [ "$approve_page_exit_code" = "0" ]; then
+    log info "Success at first attempt, ok."
+    continue
+  elif [ "$approve_page_exit_code" = "254" ]; then
+    log info "Got exit code 254. Login probably expired."
+    login_function
+    log info "Try again..."
+    approve_page
+  fi
 
-   if [ "$approve_page_exit_code" = "0" ]; then
-      log info "Success after second attempt, ok."
-   else
-      error_counter=$(( $error_counter + 1 ))
-      log error "Failed!"
-   fi
-done < "$allpages_file"
+  if [ "$approve_page_exit_code" = "0" ]; then
+    log info "Success after second attempt, ok."
+  else
+    error_counter=$((error_counter + 1))
+    log error "Failed!"
+  fi
+done <"$allpages_file"
 
 if [ "$error_counter" = "0" ]; then
-   log info "Success."
+  log info "Success."
 else
-   log warning "$error_counter error(s) detected."
+  log warning "$error_counter error(s) detected."
 fi

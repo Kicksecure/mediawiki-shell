@@ -40,15 +40,15 @@ log info "wiki_source_api: $wiki_source_api"
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      "${curl_opts[@]}" \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_remote_file_name"
+page_pending_status_json=$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_remote_file_name"
 )
 
 if printf '%s\n' "$page_pending_status_json" | jq | grep -- pending_since >/dev/null 2>/dev/null; then
-   log warning "'$SOURCE_WIKI_URL' '$wiki_remote_file_name' has PENDING EDITS!"
-   exit 10
+  log warning "'$SOURCE_WIKI_URL' '$wiki_remote_file_name' has PENDING EDITS!"
+  exit 10
 fi
 
 log info "No pending edits for file, ok."
@@ -56,9 +56,9 @@ log info "No pending edits for file, ok."
 log info "Uploading file... '$DESTINATION_WIKI_URL' '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'"
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
-wiki_remote_upload_file_title="$wiki_remote_file_title" \
-wiki_remote_file_name="$wiki_remote_file_name" \
-wiki_upload_file_path="$wiki_remote_file_save_to_path" \
-mw-file-upload
+  wiki_remote_upload_file_title="$wiki_remote_file_title" \
+  wiki_remote_file_name="$wiki_remote_file_name" \
+  wiki_upload_file_path="$wiki_remote_file_save_to_path" \
+  mw-file-upload
 
 log info "Upload file success."

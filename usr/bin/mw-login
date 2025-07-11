@@ -8,8 +8,8 @@ source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
 if [ -z "${WIKI_API_USER_PASS-}" ]; then
-   log error "Password not supplied!"
-   exit 1
+  log error "Password not supplied!"
+  exit 1
 fi
 
 log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
@@ -18,34 +18,34 @@ rm -f "${TMPFOLDER}/login-token.json"
 rm -f "${TMPFOLDER}/login-result.json"
 
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Content-Type: application/json" \
-   --header "Accept-Language: en-GB" \
-   --output "${TMPFOLDER}/login-token.json" \
-   --request "POST" \
-   "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Content-Type: application/json" \
+  --header "Accept-Language: en-GB" \
+  --output "${TMPFOLDER}/login-token.json" \
+  --request "POST" \
+  "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
 
 log info "Login Token received."
 
-login_token="$(jq --raw-output '.query.tokens.logintoken' < "${TMPFOLDER}/login-token.json")"
+login_token="$(jq --raw-output '.query.tokens.logintoken' <"${TMPFOLDER}/login-token.json")"
 
 ## Sensitive?
 #log info "login_token: $login_token"
 
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
-   --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
-   --data-urlencode "lgdomain=${USERDOMAIN}" \
-   --data-urlencode "lgtoken=${login_token}" \
-   --output "${TMPFOLDER}/login-result.json" \
-   --request "POST" \
-   "${WIKI_API}?action=login&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
+  --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
+  --data-urlencode "lgdomain=${USERDOMAIN}" \
+  --data-urlencode "lgtoken=${login_token}" \
+  --output "${TMPFOLDER}/login-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=login&format=json"
 
 ## XXX:
 ## If already logged in:
@@ -53,11 +53,11 @@ curl_run \
 ## "result": "Aborted",
 ## "reason": "Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions."
 
-RESULT="$(jq -r '.login.result' < "${TMPFOLDER}/login-result.json")"
+RESULT="$(jq -r '.login.result' <"${TMPFOLDER}/login-result.json")"
 
 if [ "$RESULT" = "Success" ]; then
-   log info "Successfully logged in as '$WIKI_API_USER_NAME'."
-   exit 0
+  log info "Successfully logged in as '$WIKI_API_USER_NAME'."
+  exit 0
 fi
 
 jq "${TMPFOLDER}/login-result.json" >&2

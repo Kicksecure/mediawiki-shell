@@ -15,7 +15,7 @@ check_vars_exist WIKI_URL wiki_page_item
 #    mw-login
 
 wiki_article_to_fetch="$wiki_page_item" \
-wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
+  wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page"
 
 log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fetch
 
@@ -24,41 +24,41 @@ log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fet
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      "${curl_opts[@]}" \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
+page_pending_status_json=$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
 )
 
 if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>/dev/null; then
-   log warning "'$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
-   exit 10
+  log warning "'$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
+  exit 10
 fi
 
 filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"
 
 replace_all_except_first() {
-   if ! grep --line-number -- "$search" "$filename" >/dev/null 2>/dev/null; then
-      return 0
-   fi
+  if ! grep --line-number -- "$search" "$filename" >/dev/null 2>/dev/null; then
+    return 0
+  fi
 
-   linenum=$(grep --line-number -- "$search" "$filename")
-   linenum=$(printf '%s\n' "$linenum" | head -n1)
-   linenum=$(printf '%s\n' "$linenum" | cut -d: -f1)
+  linenum=$(grep --line-number -- "$search" "$filename")
+  linenum=$(printf '%s\n' "$linenum" | head -n1)
+  linenum=$(printf '%s\n' "$linenum" | cut -d: -f1)
 
-   # If {{project_name_long}} is found in the file
-   if [ -n "$linenum" ]; then
-      # Print the lines from the beginning of the file to the line number where the first occurrence is found
-      awk -v n="$linenum" 'NR<=n' "$filename" > "$tempfile"
+  # If {{project_name_long}} is found in the file
+  if [ -n "$linenum" ]; then
+    # Print the lines from the beginning of the file to the line number where the first occurrence is found
+    awk -v n="$linenum" 'NR<=n' "$filename" >"$tempfile"
 
-      # Replace subsequent occurrences of {{project_name_long}} with {{project_name_short}}
-      # and append them to the temporary file
-      awk -v n="$linenum" 'NR>n' "$filename" | sed "s/$search/$replace/g" >> "$tempfile"
+    # Replace subsequent occurrences of {{project_name_long}} with {{project_name_short}}
+    # and append them to the temporary file
+    awk -v n="$linenum" 'NR>n' "$filename" | sed "s/$search/$replace/g" >>"$tempfile"
 
-      # Move the temporary file to the original file
-      mv "$tempfile" "$filename"
-   fi
+    # Move the temporary file to the original file
+    mv "$tempfile" "$filename"
+  fi
 }
 
 search="{{project_name_long}}"

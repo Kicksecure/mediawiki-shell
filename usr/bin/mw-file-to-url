@@ -12,9 +12,9 @@ source /usr/share/mediawiki-shell/wiki-config
 
 log info "Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
 
-if test -d "$wiki_remote_file_name_fetch_to_file" ; then
-   log error "wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!"
-   exit 1
+if test -d "$wiki_remote_file_name_fetch_to_file"; then
+  log error "wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!"
+  exit 1
 fi
 
 safe-rm -f -- "$wiki_remote_file_name_fetch_to_file"
@@ -26,15 +26,15 @@ api_link="${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=
 
 ## MediaWiki API return json, which contains an already encoded URL.
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --output "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json" \
-   --request "GET" \
-   "$api_link"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json" \
+  --request "GET" \
+  "$api_link"
 
 log info "Network for imageinfo ok."
 

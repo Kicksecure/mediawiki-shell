@@ -25,9 +25,9 @@ check_vars_exist SOURCE_WIKI_URL DESTINATION_WIKI_URL copy_wiki_pages_item
 log info "Fetching page '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
 
 wiki_article_to_fetch="$copy_wiki_pages_item" \
-wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
-WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-fetch
+  wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
+  WIKI_URL="$SOURCE_WIKI_URL" \
+  mw-fetch
 
 log info "Fetch page success."
 
@@ -39,15 +39,15 @@ log info "wiki_source_api: $wiki_source_api"
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      "${curl_opts[@]}" \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
+page_pending_status_json=$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
 )
 
 if printf '%s\n' "$page_pending_status_json" | jq | grep -- pending_since >/dev/null 2>/dev/null; then
-   log warning "'$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
-   exit 10
+  log warning "'$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
+  exit 10
 fi
 
 log info "No pending edits for page, ok."
@@ -55,6 +55,6 @@ log info "No pending edits for page, ok."
 wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
+  mw-edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
 
 log info "Edit page success."

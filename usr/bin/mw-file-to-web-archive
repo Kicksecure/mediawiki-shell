@@ -28,78 +28,78 @@ echo "$TMPFOLDER/webarchive/already-archived.txt"
 echo "$TMPFOLDER/webarchive/already-known-down.txt"
 
 archive_check() {
-   echo "Checking if already archived by asking web archive... https://web.archive.org/web/$1"
+  echo "Checking if already archived by asking web archive... https://web.archive.org/web/$1"
 
-   curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
-   curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
+  curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/web/$1") || true
+  curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
-   if [ "$curl_http_status_code" = "403" ]; then
-      echo "Excluded from web archive."
-      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
-      return 0
-   fi
+  if [ "$curl_http_status_code" = "403" ]; then
+    echo "Excluded from web archive."
+    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
+    return 0
+  fi
 
-   if [ "$curl_http_status_code" = "404" ]; then
-      echo "Down according to web archive. curl_http_status_code: '$curl_http_status_code'"
-      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
-      return 0
-   fi
+  if [ "$curl_http_status_code" = "404" ]; then
+    echo "Down according to web archive. curl_http_status_code: '$curl_http_status_code'"
+    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
+    return 0
+  fi
 
-   location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
-   link=$(printf '%s\n' "$location" | awk '{ print $2 }')
-   if printf '%s\n' "$link" | grep --fixed-strings -- "https://web.archive.org/web/" >/dev/null 2>/dev/null; then
-      printf '%s\n' "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
-      printf '%s\n' "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
-      printf '%s\n' "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
-      return 0
-   fi
+  location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
+  link=$(printf '%s\n' "$location" | awk '{ print $2 }')
+  if printf '%s\n' "$link" | grep --fixed-strings -- "https://web.archive.org/web/" >/dev/null 2>/dev/null; then
+    printf '%s\n' "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
+    printf '%s\n' "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+    printf '%s\n' "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+    return 0
+  fi
 
-   echo "Not yet archived. curl_http_status_code: $curl_http_status_code | curl_output:"
-   echo "$curl_output"
-   return 1
+  echo "Not yet archived. curl_http_status_code: $curl_http_status_code | curl_output:"
+  echo "$curl_output"
+  return 1
 }
 
 archive_save() {
-   echo "Requesting web archive link... https://web.archive.org/save/$1"
+  echo "Requesting web archive link... https://web.archive.org/save/$1"
 
-   curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/save/$1") || true
-   curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
+  curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/save/$1") || true
+  curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
 
-   if [ "$curl_http_status_code" = "302" ]; then
-      printf '%s\n' "Archived. Web archive reported that archiving succeeded."
-      location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
-      link=$(printf '%s\n' "$location" | awk '{ print $2 }')
-      printf '%s\n' "$link"
-      return 0
-   fi
+  if [ "$curl_http_status_code" = "302" ]; then
+    printf '%s\n' "Archived. Web archive reported that archiving succeeded."
+    location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
+    link=$(printf '%s\n' "$location" | awk '{ print $2 }')
+    printf '%s\n' "$link"
+    return 0
+  fi
 
-   if [ "$curl_http_status_code" = "523" ]; then
-      echo "Origin link down."
-      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
-      return 0
-   fi
+  if [ "$curl_http_status_code" = "523" ]; then
+    echo "Origin link down."
+    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
+    return 0
+  fi
 
-   if [ "$curl_http_status_code" = "429" ]; then
-      echo "Web archive server denied request, reported too many requests. Waiting for $wait_if_too_many_requests seconds."
-      return 1
-   fi
+  if [ "$curl_http_status_code" = "429" ]; then
+    echo "Web archive server denied request, reported too many requests. Waiting for $wait_if_too_many_requests seconds."
+    return 1
+  fi
 
-   if [ "$curl_http_status_code" = "520" ]; then
-      echo "Web archive unknown error."
-      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-unknown-error.txt"
-      return 0
-   fi
+  if [ "$curl_http_status_code" = "520" ]; then
+    echo "Web archive unknown error."
+    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-unknown-error.txt"
+    return 0
+  fi
 
-   if [ "$curl_http_status_code" = "403" ]; then
-      echo "Excluded from web archive."
-      echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
-      return 0
-   fi
+  if [ "$curl_http_status_code" = "403" ]; then
+    echo "Excluded from web archive."
+    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
+    return 0
+  fi
 
-   echo "Unknown case. curl_http_status_code: $curl_http_status_code | curl_output:"
-   echo "$curl_output"
-   echo "$1" | tee -a "$TMPFOLDER/webarchive/already-unknown-case-error.txt"
-   return 0
+  echo "Unknown case. curl_http_status_code: $curl_http_status_code | curl_output:"
+  echo "$curl_output"
+  echo "$1" | tee -a "$TMPFOLDER/webarchive/already-unknown-case-error.txt"
+  return 0
 }
 
 #set -x
@@ -115,38 +115,38 @@ total="$(awk 'END {print NR}' "$file_name")"
 
 counter=0
 
-cat < "$file_name" | while IFS= read -r word; do
-   if [ "$word" = "" ]; then
-      continue
-   fi
+cat <"$file_name" | while IFS= read -r word; do
+  if [ "$word" = "" ]; then
+    continue
+  fi
 
-   counter=$(( counter + 1 ))
-   echo "$counter / $total | word: '$word'"
+  counter=$((counter + 1))
+  echo "$counter / $total | word: '$word'"
 
-   echo "Checking if already archived in locally cached file..."
+  echo "Checking if already archived in locally cached file..."
 
-   do_skip=""
-   for cached_file in $TMPFOLDER/webarchive/already-* ; do
-      if grep --fixed-strings -- "$word" "$cached_file" >/dev/null 2>/dev/null ; then
-         echo "Already locally cached file status. cached_file: '$cached_file'"
-         do_skip=true
-      fi
-   done
-   if [ "$do_skip" = "true" ]; then
+  do_skip=""
+  for cached_file in $TMPFOLDER/webarchive/already-*; do
+    if grep --fixed-strings -- "$word" "$cached_file" >/dev/null 2>/dev/null; then
+      echo "Already locally cached file status. cached_file: '$cached_file'"
       do_skip=true
-      continue
-   fi
+    fi
+  done
+  if [ "$do_skip" = "true" ]; then
+    do_skip=true
+    continue
+  fi
 
-   for retry_counter in $(seq 1 60) ; do
-      if archive_check "$word" ; then
-         break
-      fi
+  for retry_counter in $(seq 1 60); do
+    if archive_check "$word"; then
+      break
+    fi
 
-      if archive_save "$word" ; then
-         break
-      fi
-      sleep "$wait_if_too_many_requests"
-   done
+    if archive_save "$word"; then
+      break
+    fi
+    sleep "$wait_if_too_many_requests"
+  done
 
-   echo ""
+  echo ""
 done

@@ -16,54 +16,54 @@ check_vars_exist WIKI_URL wiki_upload_file_path wiki_remote_upload_file_title
 
 log info "Uploading file '${WIKI_URL}' '$wiki_upload_file_path'..."
 
-if test -d "$wiki_upload_file_path" ; then
-   log error "wiki_upload_file_path '$wiki_upload_file_path' is a folder!"
-   exit 1
+if test -d "$wiki_upload_file_path"; then
+  log error "wiki_upload_file_path '$wiki_upload_file_path' is a folder!"
+  exit 1
 fi
 
-if ! test -r "$wiki_upload_file_path" ; then
-   log error "wiki_upload_file_path '$wiki_upload_file_path' is not readable!"
-   exit 1
+if ! test -r "$wiki_upload_file_path"; then
+  log error "wiki_upload_file_path '$wiki_upload_file_path' is not readable!"
+  exit 1
 fi
 
 mw-logout
 mw-login
 
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --output "${TMPFOLDER}/fetch-edit-token.json" \
-   --request "GET" \
-   "${WIKI_API}?action=query&meta=tokens&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/fetch-edit-token.json" \
+  --request "GET" \
+  "${WIKI_API}?action=query&meta=tokens&format=json"
 
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   log info "Edit token for file OK."
+  log info "Edit token for file OK."
 else
-   log error "Edit token for file not set."
-   exit 1
+  log error "Edit token for file not set."
+  exit 1
 fi
 
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --header "Expect:" \
-   --form "token=$csrf_token" \
-   --form "filename=$wiki_remote_upload_file_title" \
-   --form "file=@$wiki_upload_file_path" \
-   --form "comment=$edit_message" \
-   --form "ignorewarnings=yes" \
-   --output "${TMPFOLDER}/upload-result.json" \
-   --request "POST" \
-   "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --header "Expect:" \
+  --form "token=$csrf_token" \
+  --form "filename=$wiki_remote_upload_file_title" \
+  --form "file=@$wiki_upload_file_path" \
+  --form "comment=$edit_message" \
+  --form "ignorewarnings=yes" \
+  --output "${TMPFOLDER}/upload-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
 
 log info "Network for file upload ok."
 
@@ -72,23 +72,23 @@ test -r "${TMPFOLDER}/upload-result.json"
 edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
 
 if [ "$(echo "$edit_result_output" | jq -r ".error.code")" = "fileexists-no-change" ]; then
-   #echo "$edit_result_output" | jq
-   log info "Upload file success."
-   exit 0
+  #echo "$edit_result_output" | jq
+  log info "Upload file success."
+  exit 0
 fi
 
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-   log info "Upload (edit) file success."
-   exit 0
+  log info "Upload (edit) file success."
+  exit 0
 fi
 
 upload_result_jq="$(echo "$edit_result_output" | jq -r ".upload.result")"
 
 if [ "$upload_result_jq" = "Success" ]; then
-   log info "Upload (upload) file success."
-   exit 0
+  log info "Upload (upload) file success."
+  exit 0
 fi
 
 echo "${TMPFOLDER}/upload-result.json"

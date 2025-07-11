@@ -9,91 +9,91 @@ source /usr/share/mediawiki-shell/common
 
 # shellcheck disable=SC2317
 exit_handler() {
-   [[ -v retry_counter ]] || retry_counter=0
-   if [ "$retry_counter" -gt 1 ]; then
-      ## >&2 is correct.
-      log notice "success after attempt $retry_counter"
-   fi
+  [[ -v retry_counter ]] || retry_counter=0
+  if [ "$retry_counter" -gt 1 ]; then
+    ## >&2 is correct.
+    log notice "success after attempt $retry_counter"
+  fi
 }
 
 trap exit_handler EXIT
 
 do_it() {
-   wiki_backup_file="${wiki_backup_folder}/${backup_filename_item}"
+  wiki_backup_file="${wiki_backup_folder}/${backup_filename_item}"
 
-   wiki_article_to_fetch="$backup_page_item" \
-   wiki_fetch_to_file="$wiki_backup_file" \
-   WIKI_URL="$SOURCE_WIKI_URL" \
-      mw-fetch
+  wiki_article_to_fetch="$backup_page_item" \
+    wiki_fetch_to_file="$wiki_backup_file" \
+    WIKI_URL="$SOURCE_WIKI_URL" \
+    mw-fetch
 
-   ## {{{
-   ## XXX
+  ## {{{
+  ## XXX
 
-   ## TODO: Should probably be done in mw-patch-modify-wiki-page
+  ## TODO: Should probably be done in mw-patch-modify-wiki-page
 
-   DESTINATION_WIKI_URL="$WIKI_URL"
+  DESTINATION_WIKI_URL="$WIKI_URL"
 
-   ## Remove trailing spaces.
-   sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
+  ## Remove trailing spaces.
+  sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
 
-#    if ! \
-#       WIKI_URL="$DESTINATION_WIKI_URL" \
-#       edit_message="remove-trailing-spaces" \
-#       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-#          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
-#          return 1
-#    fi
+  #    if ! \
+  #       WIKI_URL="$DESTINATION_WIKI_URL" \
+  #       edit_message="remove-trailing-spaces" \
+  #       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
+  #          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
+  #          return 1
+  #    fi
 
-#   file_name="$wiki_backup_file"
-#
-#
-#   ## Ignore pages without header.
-#   if ! grep --ignore-case --fixed-strings --quiet -e "{{header" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   ## Ignore redirects.
-#   if grep --ignore-case --fixed-strings --quiet -e "#redirect [[" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   ## TODO: remove '!'
-#   ## Ignore pages without SEO.
-#   if ! grep --ignore-case --fixed-strings --quiet -e "{{#seo:" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   ## Ignore pages that already have a title.
-#   if grep --ignore-case --fixed-strings --quiet -e "{{title|" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   if grep --ignore-case --fixed-strings --quiet -e "title=" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   title="$backup_page_item"
-#   title="$(echo "$title" | str_replace ".mw" "")"
-#   title="$(echo "$title" | str_replace "_" " ")"
-#
-#    search="{{#seo:"
-#    replace="\
-# {{title|title=
-# $title
-# }}
-# {{#seo:"
-#
-#    str_replace "$search" "$replace" "$wiki_backup_file"
-#
-#    if ! \
-#       WIKI_URL="$DESTINATION_WIKI_URL" \
-#       edit_message="add-title" \
-#       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-#          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
-#          return 1
-#    fi
+  #   file_name="$wiki_backup_file"
+  #
+  #
+  #   ## Ignore pages without header.
+  #   if ! grep --ignore-case --fixed-strings --quiet -e "{{header" -- "$file_name"; then
+  #     return 0
+  #   fi
+  #
+  #   ## Ignore redirects.
+  #   if grep --ignore-case --fixed-strings --quiet -e "#redirect [[" -- "$file_name"; then
+  #     return 0
+  #   fi
+  #
+  #   ## TODO: remove '!'
+  #   ## Ignore pages without SEO.
+  #   if ! grep --ignore-case --fixed-strings --quiet -e "{{#seo:" -- "$file_name"; then
+  #     return 0
+  #   fi
+  #
+  #   ## Ignore pages that already have a title.
+  #   if grep --ignore-case --fixed-strings --quiet -e "{{title|" -- "$file_name"; then
+  #     return 0
+  #   fi
+  #
+  #   if grep --ignore-case --fixed-strings --quiet -e "title=" -- "$file_name"; then
+  #     return 0
+  #   fi
+  #
+  #   title="$backup_page_item"
+  #   title="$(echo "$title" | str_replace ".mw" "")"
+  #   title="$(echo "$title" | str_replace "_" " ")"
+  #
+  #    search="{{#seo:"
+  #    replace="\
+  # {{title|title=
+  # $title
+  # }}
+  # {{#seo:"
+  #
+  #    str_replace "$search" "$replace" "$wiki_backup_file"
+  #
+  #    if ! \
+  #       WIKI_URL="$DESTINATION_WIKI_URL" \
+  #       edit_message="add-title" \
+  #       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
+  #          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
+  #          return 1
+  #    fi
 
-   ## }}}
+  ## }}}
 }
 
 check_vars_exist wiki_backup_folder backup_filename_item backup_page_item SOURCE_WIKI_URL
@@ -102,25 +102,25 @@ log info "wiki_backup_folder: $wiki_backup_folder"
 
 mkdir -p "$wiki_backup_folder"
 
-if ! test -d "$wiki_backup_folder" ; then
-   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   echo "mkdir --parents '$wiki_backup_folder'"
-   exit 1
+if ! test -d "$wiki_backup_folder"; then
+  log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+  echo "mkdir --parents '$wiki_backup_folder'"
+  exit 1
 fi
 
-if ! test -w "$wiki_backup_folder" ; then
-   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
+if ! test -w "$wiki_backup_folder"; then
+  log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+  echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+  exit 1
 fi
 
-for retry_counter in $(seq 1 5) ; do
-   if do_it ; then
-      ## Success. Exit success.
-      exit 0
-   fi
-   ## Failed. Wait and try again.
-   sleep 5
+for retry_counter in $(seq 1 5); do
+  if do_it; then
+    ## Success. Exit success.
+    exit 0
+  fi
+  ## Failed. Wait and try again.
+  sleep 5
 done
 
 ## Failed even after retry attempts. Therefore exit non-zero.

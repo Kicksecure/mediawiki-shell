@@ -33,31 +33,31 @@ log info "DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
 log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 
 $curl \
-   "${curl_opts[@]}" \
-   --output "${TMPFOLDER}/revid.json" \
-   "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
+  "${curl_opts[@]}" \
+  --output "${TMPFOLDER}/revid.json" \
+  "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
 
 lastrevid=$(jq -r ".query.pages[].lastrevid" "${TMPFOLDER}/revid.json")
 
 if printf '%s\n' "$lastrevid" | grep -E -- '^[0-9]+$' >/dev/null 2>/dev/null; then
-    true "Valid number."
+  true "Valid number."
 else
-    log error "lastrev not numeric!"
-    exit 1
+  log error "lastrev not numeric!"
+  exit 1
 fi
 
 log info "Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
 
 $curl \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Content-Type: application/json" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --output "${TMPFOLDER}/csrf_token.json" \
-   --request "POST" \
-   "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Content-Type: application/json" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --output "${TMPFOLDER}/csrf_token.json" \
+  --request "POST" \
+  "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
 
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/csrf_token.json")
 
@@ -72,13 +72,13 @@ comment="mediawiki-shell-bot-flagged-revisions-mass-approve"
 log info "Requesting review-result... ${TMPFOLDER}/review-result.json"
 
 $curl \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --output "${TMPFOLDER}/review-result.json" \
-   --silent \
-   --data-urlencode "token=${csrf_token}" \
-   "${SOURCE_TARGET_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --output "${TMPFOLDER}/review-result.json" \
+  --silent \
+  --data-urlencode "token=${csrf_token}" \
+  "${SOURCE_TARGET_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
 
 ## XXX: Sometimes API login timeout.
 # {
@@ -109,8 +109,8 @@ $curl \
 review_result=$(jq --raw-output '.review.result' "${TMPFOLDER}/review-result.json")
 
 if [ "$review_result" = "Success" ]; then
-   log info "Success."
-   exit 0
+  log info "Success."
+  exit 0
 fi
 
 echo "${TMPFOLDER}/review-result.json"
@@ -118,12 +118,12 @@ jq "${TMPFOLDER}/review-result.json"
 
 review_error_code=$(jq --raw-output '.error.code' "${TMPFOLDER}/review-result.json")
 if [ "$review_error_code" = "notreviewable" ]; then
-   log notice "notreviewable"
-   exit 0
+  log notice "notreviewable"
+  exit 0
 fi
 
 if [ "$review_error_code" = "permissiondenied" ]; then
-   die 254 "permissiondenied"
+  die 254 "permissiondenied"
 fi
 
 log bug "Error."

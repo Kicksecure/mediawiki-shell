@@ -2,13 +2,13 @@
 
 # TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
-   if [ "$wiki_error_on_fetch" = "true" ]; then
-      ## error out
-      return 1
-   else
-      ## ignore error
-      return 0
-   fi
+  if [ "$wiki_error_on_fetch" = "true" ]; then
+    ## error out
+    return 1
+  else
+    ## ignore error
+    return 0
+  fi
 }
 
 log info "START"
@@ -38,16 +38,16 @@ log info "SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
 
 mkdir -p "$wiki_backup_folder"
 
-if ! test -d "$wiki_backup_folder" ; then
-   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   echo "mkdir --parents '$wiki_backup_folder'"
-   exit 1
+if ! test -d "$wiki_backup_folder"; then
+  log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+  echo "mkdir --parents '$wiki_backup_folder'"
+  exit 1
 fi
 
-if ! test -w "$wiki_backup_folder" ; then
-   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
+if ! test -w "$wiki_backup_folder"; then
+  log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+  echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+  exit 1
 fi
 
 mw-logout

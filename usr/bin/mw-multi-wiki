@@ -1,19 +1,19 @@
 #!/bin/bash
 
 missing_variable() {
-   log error "missing variable '$1'!"
-   exit 1
+  log error "missing variable '$1'!"
+  exit 1
 }
 
 # TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
-   if [ "$wiki_error_on_fetch" = "true" ]; then
-      ## error out
-      return 1
-   else
-      ## ignore error
-      return 0
-   fi
+  if [ "$wiki_error_on_fetch" = "true" ]; then
+    ## error out
+    return 1
+  else
+    ## ignore error
+    return 0
+  fi
 }
 
 log info "START"
@@ -29,7 +29,7 @@ source /usr/share/mediawiki-shell/common
 ## example:
 [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.kicksecure.com/w'
 [[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL=(
-   'https://www.whonix.org/w'
+  'https://www.whonix.org/w'
 )
 [[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/mirror-multi-wiki
 
@@ -56,34 +56,35 @@ log info "wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
 
 mkdir --parents "$wiki_backup_folder"
 
-if ! test -d "$wiki_backup_folder" ; then
-   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   stecho "mkdir --parents '$wiki_backup_folder'"
-   exit 1
+if ! test -d "$wiki_backup_folder"; then
+  log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
+  stecho "mkdir --parents '$wiki_backup_folder'"
+  exit 1
 fi
 
-if ! test -w "$wiki_backup_folder" ; then
-   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   stecho "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
+if ! test -w "$wiki_backup_folder"; then
+  log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
+  stecho "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+  exit 1
 fi
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-logout
+  mw-logout
 
 WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-login
+  mw-login
 
-all_pages="$($curl \
-   "${curl_opts[@]}" \
-   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
+all_pages="$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
 )"
 
 ## TODO: cmcontinue
 #https://www.kicksecure.com/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmcontinue=page|434f444553454c454354|748
 
-for wiki_multi_extra_wiki_pages_item in $wiki_multi_extra_wiki_pages_list ; do
-   stecho "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
+for wiki_multi_extra_wiki_pages_item in $wiki_multi_extra_wiki_pages_list; do
+  stecho "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
 done
 
 stecho "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
@@ -93,84 +94,90 @@ result_test="$(stcat "$allpages_file")"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 if [ "$result_test" = "" ]; then
-   log error "result_test is empty!"
-   exit 1
+  log error "result_test is empty!"
+  exit 1
 fi
 
 ## continue_from_page="Template:VM" mw-multi-wiki
 continue_next=no
 if [ "$continue_from_page" = "" ]; then
-   continue_next=yes
+  continue_next=yes
 fi
 
 counter_currently=0
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( counter_currently + 1 ))
+while IFS=$'\n' read -r item_from_all_pages; do
+  counter_currently=$((counter_currently + 1))
 
-   backup_page_item="$item_from_all_pages"
-   ## remove last letter ("'")
-   backup_page_item="${backup_page_item::-1}"
-   ## remove first letter ("'")
-   backup_page_item="${backup_page_item:1}"
+  backup_page_item="$item_from_all_pages"
+  ## remove last letter ("'")
+  backup_page_item="${backup_page_item::-1}"
+  ## remove first letter ("'")
+  backup_page_item="${backup_page_item:1}"
 
-   search=" "
-   replace="_"
-   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
+  search=" "
+  replace="_"
+  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
-   stecho "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+  stecho "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
-   if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-      continue_next=yes
-   fi
-   if [ "$continue_next" = "no" ]; then
-      continue
-   fi
+  if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
+    continue_next=yes
+  fi
+  if [ "$continue_next" = "no" ]; then
+    continue
+  fi
 
-   copy_wiki_pages_exit_code=0
+  copy_wiki_pages_exit_code=0
 
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
-   TMPFOLDER="$TMPFOLDER" \
-   copy_wiki_pages_item="$backup_page_item" \
-   edit_message="mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix" \
-      mw-copy-wiki-pages \
-         || { copy_wiki_pages_exit_code="$?" ; true; }
+  SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
+    TMPFOLDER="$TMPFOLDER" \
+    copy_wiki_pages_item="$backup_page_item" \
+    edit_message="mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix" \
+    mw-copy-wiki-pages ||
+    {
+      copy_wiki_pages_exit_code="$?"
+      true
+    }
 
-   if [ "$copy_wiki_pages_exit_code" = "10" ]; then
-      log warning "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
-   elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
-      log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
-   else
-      log error "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
-      exit 1
-   fi
+  if [ "$copy_wiki_pages_exit_code" = "10" ]; then
+    log warning "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+  elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
+    log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
+  else
+    log error "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+    exit 1
+  fi
 
-   if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>/dev/null; then
-      stecho "FILE | No, not a file, ok."
-      continue
-   fi
+  if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>/dev/null; then
+    stecho "FILE | No, not a file, ok."
+    continue
+  fi
 
-   stecho "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+  stecho "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
-   copy_wiki_file_exit_code=0
+  copy_wiki_file_exit_code=0
 
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
-   TMPFOLDER="$TMPFOLDER" \
-   wiki_remote_file_name="$backup_page_item" \
-   edit_message="mediawiki-shell-bot-mirror-multi-wiki-file-from-kicksecure-to-whonix" \
-      mw-copy-wiki-file \
-         || { copy_wiki_file_exit_code="$?" ; true; }
+  SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
+    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
+    TMPFOLDER="$TMPFOLDER" \
+    wiki_remote_file_name="$backup_page_item" \
+    edit_message="mediawiki-shell-bot-mirror-multi-wiki-file-from-kicksecure-to-whonix" \
+    mw-copy-wiki-file ||
+    {
+      copy_wiki_file_exit_code="$?"
+      true
+    }
 
-   if [ "$copy_wiki_file_exit_code" = "10" ]; then
-      log warning "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
-   elif [ "$copy_wiki_file_exit_code" = "0" ]; then
-      log info "FILE - backup_page_item '$backup_page_item' mirroring success."
-   else
-      log error "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
-      exit 1
-   fi
+  if [ "$copy_wiki_file_exit_code" = "10" ]; then
+    log warning "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+  elif [ "$copy_wiki_file_exit_code" = "0" ]; then
+    log info "FILE - backup_page_item '$backup_page_item' mirroring success."
+  else
+    log error "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
+    exit 1
+  fi
 
-   continue
+  continue
 
-done < "$allpages_file"
+done <"$allpages_file"

@@ -22,18 +22,18 @@ check_vars_exist() {
 }
 
 missing_variable() {
-   log error "MISSING VARIABLE: $*"
-   exit 1
+  log error "MISSING VARIABLE: $*"
+  exit 1
 }
 
 error_output() {
-   [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
-   [[ -v TITLE ]] || TITLE=""
-   [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
-   [[ -v counter_chunk ]] || counter_chunk="unset"
-   [[ -v counter_currently ]] || counter_currently="unset"
-   [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
-   echo "error_msg: '${1:-unset}'
+  [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
+  [[ -v TITLE ]] || TITLE=""
+  [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
+  [[ -v counter_chunk ]] || counter_chunk="unset"
+  [[ -v counter_currently ]] || counter_currently="unset"
+  [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
+  echo "error_msg: '${1:-unset}'
 WIKI_INDEX: '$WIKI_INDEX'
 TITLE: '$TITLE'
 TMPFOLDER: '$TMPFOLDER'
@@ -43,148 +43,151 @@ counter_currently: '$counter_currently'
 }
 
 error_handler() {
-   last_exit_code="$?"
-   log error "
+  last_exit_code="$?"
+  log error "
 BASH_COMMAND: '$BASH_COMMAND'
 failed with exit code '$last_exit_code'." >&2
-   error_output "called-by-error_handler"
-   exit 1
+  error_output "called-by-error_handler"
+  exit 1
 }
 
 trap error_handler ERR
 
 exit_handler() {
-   trap - INT HUP ABRT QUIT EXIT
-   local exit_code=$1
-   if [ "$exit_code" = "0" ]; then
-      log notice "END: with OK exit code: '$exit_code'"
-   else
-      log error "END: with ERROR exit code: '$exit_code'"
-   fi
-   exit "$exit_code"
+  trap - INT HUP ABRT QUIT EXIT
+  local exit_code=$1
+  if [ "$exit_code" = "0" ]; then
+    log notice "END: with OK exit code: '$exit_code'"
+  else
+    log error "END: with ERROR exit code: '$exit_code'"
+  fi
+  exit "$exit_code"
 }
 
 set_curl_binary_default() {
-   if command -v scurl &>/dev/null ; then
-      curl=scurl
-   else
-      curl=curl
-   fi
+  if command -v scurl &>/dev/null; then
+    curl=scurl
+  else
+    curl=curl
+  fi
 }
 
 set_backup_page_item() {
-   local backup_page_item search replace
+  local backup_page_item search replace
 
-   backup_page_item="$1"
+  backup_page_item="$1"
 
-   if [ "$backup_page_item" = "" ]; then
-      error "set_backup_filename_item is empty!"
-   fi
+  if [ "$backup_page_item" = "" ]; then
+    error "set_backup_filename_item is empty!"
+  fi
 
-   ## remove last letter ("'")
-   backup_page_item="${backup_page_item::-1}"
-   ## remove first letter ("'")
-   backup_page_item="${backup_page_item:1}"
+  ## remove last letter ("'")
+  backup_page_item="${backup_page_item::-1}"
+  ## remove first letter ("'")
+  backup_page_item="${backup_page_item:1}"
 
-   search="'\''"
-   replace="'"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  search="'\''"
+  replace="'"
+  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   search="&"
-   replace="%26"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  search="&"
+  replace="%26"
+  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   ## Same format as git-mediawiki: replace ' ' with '_'.
-   ## Replace spaces with underscore.
-   search=" "
-   replace="_"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  ## Same format as git-mediawiki: replace ' ' with '_'.
+  ## Replace spaces with underscore.
+  search=" "
+  replace="_"
+  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   echo "$backup_page_item"
+  echo "$backup_page_item"
 }
 
 set_backup_filename_item() {
-   local backup_filename_item search replace
+  local backup_filename_item search replace
 
-   backup_filename_item="$1"
+  backup_filename_item="$1"
 
-   if [ "$backup_filename_item" = "" ]; then
-      error "backup_filename_item is empty!"
-   fi
+  if [ "$backup_filename_item" = "" ]; then
+    error "backup_filename_item is empty!"
+  fi
 
-   ## Same format as git-mediawiki: replace '/' with '%2F'.
-   ## Also the file system does not accept files containing '/'.
-   search="/"
-   replace="%2F"
-   backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
+  ## Same format as git-mediawiki: replace '/' with '%2F'.
+  ## Also the file system does not accept files containing '/'.
+  search="/"
+  replace="%2F"
+  backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
 
-   ## Same format as git-mediawiki: add '.mw' file extension.
-   backup_filename_item="${backup_filename_item}.mw"
+  ## Same format as git-mediawiki: add '.mw' file extension.
+  backup_filename_item="${backup_filename_item}.mw"
 
-   echo "$backup_filename_item"
+  echo "$backup_filename_item"
 }
 
 curl_get_output_parameter() {
-   local loop_counter
-   loop_counter=0
+  local loop_counter
+  loop_counter=0
 
-   while true; do
-      loop_counter=$(( loop_counter + 1 ))
-      if [ "$loop_counter" -ge 50 ]; then
-         error "loop_max reached!"
-         exit 1
-      fi
-      case $1 in
-         --output)
-            output_file="$2"
-            shift 2
-            break
-            ;;
-         *)
-            shift
-            ;;
-      esac
-   done
+  while true; do
+    loop_counter=$((loop_counter + 1))
+    if [ "$loop_counter" -ge 50 ]; then
+      error "loop_max reached!"
+      exit 1
+    fi
+    case $1 in
+      --output)
+        output_file="$2"
+        shift 2
+        break
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
 }
 
 curl_run() {
-   ## Do not destroy "$@" in this function. Therefore passing it to a different
-   ## helper function so it stays local there and unchanged here.
-   curl_get_output_parameter "$@"
+  ## Do not destroy "$@" in this function. Therefore passing it to a different
+  ## helper function so it stays local there and unchanged here.
+  curl_get_output_parameter "$@"
 
-   if [ -z "$output_file" ]; then
-      error "output_file is empty!"
-      exit 1
-   fi
+  if [ -z "$output_file" ]; then
+    error "output_file is empty!"
+    exit 1
+  fi
 
-   rm -f "$output_file"
-   touch "$output_file"
+  rm -f "$output_file"
+  touch "$output_file"
 
-   local args url encoded_url
-   # shellcheck disable=SC2124,SC1126
-   url="${@: -1}"
+  local args url encoded_url
+  # shellcheck disable=SC2124,SC1126
+  url="${@: -1}"
 
-   [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
+  [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
 
-   if [ "$curl_run_no_encode" = "true" ]; then
-      encoded_url="$url"
-   else
-      encoded_url="$(mw-urlencode "$url")"
-   fi
+  if [ "$curl_run_no_encode" = "true" ]; then
+    encoded_url="$url"
+  else
+    encoded_url="$(mw-urlencode "$url")"
+  fi
 
-   # Rebuild the arguments excluding the last parameter, then append the encoded URL
-   args=("${@:1:$#-1}" "$encoded_url")
+  # Rebuild the arguments excluding the last parameter, then append the encoded URL
+  args=("${@:1:$#-1}" "$encoded_url")
 
-   curl_exit_code=0
+  curl_exit_code=0
 
-   # Run curl with the modified arguments
-   $curl "${args[@]}" || { curl_exit_code=$?; true; }
+  # Run curl with the modified arguments
+  $curl "${args[@]}" || {
+    curl_exit_code=$?
+    true
+  }
 
-   if [ ! "$curl_exit_code" = "0" ]; then
-      log error "curl result failed with exit code '$curl_exit_code'. output_file: $output_file"
-      cat "$output_file" >&2
-      exit 1
-   fi
+  if [ ! "$curl_exit_code" = "0" ]; then
+    log error "curl result failed with exit code '$curl_exit_code'. output_file: $output_file"
+    cat "$output_file" >&2
+    exit 1
+  fi
 }
 
 trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
@@ -194,14 +197,14 @@ trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || set_curl_binary_default
 [[ -v curl_opts ]] || curl_opts=(
-   "--fail"
-   "--no-progress-meter"
-   "--show-error"
-   "--retry-connrefused"
-   "--retry" "10"
-   "--retry-delay" "5"
-   "--cookie" "nocache=true"
-   "--user-agent" "mediawiki-shell"
+  "--fail"
+  "--no-progress-meter"
+  "--show-error"
+  "--retry-connrefused"
+  "--retry" "10"
+  "--retry-delay" "5"
+  "--cookie" "nocache=true"
+  "--user-agent" "mediawiki-shell"
 )
 
 mkdir --parents "$TMPFOLDER"

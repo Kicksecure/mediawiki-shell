@@ -45,66 +45,66 @@ chunk_max_size=10
 pid_list=""
 start_from_here="not-yet"
 
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( counter_currently + 1 ))
-   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-   backup_filename_item=$(set_backup_filename_item "$backup_page_item")
+while IFS=$'\n' read -r item_from_all_pages; do
+  counter_currently=$((counter_currently + 1))
+  backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+  backup_filename_item=$(set_backup_filename_item "$backup_page_item")
 
-   ## XXX
-   wiki_page_item="$backup_page_item"
-   wiki_article_to_fetch="$backup_page_item"
+  ## XXX
+  wiki_page_item="$backup_page_item"
+  wiki_article_to_fetch="$backup_page_item"
 
-   counter_chunk=$(( counter_chunk + 1 ))
+  counter_chunk=$((counter_chunk + 1))
 
-   ## TODO:
-   #continue_from_page="Network_Time_Synchronization"
+  ## TODO:
+  #continue_from_page="Network_Time_Synchronization"
 
-   if [ "$continue_from_page" = "" ]; then
+  if [ "$continue_from_page" = "" ]; then
+    start_from_here=true
+  else
+    if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
       start_from_here=true
-   else
-      if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-         start_from_here=true
+    fi
+  fi
+
+  if [ ! "$start_from_here" = "true" ]; then
+    log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+    continue
+  fi
+  log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+
+  if [ "$backup_page_item" = "Changelog" ]; then
+    continue
+  fi
+
+  TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
+  mkdir --parents "$TMPFOLDER_SEPARATE"
+
+  run_background=1 log_run \
+    env \
+    counter_currently="$counter_currently" \
+    counter_chunk="$counter_chunk" \
+    TMPFOLDER="$TMPFOLDER_SEPARATE" \
+    WIKI_URL="$SOURCE_WIKI_URL" \
+    backup_page_item="$backup_page_item" \
+    backup_filename_item="$backup_filename_item" \
+    wiki_page_item="$wiki_page_item" \
+    wiki_article_to_fetch="$wiki_article_to_fetch" \
+    mw-retry-wrapper "$wiki_script"
+
+  pid_list+=" $background_pid"
+
+  if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then
+    counter_chunk=0
+    log info "wait $pid_list"
+
+    for check_pid in $pid_list; do
+      if ! wait "$check_pid"; then
+        error "check_pid '$check_pid' failed!"
       fi
-   fi
+    done
 
-   if [ ! "$start_from_here" = "true" ]; then
-      log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
-      continue
-   fi
-   log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+    pid_list=""
+  fi
 
-   if [ "$backup_page_item" = "Changelog" ]; then
-      continue
-   fi
-
-   TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
-   mkdir --parents "$TMPFOLDER_SEPARATE"
-
-   run_background=1 log_run \
-      env \
-         counter_currently="$counter_currently" \
-         counter_chunk="$counter_chunk" \
-         TMPFOLDER="$TMPFOLDER_SEPARATE" \
-         WIKI_URL="$SOURCE_WIKI_URL" \
-         backup_page_item="$backup_page_item" \
-         backup_filename_item="$backup_filename_item" \
-         wiki_page_item="$wiki_page_item" \
-         wiki_article_to_fetch="$wiki_article_to_fetch" \
-         mw-retry-wrapper "$wiki_script"
-
-   pid_list+=" $background_pid"
-
-   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ] ; then
-      counter_chunk=0
-      log info "wait $pid_list"
-
-      for check_pid in $pid_list ; do
-         if ! wait "$check_pid" ; then
-            error "check_pid '$check_pid' failed!"
-         fi
-      done
-
-      pid_list=""
-   fi
-
-done < "$allpages_file"
+done <"$allpages_file"

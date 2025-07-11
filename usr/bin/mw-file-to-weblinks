@@ -15,16 +15,16 @@ set -e
 file_name="$1"
 test -r "$file_name"
 
-tr -s '[:blank:]' '[\n*]' < "$file_name" | while IFS= read -r word; do
-   #printf "%s\n" "word: '$word'"
+tr -s '[:blank:]' '[\n*]' <"$file_name" | while IFS= read -r word; do
+  #printf "%s\n" "word: '$word'"
 
-   if [ "$word" = "" ]; then
-      continue
-   fi
+  if [ "$word" = "" ]; then
+    continue
+  fi
 
-   [[ "$word" =~ .*https?://.* ]] || true
+  [[ $word =~ .*https?://.* ]] || true
 
-   if [ -n "${BASH_REMATCH[0]}" ]; then
-      printf "%s\n" "${BASH_REMATCH[0]}"
-   fi
+  if [ -n "${BASH_REMATCH[0]}" ]; then
+    printf "%s\n" "${BASH_REMATCH[0]}"
+  fi
 done

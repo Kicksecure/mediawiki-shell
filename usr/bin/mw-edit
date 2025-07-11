@@ -34,23 +34,23 @@ mw-logout
 mw-login
 
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --output "${TMPFOLDER}/fetch-edit-token.json" \
-   --request "GET" \
-   "${WIKI_API}?action=query&meta=tokens&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/fetch-edit-token.json" \
+  --request "GET" \
+  "${WIKI_API}?action=query&meta=tokens&format=json"
 
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   log info "Edit token for page OK."
+  log info "Edit token for page OK."
 else
-   log error "Edit token for page not set."
-   exit 1
+  log error "Edit token for page not set."
+  exit 1
 fi
 
 #log info "Editing '$TITLE'..."
@@ -61,18 +61,18 @@ fi
 ## https://www.whonix.org/wiki/Special:Tags
 
 curl_run \
-   "${curl_opts[@]}" \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --header "Expect:" \
-   --data-urlencode "title=$TITLE" \
-   --data-urlencode "text@$filename_with_contents" \
-   --data-urlencode "token=$csrf_token" \
-   --output "${TMPFOLDER}/edit-result.json" \
-   --request "POST" \
-   "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --header "Expect:" \
+  --data-urlencode "title=$TITLE" \
+  --data-urlencode "text@$filename_with_contents" \
+  --data-urlencode "token=$csrf_token" \
+  --output "${TMPFOLDER}/edit-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
 
 log info "Network for edit page ok."
 
@@ -83,8 +83,8 @@ edit_result_output="$(cat "${TMPFOLDER}/edit-result.json")"
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-   #echo "$edit_result_output" | jq
-   exit 0
+  #echo "$edit_result_output" | jq
+  exit 0
 fi
 
 echo "$edit_result_output" | jq >&2

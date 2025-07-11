@@ -8,13 +8,13 @@ set -e
 source /usr/share/mediawiki-shell/common
 
 [[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
-   # 'https://www.kicksecure.com/w'
-   'https://www.whonix.org/w'
+  # 'https://www.kicksecure.com/w'
+  'https://www.whonix.org/w'
 )
 
 for DESTINATION_WIKI in "${DESTINATION_WIKI[@]}"; do
-   WIKI_URL="$DESTINATION_WIKI"  \
-      mw-logout
-   WIKI_URL="$DESTINATION_WIKI"  \
-      mw-login
+  WIKI_URL="$DESTINATION_WIKI" \
+    mw-logout
+  WIKI_URL="$DESTINATION_WIKI" \
+    mw-login
 done

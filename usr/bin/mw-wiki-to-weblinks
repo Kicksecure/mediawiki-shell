@@ -35,12 +35,12 @@ log info "See:"
 echo "tail -f $TMPFOLDER/wiki-links/all-links.txt"
 
 WIKI_WEB=https://www.kicksecure.com/wiki \
-wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
-   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+  wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
+  mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
 
 WIKI_WEB=https://www.kicksecure.com/wiki \
-wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
-   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+  wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
+  mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
 
 grep --invert-match -- "## " "$TMPFOLDER/wiki-links/all-links.txt" | tee "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
 sort --unique "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null

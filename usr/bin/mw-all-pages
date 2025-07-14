@@ -107,7 +107,7 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
       ## Upstream does not support name spaces for this API call.
       break
     else
-      error "Not implemented!"
+      log error "Not implemented!"
       break
     fi
   done

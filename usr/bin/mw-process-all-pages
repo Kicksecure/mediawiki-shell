@@ -100,7 +100,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
     for check_pid in $pid_list; do
       if ! wait "$check_pid"; then
-        error "check_pid '$check_pid' failed!"
+        log error "check_pid '$check_pid' failed!"
       fi
     done
 

@@ -5,11 +5,17 @@ log_level=info
 source /usr/libexec/helper-scripts/log_run_die.sh
 source /usr/libexec/helper-scripts/has.sh
 
-for cmd in retry curl jq safe-rm; do
-  if ! has "$cmd"; then
-    die 1 "'${cmd}' command is unavailable!" >&2
+collect_reqs(){
+  local collect
+  for cmd in retry curl jq safe-rm; do
+    if ! has "$cmd"; then
+      collect="${collect:+$collect }$cmd"
+    fi
+  done
+  if test ${#cmd} -gt 0; then
+    die 1 "command(s) unavailable: $collect" >&2
   fi
-done
+}
 
 check_vars_exist() {
   for var_name in "$@"; do
@@ -75,9 +81,8 @@ set_backup_page_item() {
   local backup_page_item search replace
 
   backup_page_item="$(stecho "$1")"
-
   if [ -z "$backup_page_item" ]; then
-    error "set_backup_filename_item is empty!"
+    log error "set_backup_filename_item is empty!"
   fi
 
   ## remove last letter ("'")
@@ -108,7 +113,7 @@ set_backup_filename_item() {
   backup_filename_item="$1"
 
   if [ -z "$backup_filename_item" ]; then
-    error "backup_filename_item is empty!"
+    log error "backup_filename_item is empty!"
   fi
 
   ## Same format as git-mediawiki: replace '/' with '%2F'.
@@ -130,7 +135,7 @@ curl_get_output_parameter() {
   while true; do
     loop_counter=$((loop_counter + 1))
     if [ "$loop_counter" -ge 50 ]; then
-      error "loop_max reached!"
+      log error "loop_max reached!"
       exit 1
     fi
     case $1 in

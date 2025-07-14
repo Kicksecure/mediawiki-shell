@@ -12,26 +12,23 @@ source /usr/share/mediawiki-shell/common
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-## TODO: no root check
+not_as_root
 
 mkdir -p -- "$TMPFOLDER/wiki-links"
 
 ## TODO: path
-test -d ~/sourcesown/wiki-backup/kicksecure-wiki-backup
-test -d ~/sourcesown/wiki-backup/whonix-wiki-backup
+path=~/sourcesown/wiki-backup/
+test -d "${path}kicksecure-wiki-backup"
+test -d "${path}whonix-wiki-backup"
 
-cd ~/sourcesown/wiki-backup/kicksecure-wiki-backup
-git config pull.ff only
-git pull
-
-cd ~/sourcesown/wiki-backup/whonix-wiki-backup
-git config pull.ff only
-git pull
+for dir in "${path}kicksecure-wiki-backup" "${path}whonix-wiki-backup"; do
+  git -C "${dir}" config pull.ff only
+  git -C "${dir}" pull
+done
 
 safe-rm -f -- "$TMPFOLDER/wiki-links/all-links.txt"
 
-log info "See:"
-echo "tail -f -- $TMPFOLDER/wiki-links/all-links.txt"
+log info "Try: tail -f -- $TMPFOLDER/wiki-links/all-links.txt"
 
 WIKI_WEB=https://www.kicksecure.com/wiki \
   wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
@@ -44,5 +41,4 @@ WIKI_WEB=https://www.kicksecure.com/wiki \
 grep --invert-match -- "## " -- "$TMPFOLDER/wiki-links/all-links.txt" | tee -- "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
 sort --unique -- "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee -- "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
 
-echo "See:"
-echo "cat -- $TMPFOLDER/wiki-links/links-sorted.txt"
+log info "Try: cat -- $TMPFOLDER/wiki-links/links-sorted.txt"

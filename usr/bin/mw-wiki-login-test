@@ -7,14 +7,20 @@ source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-[[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
-  # 'https://www.kicksecure.com/w'
-  'https://www.whonix.org/w'
-)
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI..]
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w'" >&2
+  exit 1
+}
 
-for DESTINATION_WIKI in "${DESTINATION_WIKI[@]}"; do
-  WIKI_URL="$DESTINATION_WIKI" \
-    mw-logout
-  WIKI_URL="$DESTINATION_WIKI" \
-    mw-login
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+not_as_root
+
+for wiki in "${@}"; do
+  mw-logout "$wiki"
+  mw-login "$wiki"
 done

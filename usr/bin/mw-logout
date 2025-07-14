@@ -3,8 +3,20 @@ set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$1" source /usr/share/mediawiki-shell/wiki-config
 
 log info "Logging out of $WIKI_API... Requesting CSRF token..."
 safe-rm -f -- "${TMPFOLDER}/logout-token.json"
@@ -38,5 +50,5 @@ then
   exit 0
 fi
 
-jq . -- "${TMPFOLDER}/logout.json" >&2
+jq . -- "${TMPFOLDER}/logout.json" | stcat >&2
 die 1 "Logout failed!"

@@ -5,7 +5,6 @@
 ## example:
 ## See mw-wiki-to-weblinks.
 
-#set -x
 set -euEo pipefail
 
 ## XXX
@@ -16,7 +15,7 @@ source /usr/share/mediawiki-shell/common
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-## TODO: no root check
+not_as_root
 
 files_list+=("$wiki_folder"/*.mw)
 
@@ -30,17 +29,15 @@ for file_name in "${files_list[@]}"; do
   counter=$((counter + 1))
   base_name=$(basename "$file_name")
   without_file_extension=${base_name%.mw}
-  echo "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
+  log debug "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
   test -r "$file_name"
 
   web_links_list=$(mw-file-to-weblinks "$file_name")
-
   for web_link_item in $web_links_list; do
     web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
     if [ -z "$web_link_cleaned" ]; then
       continue
     fi
-
     ## Thanks to:
     ## Dennis Williamson
     ## https://stackoverflow.com/users/26428/dennis-williamson
@@ -48,12 +45,9 @@ for file_name in "${files_list[@]}"; do
     regex='^(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
     string="$web_link_cleaned"
     if [[ $string =~ $regex ]]; then
-      echo "$web_link_cleaned"
+      stprint "$web_link_cleaned"
     else
-      echo "## invalid link: $web_link_cleaned"
+      stecho "## invalid link: $web_link_cleaned"
     fi
-
   done
-  #echo ""
-
 done

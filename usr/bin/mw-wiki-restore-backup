@@ -18,42 +18,46 @@ error_out_maybe() {
   fi
 }
 
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-#[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/whonix-wiki-backup"
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI DIR
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'
+  ${0##*/} 'https://www.kicksecure.com/w' ~/mediawiki-shell/kicksecure-wiki-backup" >&2
+  exit 1
+}
 
-## These variables should be set by the calling script as environment variables.
-check_vars_exist SOURCE_WIKI_URL wiki_backup_folder
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+wiki="$1"
+folder="$2"
 
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
-
-## XXX
-WIKI_URL="$SOURCE_WIKI_URL"
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
 
-log info "TMPFOLDER         : $TMPFOLDER"
-log info "wiki_backup_folder: $wiki_backup_folder"
-log info "SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+log info "TMPFOLDER: $TMPFOLDER"
+log info "folder   : $folder"
+log info "wiki     : $wiki"
 
-mkdir -p -- "$wiki_backup_folder"
+mkdir -p -- "$folder"
 
-if ! test -d "$wiki_backup_folder"; then
-  log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-  echo "mkdir --parents -- '$wiki_backup_folder'"
+if ! test -d "$folder"; then
+  log error "folder '$folder' does not exist! Run...?:"
+  echo "mkdir --parents -- '$folder'"
   exit 1
 fi
 
-if ! test -w "$wiki_backup_folder"; then
-  log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-  echo "chown --recursive -- '$USER:$USER' '$wiki_backup_folder'"
+if ! test -w "$folder"; then
+  log error "folder '$folder' unwriteable! Run...?:"
+  echo "chown --recursive -- '$USER:$USER' '$folder'"
   exit 1
 fi
 
-mw-logout
-mw-login
-
+mw-logout "$SOURCE_WIKI_URL"
+mw-login "$SOURCE_WIKI_URL"
 ## TODO
 die 1 "ERROR: UNFINISHED SCRIPT!"
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 set -euEo pipefail
 
 [[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL=https://www.kicksecure.com/w

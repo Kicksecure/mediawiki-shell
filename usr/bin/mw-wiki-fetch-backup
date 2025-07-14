@@ -11,7 +11,6 @@ log info "START"
 exit_handler() {
   [[ -v retry_counter ]] || retry_counter=0
   if [ "$retry_counter" -gt 1 ]; then
-    ## >&2 is correct.
     log notice "success after attempt $retry_counter"
   fi
 }
@@ -19,11 +18,10 @@ exit_handler() {
 trap exit_handler EXIT
 
 do_it() {
-  wiki_backup_file="${wiki_backup_folder}/${backup_filename_item}"
-
-  wiki_article_to_fetch="$backup_page_item" \
+  wiki_backup_file="${folder}/${file}"
+  wiki_article_to_fetch="$page" \
     wiki_fetch_to_file="$wiki_backup_file" \
-    WIKI_URL="$SOURCE_WIKI_URL" \
+    WIKI_URL="$wiki" \
     mw-fetch
 
   ## {{{
@@ -39,8 +37,8 @@ do_it() {
   #    if ! \
   #       WIKI_URL="$DESTINATION_WIKI_URL" \
   #       edit_message="remove-trailing-spaces" \
-  #       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-  #          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
+  #       mw-edit "$page" "$wiki_backup_file" ; then
+  #          log error "mw-edit '$page' '$wiki_backup_file' failed!"
   #          return 1
   #    fi
 
@@ -72,7 +70,7 @@ do_it() {
   #     return 0
   #   fi
   #
-  #   title="$backup_page_item"
+  #   title="$page"
   #   title="$(echo "$title" | str_replace ".mw" "")"
   #   title="$(echo "$title" | str_replace "_" " ")"
   #
@@ -88,29 +86,43 @@ do_it() {
   #    if ! \
   #       WIKI_URL="$DESTINATION_WIKI_URL" \
   #       edit_message="add-title" \
-  #       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-  #          log error "mw-edit '$backup_page_item' '$wiki_backup_file' failed!"
+  #       mw-edit "$page" "$wiki_backup_file" ; then
+  #          log error "mw-edit '$page' '$wiki_backup_file' failed!"
   #          return 1
   #    fi
 
   ## }}}
 }
 
-check_vars_exist wiki_backup_folder backup_filename_item backup_page_item SOURCE_WIKI_URL
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI FOLDER FILENAME PAGE
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  exit 1
+}
 
-log info "wiki_backup_folder: $wiki_backup_folder"
+if [[ -z "${4-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-mkdir -p -- "$wiki_backup_folder"
+wiki="$1"
+folder="$2"
+file="$3"
+page="$4"
 
-if ! test -d "$wiki_backup_folder"; then
-  log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-  echo "mkdir --parents -- '$wiki_backup_folder'"
+log info "folder: $folder"
+
+mkdir -p -- "$folder"
+
+if ! test -d "$folder"; then
+  log error "folder '$folder' does not exist! Run...?:"
+  echo "mkdir --parents -- '$folder'"
   exit 1
 fi
 
-if ! test -w "$wiki_backup_folder"; then
-  log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-  echo "chown --recursive -- '$USER:$USER' '$wiki_backup_folder'"
+if ! test -w "$folder"; then
+  log error "folder '$folder' unwriteable! Run...?:"
+  echo "chown --recursive -- '$USER:$USER' '$folder'"
   exit 1
 fi
 

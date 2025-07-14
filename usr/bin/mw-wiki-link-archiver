@@ -5,6 +5,9 @@
 
 set -euEo pipefail
 
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
 log info "START"
 
 ensure_dir_exists() {

@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 
-log info "START"
-
-#set -x
 set -euEo pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "START"
 
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
@@ -19,11 +23,6 @@ WIKI_URL="$SOURCE_WIKI_URL"
 ## Namespace 500 (Moved:) is not reviewable.
 ## Namespace 500 (Widget:) is not reviewable.
 #export wiki_namespace_list_extra="500 274"
-
-# shellcheck source=../share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/common
-# shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
 
 log info "TMPFOLDER        : $TMPFOLDER"
 log info "SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"

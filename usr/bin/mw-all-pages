@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common

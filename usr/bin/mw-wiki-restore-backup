@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+set -euEo pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
 # TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
   if [ "$wiki_error_on_fetch" = "true" ]; then
@@ -10,10 +17,6 @@ error_out_maybe() {
     return 0
   fi
 }
-
-log info "START"
-
-set -euEo pipefail
 
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
@@ -26,8 +29,6 @@ check_vars_exist SOURCE_WIKI_URL wiki_backup_folder
 
 ## XXX
 WIKI_URL="$SOURCE_WIKI_URL"
-# shellcheck source=../share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/common
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"

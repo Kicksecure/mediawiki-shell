@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+set -euEo pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
 missing_variable() {
   log error "missing variable '$1'!"
   exit 1
@@ -15,12 +22,6 @@ error_out_maybe() {
     return 0
   fi
 }
-
-log info "START"
-
-set -euEo pipefail
-
-source /usr/share/mediawiki-shell/common
 
 [[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
 #[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"

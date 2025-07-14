@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-log info "START"
-
 set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+log info "START"
 
 [[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
   # 'https://www.kicksecure.com/w'

@@ -125,12 +125,12 @@ wiki_link_archiver() {
       ## have a less secure HTTPS configuration.
       if [[ ${raw_link} =~ \.onion$ ]]; then
         # Route onion links through Tor, assumes that tor is running
-        curl 2>/dev/null >/dev/null --proxy socks5h://127.0.0.1:9050 --location --fail "${raw_link}" || {
+        curl --proxy socks5h://127.0.0.1:9050 --location --fail "${raw_link}" >/dev/null 2>&1 || {
           append-once "${error_link_list_file}" "${raw_link}"
           continue
         }
       else
-        curl 2>/dev/null >/dev/null --location --fail "${raw_link}" || {
+        curl --location --fail "${raw_link}" >/dev/null 2>&1 || {
           append-once "${error_link_list_file}" "${raw_link}"
           continue
         }

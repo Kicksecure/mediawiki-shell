@@ -127,12 +127,12 @@ string_replace_tupils_list="\
 >
 "
 
-if printf '%s\n' "$link_result_cleaned" | grep --ignore-case --fixed-strings "$grep_skip_fixed_string_list_to_exclude" >/dev/null 2>/dev/null; then
+if printf '%s\n' "$link_result_cleaned" | grep --ignore-case --fixed-strings "$grep_skip_fixed_string_list_to_exclude" >/dev/null 2>&1; then
   exit 0
 fi
 
 ## '<ref name=f_secure>https://blog.f-secure.com/cold-boot-attacks/'
-if printf '%s\n' "$link_result_cleaned" | grep --fixed-strings --ignore-case "name=" >/dev/null 2>/dev/null; then
+if printf '%s\n' "$link_result_cleaned" | grep --fixed-strings --ignore-case "name=" >/dev/null 2>&1; then
   longest_match_after_character=">"
   link_result_cleaned="${link_result_cleaned#*"${longest_match_after_character}"}"
 fi

@@ -39,7 +39,7 @@ $curl \
 
 lastrevid=$(jq -r ".query.pages[].lastrevid" "${TMPFOLDER}/revid.json")
 
-if printf '%s\n' "$lastrevid" | grep -E -- '^[0-9]+$' >/dev/null 2>/dev/null; then
+if printf '%s\n' "$lastrevid" | grep -E -- '^[0-9]+$' >/dev/null 2>&1; then
   true "Valid number."
 else
   log error "lastrev not numeric!"

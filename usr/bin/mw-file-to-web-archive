@@ -47,7 +47,7 @@ archive_check() {
 
   location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
   link=$(printf '%s\n' "$location" | awk '{ print $2 }')
-  if printf '%s\n' "$link" | grep --fixed-strings -- "https://web.archive.org/web/" >/dev/null 2>/dev/null; then
+  if printf '%s\n' "$link" | grep --fixed-strings -- "https://web.archive.org/web/" >/dev/null 2>&1; then
     printf '%s\n' "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
     printf '%s\n' "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
     printf '%s\n' "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
@@ -121,7 +121,7 @@ while IFS= read -r word; do
 
   do_skip=""
   for cached_file in $TMPFOLDER/webarchive/already-*; do
-    if grep --fixed-strings -- "$word" "$cached_file" >/dev/null 2>/dev/null; then
+    if grep --fixed-strings -- "$word" "$cached_file" >/dev/null 2>&1; then
       echo "Already locally cached file status. cached_file: '$cached_file'"
       do_skip=true
     fi

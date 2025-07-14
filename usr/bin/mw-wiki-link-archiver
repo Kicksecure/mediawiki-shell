@@ -18,7 +18,7 @@ ensure_dir_exists() {
       log error "${dir_path} exists but is not a directory!"
       exit 1
     fi
-    mkdir -p "${dir_path}" || {
+    mkdir -p -- "${dir_path}" || {
       log error "Could not create a directory at ${dir_path}!"
       exit 1
     }
@@ -30,10 +30,10 @@ ensure_file_exists() {
 
   file_path="${1-}"
   test -n "${file_path}"
-  file_dir="$(dirname "${file_path}")"
+  file_dir="$(dirname -- "${file_path}")"
 
   ensure_dir_exists "${file_dir}"
-  touch "${file_path}" || {
+  touch -- "${file_path}" || {
     log error "Could not touch ${file_path}!"
     exit 1
   }

@@ -7,7 +7,7 @@ source /usr/share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/wiki-config
 
 log info "Logging out of $WIKI_API... Requesting CSRF token..."
-rm -f -- "${TMPFOLDER}/logout-token.json"
+safe-rm -f -- "${TMPFOLDER}/logout-token.json"
 
 curl_run \
   "${curl_opts[@]}" \

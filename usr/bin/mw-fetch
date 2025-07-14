@@ -16,8 +16,8 @@ if test -d "$wiki_fetch_to_file"; then
   exit 1
 fi
 
-rm -f "$wiki_fetch_to_file"
-touch "$wiki_fetch_to_file"
+safe-rm -f -- "$wiki_fetch_to_file"
+touch -- "$wiki_fetch_to_file"
 test -w "$wiki_fetch_to_file"
 
 # curl_run \

@@ -28,5 +28,5 @@ WIKI_URL=https://www.whonix.org/w ${0##*/}
 for f in /usr/share/mediawiki-shell/credentials ~/.credentials; do
   test -f "$f" || continue
   # shellcheck source=credentials disable=SC1090,SC1091
-  source "$f"
+  source -- "$f"
 done

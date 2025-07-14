@@ -17,8 +17,8 @@ if test -d "$wiki_remote_file_save_to_path"; then
   exit 1
 fi
 
-rm -f "$wiki_remote_file_save_to_path"
-touch "$wiki_remote_file_save_to_path"
+safe-rm -f -- "$wiki_remote_file_save_to_path"
+touch -- "$wiki_remote_file_save_to_path"
 test -w "$wiki_remote_file_save_to_path"
 
 ## mw-file-to-url gets already encoded URL from MediaWiki API.

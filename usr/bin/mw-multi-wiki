@@ -54,17 +54,17 @@ log info "allpages_file     : $allpages_file"
 log info "multiwiki_category: $multiwiki_category"
 log info "wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
 
-mkdir --parents "$wiki_backup_folder"
+mkdir --parents -- "$wiki_backup_folder"
 
 if ! test -d "$wiki_backup_folder"; then
   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-  stecho "mkdir --parents '$wiki_backup_folder'"
+  stecho "mkdir --parents -- '$wiki_backup_folder'"
   exit 1
 fi
 
 if ! test -w "$wiki_backup_folder"; then
   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-  stecho "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+  stecho "chown --recursive -- '$USER:$USER' '$wiki_backup_folder'"
   exit 1
 fi
 

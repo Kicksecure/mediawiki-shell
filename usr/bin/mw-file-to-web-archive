@@ -20,9 +20,9 @@ source /usr/share/mediawiki-shell/common
    -w %{http_code} \
 "
 
-mkdir --parents "$TMPFOLDER/webarchive"
-touch "$TMPFOLDER/webarchive/already-archived.txt"
-touch "$TMPFOLDER/webarchive/already-known-down.txt"
+mkdir --parents -- "$TMPFOLDER/webarchive"
+touch -- "$TMPFOLDER/webarchive/already-archived.txt"
+touch -- "$TMPFOLDER/webarchive/already-known-down.txt"
 
 echo "$TMPFOLDER/webarchive/already-archived.txt"
 echo "$TMPFOLDER/webarchive/already-known-down.txt"
@@ -35,13 +35,13 @@ archive_check() {
 
   if [ "$curl_http_status_code" = "403" ]; then
     echo "Excluded from web archive."
-    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-excluded.txt"
+    echo "$1" | tee -a -- "$TMPFOLDER/webarchive/already-known-excluded.txt"
     return 0
   fi
 
   if [ "$curl_http_status_code" = "404" ]; then
     echo "Down according to web archive. curl_http_status_code: '$curl_http_status_code'"
-    echo "$1" | tee -a "$TMPFOLDER/webarchive/already-known-down.txt"
+    echo "$1" | tee -a -- "$TMPFOLDER/webarchive/already-known-down.txt"
     return 0
   fi
 
@@ -49,8 +49,8 @@ archive_check() {
   link=$(printf '%s\n' "$location" | awk '{ print $2 }')
   if printf '%s\n' "$link" | grep --fixed-strings -- "https://web.archive.org/web/" >/dev/null 2>&1; then
     printf '%s\n' "Already archived according to the web archive. curl_http_status_code: '$curl_http_status_code'"
-    printf '%s\n' "$1" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
-    printf '%s\n' "$link" | tee -a "$TMPFOLDER/webarchive/already-archived.txt"
+    printf '%s\n' "$1" | tee -a -- "$TMPFOLDER/webarchive/already-archived.txt"
+    printf '%s\n' "$link" | tee -a -- "$TMPFOLDER/webarchive/already-archived.txt"
     return 0
   fi
 

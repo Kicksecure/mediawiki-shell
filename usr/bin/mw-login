@@ -13,7 +13,7 @@ fi
 
 log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
 
-rm -f -- "${TMPFOLDER}"/login-{token,result}.json
+safe-rm -f -- "${TMPFOLDER}"/login-{token,result}.json
 
 curl_run \
   "${curl_opts[@]}" \

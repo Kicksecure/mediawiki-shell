@@ -2,7 +2,6 @@
 
 ## Does not unduplicate. That should be done with a different script.
 
-#set -x
 set -euEo pipefail
 
 ## XXX
@@ -15,7 +14,7 @@ source /usr/share/mediawiki-shell/wiki-config
 
 ## TODO: no root check
 
-mkdir -p "$TMPFOLDER/wiki-links"
+mkdir -p -- "$TMPFOLDER/wiki-links"
 
 ## TODO: path
 test -d ~/sourcesown/wiki-backup/kicksecure-wiki-backup
@@ -29,10 +28,10 @@ cd ~/sourcesown/wiki-backup/whonix-wiki-backup
 git config pull.ff only
 git pull
 
-rm -f "$TMPFOLDER/wiki-links/all-links.txt"
+safe-rm -f -- "$TMPFOLDER/wiki-links/all-links.txt"
 
 log info "See:"
-echo "tail -f $TMPFOLDER/wiki-links/all-links.txt"
+echo "tail -f -- $TMPFOLDER/wiki-links/all-links.txt"
 
 WIKI_WEB=https://www.kicksecure.com/wiki \
   wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
@@ -42,8 +41,8 @@ WIKI_WEB=https://www.kicksecure.com/wiki \
   wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
 
-grep --invert-match -- "## " "$TMPFOLDER/wiki-links/all-links.txt" | tee "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
-sort --unique "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
+grep --invert-match -- "## " -- "$TMPFOLDER/wiki-links/all-links.txt" | tee -- "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
+sort --unique -- "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee -- "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
 
 echo "See:"
-echo "cat $TMPFOLDER/wiki-links/links-sorted.txt"
+echo "cat -- $TMPFOLDER/wiki-links/links-sorted.txt"

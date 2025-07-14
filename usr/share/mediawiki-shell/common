@@ -70,7 +70,7 @@ exit_handler() {
 }
 
 set_curl_binary_default() {
-  if command -v scurl &>/dev/null; then
+  if has scurl; then
     curl=scurl
   else
     curl=curl
@@ -161,8 +161,8 @@ curl_run() {
     exit 1
   fi
 
-  rm -f "$output_file"
-  touch "$output_file"
+  safe-rm -f -- "$output_file"
+  touch -- "$output_file"
 
   local args url encoded_url
   # shellcheck disable=SC2124,SC1126
@@ -211,5 +211,5 @@ trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
   "--user-agent" "mediawiki-shell"
 )
 
-mkdir --parents "$TMPFOLDER"
-chmod og-rw "$TMPFOLDER"
+mkdir --parents -- "$TMPFOLDER"
+chmod og-rw -- "$TMPFOLDER"

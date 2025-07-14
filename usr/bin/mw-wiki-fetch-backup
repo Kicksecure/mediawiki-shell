@@ -100,17 +100,17 @@ check_vars_exist wiki_backup_folder backup_filename_item backup_page_item SOURCE
 
 log info "wiki_backup_folder: $wiki_backup_folder"
 
-mkdir -p "$wiki_backup_folder"
+mkdir -p -- "$wiki_backup_folder"
 
 if ! test -d "$wiki_backup_folder"; then
   log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-  echo "mkdir --parents '$wiki_backup_folder'"
+  echo "mkdir --parents -- '$wiki_backup_folder'"
   exit 1
 fi
 
 if ! test -w "$wiki_backup_folder"; then
   log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-  echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
+  echo "chown --recursive -- '$USER:$USER' '$wiki_backup_folder'"
   exit 1
 fi
 

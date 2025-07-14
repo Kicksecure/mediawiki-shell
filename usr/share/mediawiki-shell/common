@@ -152,7 +152,7 @@ curl_run() {
   curl_get_output_parameter "$@"
 
   if [ -z "$output_file" ]; then
-    error "output_file is empty!"
+    log error "output_file is empty!"
     exit 1
   fi
 
@@ -184,7 +184,7 @@ curl_run() {
 
   if [ ! "$curl_exit_code" = "0" ]; then
     log error "curl result failed with exit code '$curl_exit_code'. output_file: $output_file"
-    cat "$output_file" >&2
+    cat -- "$output_file" >&2
     exit 1
   fi
 }

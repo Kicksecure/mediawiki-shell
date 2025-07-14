@@ -90,13 +90,11 @@ done
 stecho "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
 
 test -f "$allpages_file"
-result_test="$(stcat "$allpages_file")"
-counter_total="$(awk 'END {print NR}' "$allpages_file")"
-
-if [ -z "$result_test" ]; then
-  log error "result_test is empty!"
+if [ ! -s "$allpages_file" ]; then
+  log error "allpages_file file is empty!" >&2
   exit 1
 fi
+counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 ## continue_from_page="Template:VM" mw-multi-wiki
 continue_next=no

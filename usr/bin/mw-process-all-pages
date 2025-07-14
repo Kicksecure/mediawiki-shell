@@ -59,7 +59,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
   ## TODO:
   #continue_from_page="Network_Time_Synchronization"
 
-  if [ "$continue_from_page" = "" ]; then
+  if [ -z "$continue_from_page" ]; then
     start_from_here=true
   else
     if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then

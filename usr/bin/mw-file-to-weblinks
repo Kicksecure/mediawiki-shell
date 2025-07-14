@@ -18,7 +18,7 @@ test -r "$file_name"
 tr -s '[:blank:]' '[\n*]' <"$file_name" | while IFS= read -r word; do
   #printf "%s\n" "word: '$word'"
 
-  if [ "$word" = "" ]; then
+  if [ -z "$word" ]; then
     continue
   fi
 

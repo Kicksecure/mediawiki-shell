@@ -76,7 +76,7 @@ set_backup_page_item() {
 
   backup_page_item="$1"
 
-  if [ "$backup_page_item" = "" ]; then
+  if [ -z "$backup_page_item" ]; then
     error "set_backup_filename_item is empty!"
   fi
 
@@ -107,7 +107,7 @@ set_backup_filename_item() {
 
   backup_filename_item="$1"
 
-  if [ "$backup_filename_item" = "" ]; then
+  if [ -z "$backup_filename_item" ]; then
     error "backup_filename_item is empty!"
   fi
 

@@ -15,7 +15,7 @@ command -v str_replace >/dev/null
 ## TODO: no root check
 
 link_result_cleaned="$1"
-if [ "$link_result_cleaned" = "" ]; then
+if [ -z "$link_result_cleaned" ]; then
   log error "No link given!"
   exit 1
 fi
@@ -138,7 +138,7 @@ if printf '%s\n' "$link_result_cleaned" | grep --fixed-strings --ignore-case "na
 fi
 
 while read -r replace_config_line; do
-  if [ "$replace_config_line" = "" ]; then
+  if [ -z "$replace_config_line" ]; then
     log error "replace_config_line is empty!"
     exit 1
   fi
@@ -149,12 +149,12 @@ while read -r replace_config_line; do
   true "first: $first"
   true "second: $second"
 
-  if [ "$first" = "" ]; then
+  if [ -z "$first" ]; then
     log error "first is empty!"
     exit 1
   fi
   ## Second can be empty.
-  #if [ "$second" = "" ]; then
+  #if [ -z "$second" ]; then
   #log error "second is empty!"
   #exit 1
   #fi

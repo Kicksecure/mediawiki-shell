@@ -116,7 +116,7 @@ total="$(awk 'END {print NR}' "$file_name")"
 counter=0
 
 cat <"$file_name" | while IFS= read -r word; do
-  if [ "$word" = "" ]; then
+  if [ -z "$word" ]; then
     continue
   fi
 

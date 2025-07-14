@@ -37,7 +37,7 @@ for file_name in "${files_list[@]}"; do
 
   for web_link_item in $web_links_list; do
     web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
-    if [ "$web_link_cleaned" = "" ]; then
+    if [ -z "$web_link_cleaned" ]; then
       continue
     fi
 

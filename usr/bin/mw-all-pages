@@ -115,12 +115,12 @@ done
 
 test -f "$allpages_file"
 result_test="$(stcat "$allpages_file")"
-if [ "$result_test" = "" ]; then
+if [ -z "$result_test" ]; then
   log error "result_test is empty!" >&2
   exit 1
 fi
 
-if [ "$wiki_article_must_include_sanity_test" = "" ]; then
+if [ -z "$wiki_article_must_include_sanity_test" ]; then
   log info "wiki_article_must_include_sanity_test not configured, ok."
 else
   ## TODO: stecho too much. ARG_MAX potentially hit. grep based on file instead.

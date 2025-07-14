@@ -93,14 +93,14 @@ test -f "$allpages_file"
 result_test="$(stcat "$allpages_file")"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
-if [ "$result_test" = "" ]; then
+if [ -z "$result_test" ]; then
   log error "result_test is empty!"
   exit 1
 fi
 
 ## continue_from_page="Template:VM" mw-multi-wiki
 continue_next=no
-if [ "$continue_from_page" = "" ]; then
+if [ -z "$continue_from_page" ]; then
   continue_next=yes
 fi
 

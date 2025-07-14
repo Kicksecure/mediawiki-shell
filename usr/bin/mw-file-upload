@@ -69,7 +69,7 @@ log info "Network for file upload ok."
 
 test -r "${TMPFOLDER}/upload-result.json"
 
-edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
+edit_result_output="$(stcat "${TMPFOLDER}/upload-result.json")"
 
 if [ "$(echo "$edit_result_output" | jq -r ".error.code")" = "fileexists-no-change" ]; then
   #echo "$edit_result_output" | jq
@@ -92,6 +92,6 @@ if [ "$upload_result_jq" = "Success" ]; then
 fi
 
 echo "${TMPFOLDER}/upload-result.json"
-echo "$edit_result_output" | jq >&2
+jq . <<<"$edit_result_output" >&2
 log error "Upload file error."
 exit 1

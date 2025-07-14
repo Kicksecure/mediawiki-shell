@@ -32,7 +32,7 @@ error_output() {
   [[ -v counter_chunk ]] || counter_chunk="unset"
   [[ -v counter_currently ]] || counter_currently="unset"
   [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
-  echo "error_msg: '${1:-unset}'
+  stecho "error_msg: '${1:-unset}'
 WIKI_INDEX: '$WIKI_INDEX'
 TITLE: '$TITLE'
 TMPFOLDER: '$TMPFOLDER'
@@ -74,7 +74,7 @@ set_curl_binary_default() {
 set_backup_page_item() {
   local backup_page_item search replace
 
-  backup_page_item="$1"
+  backup_page_item="$(stecho "$1")"
 
   if [ -z "$backup_page_item" ]; then
     error "set_backup_filename_item is empty!"
@@ -115,12 +115,12 @@ set_backup_filename_item() {
   ## Also the file system does not accept files containing '/'.
   search="/"
   replace="%2F"
-  backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
+  backup_filename_item=$(stecho "$backup_filename_item" | str_replace "$search" "$replace")
 
   ## Same format as git-mediawiki: add '.mw' file extension.
   backup_filename_item="${backup_filename_item}.mw"
 
-  echo "$backup_filename_item"
+  stecho "$backup_filename_item"
 }
 
 curl_get_output_parameter() {
@@ -184,7 +184,7 @@ curl_run() {
 
   if [ ! "$curl_exit_code" = "0" ]; then
     log error "curl result failed with exit code '$curl_exit_code'. output_file: $output_file"
-    cat -- "$output_file" >&2
+    stcat "$output_file" >&2
     exit 1
   fi
 }

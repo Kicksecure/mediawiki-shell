@@ -31,7 +31,7 @@ curl_run \
   --request "POST" \
   "${WIKI_API}?action=logout&format=json"
 
-if [ "$(cat -- "${TMPFOLDER}/logout.json")" = "{}" ] ||
+if [ "$(stcat "${TMPFOLDER}/logout.json")" = "{}" ] ||
   [ "$(jq --raw-output '.warnings.logout."*"' -- "${TMPFOLDER}/logout.json")" = "You must be logged in." ]
 then
   log info "OK, logged out."

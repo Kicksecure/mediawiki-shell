@@ -63,12 +63,12 @@ archive_save() {
   echo "Requesting web archive link... https://web.archive.org/save/$1"
 
   curl_http_status_code=$($curl $curl_web_archive_opts "https://web.archive.org/save/$1") || true
-  curl_output="$(cat "$TMPFOLDER/webarchive/curl-output-temp")"
+  curl_output="$(stcat "$TMPFOLDER/webarchive/curl-output-temp")"
 
   if [ "$curl_http_status_code" = "302" ]; then
-    printf '%s\n' "Archived. Web archive reported that archiving succeeded."
-    location=$(printf '%s\n' "$curl_output" | grep -- '^location:')
-    link=$(printf '%s\n' "$location" | awk '{ print $2 }')
+    echo "Archived. Web archive reported that archiving succeeded."
+    location=$(grep -- '^location:' <<<"$curl_output")
+    link=$(awk -- '{ print $2 }' "$location")
     printf '%s\n' "$link"
     return 0
   fi
@@ -102,20 +102,14 @@ archive_save() {
   return 0
 }
 
-#set -x
-set -euEo pipefail
-
 ## TODO: no root check
 
 file_name="$TMPFOLDER/wiki-links/links-sorted.txt"
-
 test -r "$file_name"
-
 total="$(awk 'END {print NR}' "$file_name")"
-
 counter=0
 
-cat <"$file_name" | while IFS= read -r word; do
+while IFS= read -r word; do
   if [ -z "$word" ]; then
     continue
   fi
@@ -149,4 +143,4 @@ cat <"$file_name" | while IFS= read -r word; do
   done
 
   echo ""
-done
+done <"$file_name"

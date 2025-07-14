@@ -78,16 +78,15 @@ log info "Network for edit page ok."
 
 test -r "${TMPFOLDER}/edit-result.json"
 
-edit_result_output="$(cat "${TMPFOLDER}/edit-result.json")"
+edit_result_output="$(stcat "${TMPFOLDER}/edit-result.json")"
 
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-  #echo "$edit_result_output" | jq
   exit 0
 fi
 
-echo "$edit_result_output" | jq >&2
+jq . <<<"$edit_result_output" >&2
 log error "Edit page error."
 
 exit 1

@@ -1,6 +1,5 @@
-#!/bin/bash
-
-set -euo pipefail -o errtrace
+#!/usr/bin/env bash
+set -euEo pipefail
 
 log_level=info
 source /usr/libexec/helper-scripts/log_run_die.sh

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Example:
 ## mw-wiki-link-clean "https://en.wikipedia.org/wiki/Atomic_clock"
@@ -8,7 +8,7 @@
 ## mw-wiki-link-clean "https://en.wikipedia.org/wiki/Atomic_clock"
 
 #set -x
-set -e
+set -euEo pipefail
 
 command -v str_replace >/dev/null
 

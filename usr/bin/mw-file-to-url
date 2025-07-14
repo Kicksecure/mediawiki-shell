@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## example:
 ## WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name_fetch_to_file=/tmp/a wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-file-to-link
 
-set -e
+set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common

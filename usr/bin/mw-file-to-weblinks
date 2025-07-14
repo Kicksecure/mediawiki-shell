@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Takes a file as an input parameter.
 ## Goes through line by line of that file, goes through every line word by word
@@ -8,7 +8,7 @@
 ## mw-file-to-weblinks ~/sourcesown/wiki-backup/kicksecure-wiki-backup/Secure_Downloads.mw
 
 #set -x
-set -e
+set -euEo pipefail
 
 ## TODO: no root check
 

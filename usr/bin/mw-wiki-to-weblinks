@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Does not unduplicate. That should be done with a different script.
 
 #set -x
-set -e
+set -euEo pipefail
 
 ## XXX
 WIKI_URL=""

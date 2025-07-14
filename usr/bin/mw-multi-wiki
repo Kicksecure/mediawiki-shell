@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 missing_variable() {
   log error "missing variable '$1'!"
@@ -18,7 +18,7 @@ error_out_maybe() {
 
 log info "START"
 
-set -e
+set -euEo pipefail
 
 source /usr/share/mediawiki-shell/common
 

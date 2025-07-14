@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 log info "START"
 
 #set -x
-set -e
+set -euEo pipefail
 
 ## example:
 #[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'

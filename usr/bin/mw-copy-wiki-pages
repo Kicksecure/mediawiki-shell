@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 log info "START"
 
-set -e
+set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common

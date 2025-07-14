@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## example:
 ## mw-file-to-web-archive ~/sourcesown/web-links.txt
 
-set -e
+set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -103,7 +103,7 @@ archive_save() {
 }
 
 #set -x
-set -e
+set -euEo pipefail
 
 ## TODO: no root check
 

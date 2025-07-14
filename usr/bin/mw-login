@@ -1,6 +1,5 @@
-#!/bin/bash
-
-set -e
+#!/usr/bin/env bash
+set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -14,8 +13,7 @@ fi
 
 log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
 
-rm -f "${TMPFOLDER}/login-token.json"
-rm -f "${TMPFOLDER}/login-result.json"
+rm -f -- "${TMPFOLDER}"/login-{token,result}.json
 
 curl_run \
   "${curl_opts[@]}" \
@@ -28,11 +26,7 @@ curl_run \
   "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
 
 log info "Login Token received."
-
-login_token="$(jq --raw-output '.query.tokens.logintoken' <"${TMPFOLDER}/login-token.json")"
-
-## Sensitive?
-#log info "login_token: $login_token"
+login_token="$(jq --raw-output '.query.tokens.logintoken' -- "${TMPFOLDER}/login-token.json")"
 
 curl_run \
   "${curl_opts[@]}" \
@@ -53,13 +47,12 @@ curl_run \
 ## "result": "Aborted",
 ## "reason": "Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions."
 
-RESULT="$(jq -r '.login.result' <"${TMPFOLDER}/login-result.json")"
+RESULT="$(jq --raw-output '.login.result' -- "${TMPFOLDER}/login-result.json")"
 
 if [ "$RESULT" = "Success" ]; then
   log info "Successfully logged in as '$WIKI_API_USER_NAME'."
   exit 0
 fi
 
-jq "${TMPFOLDER}/login-result.json" >&2
-log error "Login failed!"
-exit 1
+jq . -- "${TMPFOLDER}/login-result.json" >&2
+die 1 "Login failed!"

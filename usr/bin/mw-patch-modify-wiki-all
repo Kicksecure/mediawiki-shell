@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 log info "START"
 
 #set -x
-set -e
+set -euEo pipefail
 
 source /usr/share/mediawiki-shell/common
 

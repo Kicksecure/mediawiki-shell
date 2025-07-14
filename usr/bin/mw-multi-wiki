@@ -139,14 +139,17 @@ while IFS=$'\n' read -r item_from_all_pages; do
       true
     }
 
-  if [ "$copy_wiki_pages_exit_code" = "10" ]; then
-    log warning "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
-  elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
-    log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
-  else
-    log error "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
-    exit 1
-  fi
+  case "$copy_wiki_pages_exit_code" in
+    10)
+      log warning "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      ;;
+    0)
+      log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
+      ;;
+    *)
+      die 1 "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      ;;
+  esac
 
   if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>&1; then
     stecho "FILE | No, not a file, ok."
@@ -168,14 +171,17 @@ while IFS=$'\n' read -r item_from_all_pages; do
       true
     }
 
-  if [ "$copy_wiki_file_exit_code" = "10" ]; then
-    log warning "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
-  elif [ "$copy_wiki_file_exit_code" = "0" ]; then
-    log info "FILE - backup_page_item '$backup_page_item' mirroring success."
-  else
-    log error "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
-    exit 1
-  fi
+  case "$copy_wiki_file_exit_code" in
+    10)
+      log warning "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      ;;
+    0)
+      log info "FILE - backup_page_item '$backup_page_item' mirroring success."
+      ;;
+    *)
+      die 1 "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
+      ;;
+  esac
 
   continue
 

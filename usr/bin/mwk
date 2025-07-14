@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euEo pipefail
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS]
+  --login
+  --logout
+  "
+  exit "${1}"
+}
+
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
+while true; do
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    login|logout) mw-"${opt}";;
+    h|help) usage 0;;
+    "") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done

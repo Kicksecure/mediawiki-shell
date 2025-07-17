@@ -5,11 +5,11 @@ set -euEo pipefail
 ## ~/.credentials with the following contents:
 #
 #case "${WIKI_URL-}" in
-#  whonix)
+#  *".whonix."*)
 #    WIKI_API_USER_NAME="username"
 #    WIKI_API_USER_PASS="password"
 #    ;;
-#  kicksecure)
+#  *".kicksecure."*)
 #    WIKI_API_USER_NAME="username"
 #    WIKI_API_USER_PASS="password"
 #    ;;
@@ -27,8 +27,7 @@ WIKI_URL=https://www.whonix.org/w ${0##*/}
 
 require_pass(){
   if [ -z "${WIKI_API_USER_PASS-}" ]; then
-    log error "Password not supplied!"
-    exit 1
+    die 1 "Password not supplied!"
   fi
 }
 

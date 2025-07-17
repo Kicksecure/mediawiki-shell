@@ -1,33 +1,43 @@
 #!/usr/bin/env bash
 
-## example:
-## WIKI_URL=https://www.whonix.org/w wiki_upload_file_path=/tmp/a wiki_remote_upload_file_title="File:Ubuntu_software_icon.png" mw-file-upload
-
 set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI ORIGIN DESTINATION
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png" >&2
+  exit 1
+}
+
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+wiki_url="$1"
+origin="$2"
+destination="$3"
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-check_vars_exist WIKI_URL wiki_upload_file_path wiki_remote_upload_file_title
-
+# TODO: ben: options
 [[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-upload-message"
 
-log info "Uploading file '${WIKI_URL}' '$wiki_upload_file_path'..."
+log info "Uploading file '${wiki_url}' '$origin'..."
 
-if test -d "$wiki_upload_file_path"; then
-  log error "wiki_upload_file_path '$wiki_upload_file_path' is a folder!"
+if test -d "$origin"; then
+  log error "origin '$origin' is a folder!"
   exit 1
 fi
 
-if ! test -r "$wiki_upload_file_path"; then
-  log error "wiki_upload_file_path '$wiki_upload_file_path' is not readable!"
+if ! test -r "$origin"; then
+  log error "origin '$origin' is not readable!"
   exit 1
 fi
 
-mw-logout
-mw-login
+mw-login-test "$wiki_url"
 
 curl_run \
   "${curl_opts[@]}" \
@@ -57,8 +67,8 @@ curl_run \
   --header "Connection: keep-alive" \
   --header "Expect:" \
   --form "token=$csrf_token" \
-  --form "filename=$wiki_remote_upload_file_title" \
-  --form "file=@$wiki_upload_file_path" \
+  --form "filename=$destination" \
+  --form "file=@$origin" \
   --form "comment=$edit_message" \
   --form "ignorewarnings=yes" \
   --output "${TMPFOLDER}/upload-result.json" \
@@ -70,28 +80,24 @@ log info "Network for file upload ok."
 test -r "${TMPFOLDER}/upload-result.json"
 
 edit_result_output="$(stcat "${TMPFOLDER}/upload-result.json")"
-
 if [ "$(echo "$edit_result_output" | jq -r ".error.code")" = "fileexists-no-change" ]; then
-  #echo "$edit_result_output" | jq
   log info "Upload file success."
   exit 0
 fi
 
 edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
-
 if [ "$edit_result_jq" = "Success" ]; then
   log info "Upload (edit) file success."
   exit 0
 fi
 
 upload_result_jq="$(echo "$edit_result_output" | jq -r ".upload.result")"
-
 if [ "$upload_result_jq" = "Success" ]; then
   log info "Upload (upload) file success."
   exit 0
 fi
 
-echo "${TMPFOLDER}/upload-result.json"
-jq . <<<"$edit_result_output" >&2
+stecho "${TMPFOLDER}/upload-result.json"
+jq . <<<"$edit_result_output" | stcat >&2
 log error "Upload file error."
 exit 1

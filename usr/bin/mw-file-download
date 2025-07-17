@@ -4,39 +4,52 @@ set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE_FILE OUTPUT
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' File:Ubuntu_software_icon.png /tmp/Ubuntu_software_icon.png" >&2
+  exit 1
+}
+
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+wiki_url="$1"
+page_file="$2"
+page_file_local="$3"
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-## example:
-#WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name="File:Ubuntu_software_icon.png" wiki_remote_file_save_to_path="/tmp/Ubuntu_software_icon.png" mw-file-download
+log info "Downloading file '${WIKI_INDEX}' '$page_file'..."
 
-log info "Downloading file '${WIKI_INDEX}' '$wiki_remote_file_name'..."
-
-if test -d "$wiki_remote_file_save_to_path"; then
-  log error "wiki_remote_file_save_to_path '$wiki_remote_file_save_to_path' is a folder!"
+if test -d "$page_file_local"; then
+  log error "page_file_local '$page_file_local' is a folder!"
   exit 1
 fi
 
-safe-rm -f -- "$wiki_remote_file_save_to_path"
-touch -- "$wiki_remote_file_save_to_path"
-test -w "$wiki_remote_file_save_to_path"
+safe-rm -f -- "$page_file_local"
+touch -- "$page_file_local"
+test -w "$page_file_local"
 
 ## mw-file-to-url gets already encoded URL from MediaWiki API.
-wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" wiki_remote_file_name="$wiki_remote_file_name" mw-file-to-url
+page_file_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" page_file="$page_file" mw-file-to-url
 
 url="$(stcat "${TMPFOLDER}/wiki-remote-file-url.txt")"
 ## url contains encoded URL.
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg
 
-log info "saving file to wiki_remote_file_save_to_path: '$wiki_remote_file_save_to_path'"
+log info "saving file to page_file_local: '$page_file_local'"
 
 curl_run_no_encode=true \
   curl_run \
   "${curl_opts[@]}" \
   --header "Accept-Language: en-GB" \
   --header "Expect:" \
-  --output "$wiki_remote_file_save_to_path" \
+  --output "$page_file_local" \
   "$url"
 
 log info "Fetch file success."

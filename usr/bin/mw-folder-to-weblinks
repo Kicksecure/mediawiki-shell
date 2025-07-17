@@ -2,22 +2,28 @@
 
 ## Does not unduplicate. That should be done with a different script.
 
-## example:
-## See mw-wiki-to-weblinks.
-
 set -euEo pipefail
-
-## XXX
-WIKI_URL=""
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-# shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} wiki_web ORIGIN_DIR
+Example:
+  ${0##*/} 'https://www.kicksecure.com/wiki'
+  ${0##*/} 'https://www.kicksecure.com/wiki' ~/sourcesown/wiki-backup/whonix-wiki-backup" >&2
+  exit 1
+}
+
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+wiki_web="$1"
+origin_dir="$2"
 
 not_as_root
 
-files_list+=("$wiki_folder"/*.mw)
+files_list+=("$origin_dir"/*.mw)
 
 total=0
 for file_name in "${files_list[@]}"; do
@@ -29,7 +35,7 @@ for file_name in "${files_list[@]}"; do
   counter=$((counter + 1))
   base_name=$(basename "$file_name")
   without_file_extension=${base_name%.mw}
-  log debug "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
+  log debug "## $counter / $total | file_name: '$base_name' | $wiki_web/$without_file_extension"
   test -r "$file_name"
 
   web_links_list=$(mw-file-to-weblinks "$file_name")

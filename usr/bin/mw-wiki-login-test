@@ -20,7 +20,7 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
 fi
 not_as_root
 
-for wiki in "${@}"; do
-  mw-logout "$wiki"
-  mw-login "$wiki"
+for wiki_url in "${@}"; do
+  mw-logout "$wiki_url"
+  mw-login "$wiki_url"
 done

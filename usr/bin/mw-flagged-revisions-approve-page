@@ -7,33 +7,38 @@ source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' File:10b.png" >&2
+  exit 1
+}
 
-## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w' "$0"
-[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
-[[ -v DESTINATION_WIKI_PAGE ]] || missing_variable DESTINATION_WIKI_PAGE For example: DESTINATION_WIKI_PAGE=File:10b.png "$0"
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-## XXX
-WIKI_URL="$SOURCE_WIKI_URL"
+wiki_url="$1"
+page_file="$2"
+
+# TODO: ben: api
+[[ -v WIKI_API ]] || WIKI_API="${SOURCE_WIKI_URL}/api.php"
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 log info "SOURCE_WIKI_URL      : $SOURCE_WIKI_URL"
-log info "SOURCE_TARGET_API    : $SOURCE_TARGET_API"
-log info "DESTINATION_WIKI_PAGE: $DESTINATION_WIKI_PAGE"
+log info "WIKI_API    : $WIKI_API"
+log info "page_file: $page_file"
 
-## XXX
-#WIKI_URL="$SOURCE_WIKI_URL" mw-logout
-#WIKI_URL="$SOURCE_WIKI_URL" mw-login
+#mw-login-test "$wiki_url"
 
 log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 
 $curl \
   "${curl_opts[@]}" \
   --output "${TMPFOLDER}/revid.json" \
-  "${SOURCE_TARGET_API}?format=json&action=query&prop=info%7Cflagged&titles=${DESTINATION_WIKI_PAGE}"
+  "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=${page_file}"
 
 lastrevid=$(jq -r ".query.pages[].lastrevid" "${TMPFOLDER}/revid.json")
 
@@ -55,7 +60,7 @@ $curl \
   --header "Connection: keep-alive" \
   --output "${TMPFOLDER}/csrf_token.json" \
   --request "POST" \
-  "${SOURCE_TARGET_API}?action=query&meta=tokens&type=csrf&format=json"
+  "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
 
 csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/csrf_token.json")
 
@@ -76,7 +81,7 @@ $curl \
   --output "${TMPFOLDER}/review-result.json" \
   --silent \
   --data-urlencode "token=${csrf_token}" \
-  "${SOURCE_TARGET_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
+  "${WIKI_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
 
 ## XXX: Sometimes API login timeout.
 # {
@@ -102,7 +107,7 @@ $curl \
 #    --output "${TMPFOLDER}/review-result.json" \
 #    --silent \
 #    --data-urlencode "token=${csrf_token}" \
-#    "${SOURCE_TARGET_API}?format=json&action=stabilize&title=${DESTINATION_WIKI_PAGE}&default=stable&&reason=${comment}"
+#    "${WIKI_API}?format=json&action=stabilize&title=${page_file}&default=stable&&reason=${comment}"
 
 review_result=$(jq --raw-output '.review.result' "${TMPFOLDER}/review-result.json")
 

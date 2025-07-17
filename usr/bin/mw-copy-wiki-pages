@@ -7,30 +7,34 @@ source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-## example:
-#SOURCE_WIKI_URL='https://www.kicksecure.com'
-#DESTINATION_WIKI_URL=(
-#   'https://www.whonix.org'
-#)
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET PAGE [OUTPUT]
+Defaults:
+  OUTPUT=${default_page_title_local}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' Ubuntu_software" >&2
+  exit 1
+}
 
-check_vars_exist SOURCE_WIKI_URL DESTINATION_WIKI_URL copy_wiki_pages_item
+default_page_title_local="$TMPFOLDER/fetched-wiki-page"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-[[ -v wiki_source_api ]] || wiki_source_api="${SOURCE_WIKI_URL}/api.php"
+wiki_url="$1"
+wiki_url_target="$2"
+page_title="$3"
+page_title_local="${4-"${default_page_title_local}"}"
 
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-logout
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-login
+[[ -v wiki_source_api ]] || wiki_source_api="${wiki_url}/api.php"
 
-log info "Fetching page '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
+#mw-login-test "$wiki_url"
 
-wiki_article_to_fetch="$copy_wiki_pages_item" \
-  wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
-  WIKI_URL="$SOURCE_WIKI_URL" \
-  mw-fetch
+log info "Fetching page '$wiki_url' '$page_title'..."
+
+mw-fetch "$wiki_url" "$page_title" "$page_title_local"
 
 log info "Fetch page success."
-
 log info "Checking for pending changes for page..."
 log info "wiki_source_api: $wiki_source_api"
 
@@ -42,19 +46,20 @@ log info "wiki_source_api: $wiki_source_api"
 page_pending_status_json=$(
   $curl \
     "${curl_opts[@]}" \
-    "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
+    "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
 )
 
-if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
-  log warning "'$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
+if jq . <<<"$page_pending_status_json" | grep -q -- pending_since >/dev/null 2>&1; then
+  log warning "'$wiki_url' '$page_title' page has PENDING EDITS!"
   exit 10
 fi
 
 log info "No pending edits for page, ok."
 
+# TODO: ben: to patrick: unused, remove?
 wiki_page_content=$(stcat "$TMPFOLDER/fetched-wiki-page")
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-  mw-edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
+# TODO: ben: mw-edit
+mw-edit "$wiki_url_target" "$page_title" "$page_title_local"
 
 log info "Edit page success."

@@ -9,68 +9,69 @@ log info "START"
 
 # TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
-  if [ "$wiki_error_on_fetch" = "true" ]; then
+  if [ "${wiki_error_on_fetch-}" = "true" ]; then
     return 1
   fi
   return 0
 }
 
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET [OUTPUT_DIR]
+Defaults:
+  OUTPUT=${default_page_title_local}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' /my-mirr-dir" >&2
+  exit 1
+}
+
+[[ -v wiki_url_target ]] || wiki_url_target='https://www.whonix.org/w'
+
+default_output_dir="$HOME/mediawiki-shell/mirror-multi-wiki"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+wiki_url="$1"
+wiki_url_target="$2"
+output_dir="${3-"${default_output_dir}"}"
+
+# TODO: ben: option parsing
+[[ -v WIKI_API ]] || WIKI_API="${wiki_url}/api.php"
+[[ -v continue_from_page ]] || continue_from_page=""
 [[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
 #[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
 [[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list=""
 
-## example:
-[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.kicksecure.com/w'
-[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL=(
-  'https://www.whonix.org/w'
-)
-[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/mirror-multi-wiki
-
-## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
-[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
-
-[[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
-
-[[ -v continue_from_page ]] || continue_from_page=""
-
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
 
-temp_article="${TMPFOLDER}/temp_article.txt"
-
 log info "TMPFOLDER         : $TMPFOLDER"
-log info "SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
-log info "SOURCE_WIKI_API   : $SOURCE_WIKI_API"
+log info "wiki_url   : $wiki_url"
+log info "WIKI_API   : $WIKI_API"
 log info "allpages_file     : $allpages_file"
 log info "multiwiki_category: $multiwiki_category"
 log info "wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
 
-mkdir --parents -- "$wiki_backup_folder"
+mkdir --parents -- "$output_dir"
 
-if ! test -d "$wiki_backup_folder"; then
-  log error "wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-  stecho "mkdir --parents -- '$wiki_backup_folder'"
+if ! test -d "$output_dir"; then
+  log error "output_dir '$output_dir' does not exist! Run...?:"
+  stecho "mkdir --parents -- '$output_dir'"
   exit 1
 fi
 
-if ! test -w "$wiki_backup_folder"; then
-  log error "wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-  stecho "chown --recursive -- '$USER:$USER' '$wiki_backup_folder'"
+if ! test -w "$output_dir"; then
+  log error "output_dir '$output_dir' unwriteable! Run...?:"
+  stecho "chown --recursive -- '$USER:$USER' '$output_dir'"
   exit 1
 fi
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-  mw-logout
-
-WIKI_URL="$DESTINATION_WIKI_URL" \
-  mw-login
+mw-login-test "$wiki_url"
 
 all_pages="$(
   $curl \
     "${curl_opts[@]}" \
-    "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
+    "${WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
 )"
 
 ## TODO: cmcontinue
@@ -120,12 +121,9 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   copy_wiki_pages_exit_code=0
 
-  SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
-    TMPFOLDER="$TMPFOLDER" \
-    copy_wiki_pages_item="$backup_page_item" \
+  TMPFOLDER="$TMPFOLDER" \
     edit_message="mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix" \
-    mw-copy-wiki-pages ||
+    mw-copy-wiki-pages "$wiki_url" "$wiki_url_target" "$backup_page_item" ||
     {
       copy_wiki_pages_exit_code="$?"
       true
@@ -152,12 +150,9 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   copy_wiki_file_exit_code=0
 
-  SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-    DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
-    TMPFOLDER="$TMPFOLDER" \
-    wiki_remote_file_name="$backup_page_item" \
+  TMPFOLDER="$TMPFOLDER" \
     edit_message="mediawiki-shell-bot-mirror-multi-wiki-file-from-kicksecure-to-whonix" \
-    mw-copy-wiki-file ||
+    mw-copy-wiki-file "$wiki_url" "$wiki_url_target" "$backup_page_item" ||
     {
       copy_wiki_file_exit_code="$?"
       true

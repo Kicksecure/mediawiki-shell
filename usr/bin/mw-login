@@ -15,8 +15,10 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
+wiki_url="$1"
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$1" source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 require_pass
 
 log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."

@@ -4,34 +4,42 @@ set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-# shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
 
-TITLE="$1"
-filename_with_contents="$2"
-
-[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-edit-message"
-
-if [ -z "$filename_with_contents" ]; then
-  log error "Syntax: ${0##*/} <page_to_edit> <new_content_file>"
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE NEW_FILE
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
   exit 1
+}
+
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
 fi
 
-if [ ! -r "$filename_with_contents" ]; then
-  log error "Local file '$filename_with_contents' does not exist or is not readable!"
+wiki_url="$1"
+page_title="$3"
+new_file="$3"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+
+# TODO: ben: option parsing
+[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-edit-message"
+
+if [ ! -r "$new_file" ]; then
+  log error "Local file '$new_file' does not exist or is not readable!"
   exit 2
 fi
 
-if [ ! -s "$filename_with_contents" ]; then
-  log info "Local file '$filename_with_contents' was empty."
+if [ ! -s "$new_file" ]; then
+  log info "Local file '$new_file' was empty."
   exit 0
 fi
 
-log info "Editing page '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
+log info "Editing page '${WIKI_URL}' | '${WIKI_API}' | '$page_title'..."
 #log info "Fetching edit token..."
 
-mw-logout
-mw-login
+mw-login-test "$wiki_url"
 
 curl_run \
   "${curl_opts[@]}" \
@@ -53,7 +61,7 @@ else
   exit 1
 fi
 
-#log info "Editing '$TITLE'..."
+#log info "Editing '$page_title'..."
 
 ## XXX
 ## &tags=mediawiki-shell
@@ -67,8 +75,8 @@ curl_run \
   --header "Accept-Language: en-GB" \
   --header "Connection: keep-alive" \
   --header "Expect:" \
-  --data-urlencode "title=$TITLE" \
-  --data-urlencode "text@$filename_with_contents" \
+  --data-urlencode "title=$page_title" \
+  --data-urlencode "text@$new_file" \
   --data-urlencode "token=$csrf_token" \
   --output "${TMPFOLDER}/edit-result.json" \
   --request "POST" \

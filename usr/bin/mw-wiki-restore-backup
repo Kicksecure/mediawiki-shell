@@ -42,19 +42,14 @@ log info "wiki      : $wiki_url"
 mkdir -p -- "$output_dir"
 
 if ! test -d "$output_dir"; then
-  log error "output_dir '$output_dir' does not exist! Run...?:"
-  echo "mkdir --parents -- '$output_dir'"
-  exit 1
+  die 1 "output_dir '$output_dir' does not exist! Run?: mkdir --parents -- '$output_dir'"
 fi
 
 if ! test -w "$output_dir"; then
-  log error "output_dir '$output_dir' unwriteable! Run...?:"
-  echo "chown --recursive -- '$USER:$USER' '$output_dir'"
-  exit 1
+  die 1 "output_dir '$output_dir' unwriteable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
 fi
 
-mw-logout "$wiki_url"
-mw-login "$wiki_url"
+mw-login-test "$wiki_url"
 ## TODO
 die 1 "UNFINISHED SCRIPT!"
 

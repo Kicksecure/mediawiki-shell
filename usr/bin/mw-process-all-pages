@@ -18,7 +18,7 @@ fi
 wiki_url="$1"
 wiki_script="$2"
 
-# TODO: ben
+# TODO: ben: parse options
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 [[ -v continue_from_page ]] || continue_from_page=""
 
@@ -28,16 +28,13 @@ WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 log info "TMPFOLDER : $TMPFOLDER"
 log info "WIKI_URL  : $WIKI_URL"
 
-# TODO: ben: to patrick: remove?
 ## Not required for public wiki.
-#mw-logout
-#mw-login
+#mw-login-test "$wiki_url"
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 
 safe-rm -f -- "$allpages_file"
-# TODO: ben: verify variables being passed to mw-all-pages
-log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$wiki_url" mw-all-pages "$allpages_file"
+mw-all-pages "$wiki_url" allpages "$allpages_file"
 
 test -r "$allpages_file"
 

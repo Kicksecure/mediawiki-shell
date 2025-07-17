@@ -4,24 +4,29 @@
 
 set -euEo pipefail
 
-## XXX
-WIKI_URL=""
-
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-# shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} ORIGIN_DIR
+Example:
+  ${0##*/} ~/sourcesown/wiki-backup/">&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+origin_dir="$1"
 
 not_as_root
 
 mkdir -p -- "$TMPFOLDER/wiki-links"
 
-## TODO: path
-path=~/sourcesown/wiki-backup/
-test -d "${path}kicksecure-wiki-backup"
-test -d "${path}whonix-wiki-backup"
+test -d "${origin_dir}kicksecure-wiki-backup"
+test -d "${origin_dir}whonix-wiki-backup"
 
-for dir in "${path}kicksecure-wiki-backup" "${path}whonix-wiki-backup"; do
+for dir in "${origin_dir}kicksecure-wiki-backup" "${origin_dir}whonix-wiki-backup"; do
   git -C "${dir}" config pull.ff only
   git -C "${dir}" pull
 done
@@ -30,13 +35,8 @@ safe-rm -f -- "$TMPFOLDER/wiki-links/all-links.txt"
 
 log info "Try: tail -f -- $TMPFOLDER/wiki-links/all-links.txt"
 
-WIKI_WEB=https://www.kicksecure.com/wiki \
-  wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
-  mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
-
-WIKI_WEB=https://www.kicksecure.com/wiki \
-  wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
-  mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+mw-folder-to-weblinks https://www.kicksecure.com/wiki ~/sourcesown/wiki-backup/kicksecure-wiki-backup | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
+mw-folder-to-weblinks https://www.whonix.org/wiki ~/sourcesown/wiki-backup/whonix-wiki-backup | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
 
 grep --invert-match -- "## " -- "$TMPFOLDER/wiki-links/all-links.txt" | tee -- "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
 sort --unique -- "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee -- "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null

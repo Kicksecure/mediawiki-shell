@@ -5,20 +5,31 @@ set -euEo pipefail
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-check_vars_exist WIKI_URL wiki_page_item
 
-[[ -v wiki_source_api ]] || wiki_source_api="${WIKI_URL}/api.php"
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE [OUTPUT]
+Defaults:
+  OUTPUT=${default_new_file}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  exit 1
+}
 
-# WIKI_URL="$WIKI_URL" \
-#    mw-logout
-# WIKI_URL="$WIKI_URL" \
-#    mw-login
+default_new_file="$TMPFOLDER/fetched-wiki-page"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-# TODO: ben: what is happening here?
-wiki_article_to_fetch="$wiki_page_item" \
-  wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page"
+wiki_url="$1"
+page_title="$2"
+new_file="${3-"${default_new_file}"}"
 
-log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fetch
+# TODO: ben: api
+[[ -v WIKI_API ]] || WIKI_API="${wiki_url}/api.php"
+
+#mw-login-test "$wiki_url"
+
+log_run mw-fetch "$wiki_url" "$page_title" "$new_file"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
@@ -28,11 +39,11 @@ log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fet
 page_pending_status_json=$(
   $curl \
     "${curl_opts[@]}" \
-    "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
+    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
 )
 
 if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>&1; then
-  log warning "'$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
+  log warning "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
   exit 10
 fi
 
@@ -86,5 +97,4 @@ search="{{project_name_customworkstation_long}}"
 replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
-# TODO: ben: verify variables being passed to mw-edit
-log_run env WIKI_URL="$WIKI_URL" mw-edit "$wiki_page_item" "$filename"
+log_run env mw-edit "$wiki_url" "$page_title" "$filename"

@@ -15,8 +15,10 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
+wiki_url="$1"
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$1" source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 log info "Logging out of $WIKI_API... Requesting CSRF token..."
 safe-rm -f -- "${TMPFOLDER}/logout-token.json"

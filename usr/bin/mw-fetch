@@ -4,21 +4,36 @@ set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE OUTPUT
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software /tmp/a" >&2
+  exit 1
+}
+
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+wiki_url="$1"
+page_title="$2"
+new_file="$3"
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-check_vars_exist "WIKI_INDEX" "wiki_article_to_fetch" "wiki_fetch_to_file"
+# TODO: ben: WIKI_INDEX
+log info "Fetching '${WIKI_INDEX}' '$page_title' '$new_file'..."
 
-log info "Fetching '${WIKI_INDEX}' '$wiki_article_to_fetch' '$wiki_fetch_to_file'..."
-
-if test -d "$wiki_fetch_to_file"; then
-  log error "wiki_fetch_to_file '$wiki_fetch_to_file' is a folder!"
+if test -d "$new_file"; then
+  log error "new_file '$new_file' is a folder!"
   exit 1
 fi
 
-safe-rm -f -- "$wiki_fetch_to_file"
-touch -- "$wiki_fetch_to_file"
-test -w "$wiki_fetch_to_file"
+safe-rm -f -- "$new_file"
+touch -- "$new_file"
+test -w "$new_file"
 
 # curl_run \
 #    "${curl_opts[@]}" \
@@ -26,16 +41,16 @@ test -w "$wiki_fetch_to_file"
 #    --cookie-jar "$cookie_jar" \
 #    --header "Accept-Language: en-GB" \
 #    --header "Expect:" \
-#    --data-urlencode "title=$wiki_article_to_fetch" \
+#    --data-urlencode "title=$page_title" \
 #    --request "POST" "${WIKI_INDEX}?action=raw"
 
 curl_run \
   "${curl_opts[@]}" \
   --header "Accept-Language: en-GB" \
   --header "Expect:" \
-  --output "$wiki_fetch_to_file" \
-  "${WIKI_INDEX}?title=$wiki_article_to_fetch&action=raw"
+  --output "$new_file" \
+  "${WIKI_INDEX}?title=$page_title&action=raw"
 
-test -r "$wiki_fetch_to_file"
+test -r "$new_file"
 
 log info "Fetch success."

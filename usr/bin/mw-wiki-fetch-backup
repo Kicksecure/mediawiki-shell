@@ -17,14 +17,6 @@ exit_handler() {
 
 trap exit_handler EXIT
 
-do_it() {
-  # TODO: ben: mw-fetch
-  wiki_article_to_fetch="$page" \
-    wiki_fetch_to_file="$output" \
-    WIKI_URL="$wiki_url" \
-    mw-fetch
-}
-
 usage(){
   printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT PAGE
 Example:
@@ -55,7 +47,7 @@ if ! test -w "$output_dir"; then
 fi
 
 for retry_counter in {1..5}; do
-  if do_it; then
+  if mw-fetch "$wiki_url" "$page" "$output"; then
     exit 0
   fi
   sleep 5

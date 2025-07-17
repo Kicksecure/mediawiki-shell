@@ -2,7 +2,7 @@
 set -euEo pipefail
 
 ## Create a credentials file in /usr/share/mediawiki-shell/credentials or
-## ~/.credentials with the following contents:
+## ~/.mediawikishell_credentials with the following contents commented out:
 #
 #case "${WIKI_URL-}" in
 #  *".whonix."*)
@@ -15,14 +15,9 @@ set -euEo pipefail
 #    ;;
 #esac
 
-## DO NOT EDIT BELOW THIS LINE
-## UNLESS YOU KNOW WHAT YOU ARE DOING!
-
 error_message_if_missing_wiki_url_variable() {
   die 1 "environment variable WIKI_URL missing! Run for example:
-
-WIKI_URL=https://www.whonix.org/w ${0##*/}
-"
+  WIKI_URL=https://www.whonix.org/w ${0##*/}"
 }
 
 require_pass(){
@@ -35,7 +30,7 @@ require_pass(){
 [[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
 [[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
 
-for f in /usr/share/mediawiki-shell/credentials ~/.credentials; do
+for f in /usr/share/mediawiki-shell/credentials ~/.mediawikishell_credentials ~/.credentials; do
   test -f "$f" || continue
   # shellcheck source=credentials disable=SC1090,SC1091
   source -- "$f"

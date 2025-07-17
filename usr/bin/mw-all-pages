@@ -7,14 +7,30 @@ source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-## These variables should be set by the calling script as environment variables.
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-check_vars_exist SOURCE_WIKI_URL QUERY_TYPE
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI QUERY OUTPUT [API_ENDPOINT]
+Defaults:
+  API_ENDPOINT=WIKI/${default_wiki_api_endpoint}
+Example:
+  ${0##*/} https://www.kicksecure.com/w
+  ${0##*/} https://www.kicksecure.com/w [allpages|unreviewedpages|querypage]
+  ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt
+  ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt https://www.kicksecure.com/w/api.php" >&2
+  exit 1
+}
 
-[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
-[[ -v 1 ]] || missing_variable "parameter 1 needs to be set to the allpages_file name. example: $0 /tmp/allpages.txt"
+default_wiki_api_endpoint="api.php"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
+wiki_url="$1"
+query_type="$2"
+allpages_file="$3"
+wiki_api_endpoint="${4-"$wiki_url/api.php"}"
+
+# TODO: ben: option argument
+[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 ## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
 ## https://www.whonix.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces
@@ -26,10 +42,8 @@ check_vars_exist SOURCE_WIKI_URL QUERY_TYPE
 #[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra="500 274"
 [[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra=""
 
-[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
-
 api_extra_args=""
-case "$QUERY_TYPE" in
+case "$query_type" in
   allpages)
     list=allpages
     namespace_keyword=apnamespace
@@ -54,24 +68,22 @@ case "$QUERY_TYPE" in
     ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
     ;;
   *)
-    log error "QUERY_TYPE must be set to either: allpages, unreviewedpages or querypage"
+    log error "query_type must be set to either: allpages, unreviewedpages or querypage"
     exit 1
     ;;
 esac
 
-allpages_file="$1"
 safe-rm -f -- "$allpages_file"
 
 log info "allpages_file              : $allpages_file"
 log info "wiki_namespace_list_default: $wiki_namespace_list_default"
 log info "wiki_namespace_list_extra  : $wiki_namespace_list_extra"
 log info "SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-log info "SOURCE_TARGET_API: $SOURCE_TARGET_API"
-log info "QUERY_TYPE: $QUERY_TYPE"
+log info "wiki_api_endpoint: $wiki_api_endpoint"
+log info "query_type: $query_type"
 
 ## Not required for public wiki.
-#mw-logout
-#mw-login
+#mw-login-test "$wiki_url"
 
 for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_default; do
   log info "wiki_namespace_item: $wiki_namespace_item"
@@ -80,12 +92,12 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
 
   while true; do
     log info "api_full_link:"
-    api_full_link="${SOURCE_TARGET_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
+    api_full_link="${wiki_api_endpoint}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
     stecho "$api_full_link"
 
     query_result=$($curl "${curl_opts[@]}" "$api_full_link")
 
-    case "$QUERY_TYPE" in
+    case "$query_type" in
       allpages)
         stecho "$query_result" | jq -r ".query.allpages[] | .title | @sh" | tee -a -- "$allpages_file" >/dev/null
         ## If curl exits non-zero, consider no longer API continue.
@@ -133,7 +145,7 @@ if [ -z "$wiki_article_must_include_sanity_test" ]; then
 fi
 
 ## TODO: stecho too much. ARG_MAX potentially hit. grep based on file instead.
-if stecho "$result_test" | grep -i -- "$wiki_article_must_include_sanity_test" >/dev/null 2>&1; then
+if grep -i -- "$wiki_article_must_include_sanity_test" "$allpages_file" >/dev/null 2>&1; then
   log info "result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
 else
   log error "See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'"

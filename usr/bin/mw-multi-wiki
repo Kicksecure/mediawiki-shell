@@ -7,20 +7,12 @@ source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-missing_variable() {
-  log error "missing variable '$1'!"
-  exit 1
-}
-
 # TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
   if [ "$wiki_error_on_fetch" = "true" ]; then
-    ## error out
     return 1
-  else
-    ## ignore error
-    return 0
   fi
+  return 0
 }
 
 [[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'

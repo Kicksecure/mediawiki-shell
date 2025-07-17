@@ -5,27 +5,30 @@ set -euEo pipefail
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI SCRIPT
+Example:
+  ${0##*/}" >&2
+  exit 1
+}
 
-## These variables should be set by the calling script as environment variables.
-check_vars_exist SOURCE_WIKI_URL wiki_script
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+wiki_url="$1"
+wiki_script="$2"
 
+# TODO: ben
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 [[ -v continue_from_page ]] || continue_from_page=""
 
-## XXX
-WIKI_URL="$SOURCE_WIKI_URL"
-
 # shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-log info "TMPFOLDER         : $TMPFOLDER"
-log info "SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+log info "TMPFOLDER : $TMPFOLDER"
+log info "WIKI_URL  : $WIKI_URL"
 
-# ## XXX
-DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
-
+# TODO: ben: to patrick: remove?
 ## Not required for public wiki.
 #mw-logout
 #mw-login
@@ -33,7 +36,8 @@ DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
 allpages_file="${TMPFOLDER}/allpages.txt"
 
 safe-rm -f -- "$allpages_file"
-log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
+# TODO: ben: verify variables being passed to mw-all-pages
+log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$wiki_url" mw-all-pages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -59,12 +63,8 @@ while IFS=$'\n' read -r item_from_all_pages; do
   ## TODO:
   #continue_from_page="Network_Time_Synchronization"
 
-  if [ -z "$continue_from_page" ]; then
+  if [ -z "$continue_from_page" ] ||[ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
     start_from_here=true
-  else
-    if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-      start_from_here=true
-    fi
   fi
 
   if [ ! "$start_from_here" = "true" ]; then
@@ -80,12 +80,13 @@ while IFS=$'\n' read -r item_from_all_pages; do
   TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
   mkdir --parents -- "$TMPFOLDER_SEPARATE"
 
+  # TODO: ben: verify variables being passed
   run_background=1 log_run \
     env \
     counter_currently="$counter_currently" \
     counter_chunk="$counter_chunk" \
     TMPFOLDER="$TMPFOLDER_SEPARATE" \
-    WIKI_URL="$SOURCE_WIKI_URL" \
+    WIKI_URL="$wiki_url" \
     backup_page_item="$backup_page_item" \
     backup_filename_item="$backup_filename_item" \
     wiki_page_item="$wiki_page_item" \

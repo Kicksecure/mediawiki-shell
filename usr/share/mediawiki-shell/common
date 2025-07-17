@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euEo pipefail
 
-log_level=info
 source /usr/libexec/helper-scripts/log_run_die.sh
 source /usr/libexec/helper-scripts/has.sh
 source /usr/libexec/helper-scripts/not_as_root.sh
@@ -13,7 +12,7 @@ collect_reqs(){
       collect="${collect:+$collect }$cmd"
     fi
   done
-  if test ${#cmd} -gt 0; then
+  if test ${#collect} -gt 0; then
     die 1 "command(s) unavailable: $collect" >&2
   fi
 }

@@ -10,16 +10,13 @@ log info "START"
 # TODO: ben: Unused function and variable. Confirm deletion.
 error_out_maybe() {
   if [ "$wiki_error_on_fetch" = "true" ]; then
-    ## error out
     return 1
-  else
-    ## ignore error
-    return 0
   fi
+  return 0
 }
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI DIR
+  printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT_DIR
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'
   ${0##*/} 'https://www.kicksecure.com/w' ~/mediawiki-shell/kicksecure-wiki-backup" >&2
@@ -30,36 +27,36 @@ if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki="$1"
-folder="$2"
+wiki_url="$1"
+output_dir="$2"
 
 [[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
 
-log info "TMPFOLDER: $TMPFOLDER"
-log info "folder   : $folder"
-log info "wiki     : $wiki"
+log info "TMPFOLDER : $TMPFOLDER"
+log info "output_dir: $output_dir"
+log info "wiki      : $wiki_url"
 
-mkdir -p -- "$folder"
+mkdir -p -- "$output_dir"
 
-if ! test -d "$folder"; then
-  log error "folder '$folder' does not exist! Run...?:"
-  echo "mkdir --parents -- '$folder'"
+if ! test -d "$output_dir"; then
+  log error "output_dir '$output_dir' does not exist! Run...?:"
+  echo "mkdir --parents -- '$output_dir'"
   exit 1
 fi
 
-if ! test -w "$folder"; then
-  log error "folder '$folder' unwriteable! Run...?:"
-  echo "chown --recursive -- '$USER:$USER' '$folder'"
+if ! test -w "$output_dir"; then
+  log error "output_dir '$output_dir' unwriteable! Run...?:"
+  echo "chown --recursive -- '$USER:$USER' '$output_dir'"
   exit 1
 fi
 
-mw-logout "$SOURCE_WIKI_URL"
-mw-login "$SOURCE_WIKI_URL"
+mw-logout "$wiki_url"
+mw-login "$wiki_url"
 ## TODO
-die 1 "ERROR: UNFINISHED SCRIPT!"
+die 1 "UNFINISHED SCRIPT!"
 
 ## Remove trailing spaces.
 # shellcheck disable=SC2001,SC2317

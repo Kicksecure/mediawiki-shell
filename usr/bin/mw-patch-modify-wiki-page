@@ -14,6 +14,7 @@ check_vars_exist WIKI_URL wiki_page_item
 # WIKI_URL="$WIKI_URL" \
 #    mw-login
 
+# TODO: ben: what is happening here?
 wiki_article_to_fetch="$wiki_page_item" \
   wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page"
 
@@ -57,7 +58,7 @@ replace_all_except_first() {
     awk -v n="$linenum" 'NR>n' "$filename" | sed "s/$search/$replace/g" >>"$tempfile"
 
     # Move the temporary file to the original file
-    mv "$tempfile" "$filename"
+    mv -- "$tempfile" "$filename"
   fi
 }
 
@@ -85,4 +86,5 @@ search="{{project_name_customworkstation_long}}"
 replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
+# TODO: ben: verify variables being passed to mw-edit
 log_run env WIKI_URL="$WIKI_URL" mw-edit "$wiki_page_item" "$filename"

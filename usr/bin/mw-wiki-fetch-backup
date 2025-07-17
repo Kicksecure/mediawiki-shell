@@ -18,53 +18,47 @@ exit_handler() {
 trap exit_handler EXIT
 
 do_it() {
-  wiki_backup_file="${folder}/${file}"
+  # TODO: ben: mw-fetch
   wiki_article_to_fetch="$page" \
-    wiki_fetch_to_file="$wiki_backup_file" \
-    WIKI_URL="$wiki" \
+    wiki_fetch_to_file="$output" \
+    WIKI_URL="$wiki_url" \
     mw-fetch
 }
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI FOLDER FILENAME PAGE
+  printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT PAGE
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a Some_Article" >&2
   exit 1
 }
 
-if [[ -z "${4-}" || "${1-}" =~ (-h|--help) ]]; then
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki="$1"
-folder="$2"
-file="$3"
-page="$4"
+wiki_url="$1"
+output="$2"
+page="$3"
 
-log info "folder: $folder"
+output_dir="$(dirname "${output}")"
+log info "output_dir: $output_dir"
 
-mkdir -p -- "$folder"
-
-if ! test -d "$folder"; then
-  log error "folder '$folder' does not exist! Run...?:"
-  echo "mkdir --parents -- '$folder'"
+mkdir -p -- "$output_dir"
+if ! test -d "$output_dir"; then
+  log error "output_dir '$output_dir' does not exist! Run?: mkdir --parents -- '$output_dir'"
   exit 1
 fi
 
-if ! test -w "$folder"; then
-  log error "folder '$folder' unwriteable! Run...?:"
-  echo "chown --recursive -- '$USER:$USER' '$folder'"
+if ! test -w "$output_dir"; then
+  log error "output_dir '$output_dir' unwriteable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
   exit 1
 fi
 
 for retry_counter in {1..5}; do
   if do_it; then
-    ## Success. Exit success.
     exit 0
   fi
-  ## Failed. Wait and try again.
   sleep 5
 done
 
-## Failed even after retry attempts. Therefore exit non-zero.
 exit 1

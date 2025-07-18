@@ -7,6 +7,7 @@ source /usr/libexec/helper-scripts/not_as_root.sh
 
 collect_reqs(){
   local collect
+  collect=""
   for cmd in "${@}"; do
     if ! has "$cmd"; then
       collect="${collect:+$collect }$cmd"

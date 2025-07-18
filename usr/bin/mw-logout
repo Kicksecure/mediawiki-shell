@@ -52,5 +52,7 @@ then
   exit 0
 fi
 
-jq . -- "${TMPFOLDER}/logout.json" | stcat >&2
-die 1 "Logout failed!"
+logout_json="$(stcat "${TMPFOLDER}/logout.json")"
+result="$(jq -r .result <<<"${logout_json}")"
+reason="$(jq -r .reason <<<"${logout_json}")"
+die 1 "Logout failed: ${result}: ${reason}"

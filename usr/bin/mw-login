@@ -54,12 +54,12 @@ curl_run \
 ## "result": "Aborted",
 ## "reason": "Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions."
 
-RESULT="$(jq --raw-output '.login.result' -- "${TMPFOLDER}/login-result.json")"
+result="$(jq --raw-output '.login.result' -- "${TMPFOLDER}/login-result.json")"
 
-if [ "$RESULT" = "Success" ]; then
+if [ "$result" = "Success" ]; then
   log info "Successfully logged in as '$WIKI_API_USER_NAME'."
   exit 0
 fi
 
-jq . -- "${TMPFOLDER}/login-result.json" | stcat >&2
-die 1 "Login failed!"
+reason="$(jq -r ".login.reason" <<<"$(stcat "${TMPFOLDER}/login-result.json")")"
+die 1 "Login failed: ${result}: ${reason}"

@@ -1,23 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-echo "$0: START"
+set -euEo pipefail
 
-set -e
-
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-# DESTINATION_WIKI=(
-#    'https://www.kicksecure.com/w'
-#    'https://www.whonix.org/w'
-# )
+log info "START"
 
-[[ -v DESTINATION_WIKI ]] || DESTINATION_WIKI=(
-   'https://www.whonix.org/w'
-)
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI..]
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w'" >&2
+  exit 1
+}
 
-for DESTINATION_WIKI in ${DESTINATION_WIKI[@]} ; do
-   WIKI_URL="$DESTINATION_WIKI"  \
-      mw-logout
-   WIKI_URL="$DESTINATION_WIKI"  \
-      mw-login
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+not_as_root
+
+for wiki_url in "${@}"; do
+  mw-logout "$wiki_url"
+  mw-login "$wiki_url"
 done

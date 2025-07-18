@@ -24,8 +24,8 @@ wiki_url="$1"
 page_title="$2"
 new_file="${3-"${default_new_file}"}"
 
-# TODO: ben: api
-[[ -v WIKI_API ]] || WIKI_API="${wiki_url}/api.php"
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 #mw-login-test "$wiki_url"
 

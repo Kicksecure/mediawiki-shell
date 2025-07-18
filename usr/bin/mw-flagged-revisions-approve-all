@@ -23,9 +23,6 @@ wiki_url="$1"
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-# TODO: ben: api option
-[[ -v WIKI_API ]] || WIKI_API="${wiki_url}/api.php"
-
 ## TODO: abolish need for this and fetch all name spaces instead by default.
 ## Namespace 500 (Moved:) is not reviewable.
 ## Namespace 500 (Widget:) is not reviewable.

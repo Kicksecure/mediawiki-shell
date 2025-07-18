@@ -21,13 +21,10 @@ fi
 wiki_url="$1"
 page_file="$2"
 
-# TODO: ben: api
-[[ -v WIKI_API ]] || WIKI_API="${SOURCE_WIKI_URL}/api.php"
-
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-log info "SOURCE_WIKI_URL      : $SOURCE_WIKI_URL"
+log info "WIKI_URL      : $WIKI_URL"
 log info "WIKI_API    : $WIKI_API"
 log info "page_file: $page_file"
 

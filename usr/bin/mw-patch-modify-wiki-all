@@ -8,25 +8,20 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI [API_ENDPOINT]
-Defaults:
-  API_ENDPOINT=WIKI/${default_wiki_api_endpoint}
+  printf '%s\n' "Usage: ${0##*/} WIKI
 Example:
-  ${0##*/} https://www.kicksecure.com/w
-  ${0##*/} https://www.kicksecure.com/w https://www.kicksecure.com/w/api.php" >&2
+  ${0##*/} https://www.kicksecure.com/w" >&2
   exit 1
 }
 
-default_wiki_api_endpoint="api.php"
 if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
 wiki_url="$1"
-wiki_api_endpoint="${2-"$wiki_url/api.php"}"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" WIKI_API="$wiki_api_endpoint" source /usr/share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 log info "TMPFOLDER: $TMPFOLDER"
 log info "WIKI_URL : $WIKI_URL"

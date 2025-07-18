@@ -14,6 +14,8 @@ set -euEo pipefail
 #    WIKI_API_USER_PASS="password"
 #    ;;
 #esac
+#WIKI_API="$WIKI_URL/api.php"
+#WIKI_INDEX="$WIKI_URL/index.php"
 
 error_message_if_missing_wiki_url_variable() {
   die 1 "environment variable WIKI_URL missing! Run for example:
@@ -27,11 +29,14 @@ require_pass(){
 }
 
 [[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable
-[[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
-[[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
-
+# The file '~/.credentials' is for backwards compatibility and should be
+# removed on future releases.
 for f in /usr/share/mediawiki-shell/credentials ~/.mediawikishell_credentials ~/.credentials; do
   test -f "$f" || continue
+  log info "Sourcing credentials file: $f"
   # shellcheck source=credentials disable=SC1090,SC1091
   source -- "$f"
 done
+unset f
+[[ -v WIKI_API ]] || WIKI_API="$WIKI_URL/api.php"
+[[ -v WIKI_INDEX ]] || WIKI_INDEX="$WIKI_URL/index.php"

@@ -134,7 +134,7 @@ while IFS= read -r word; do
     continue
   fi
 
-  for retry_counter in {1..60}; do
+  for _ in {1..60}; do
     if archive_check "$word" || archive_save "$word"; then
       break
     fi

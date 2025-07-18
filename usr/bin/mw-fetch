@@ -23,7 +23,6 @@ new_file="$3"
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-# TODO: ben: WIKI_INDEX
 log info "Fetching '${WIKI_INDEX}' '$page_title' '$new_file'..."
 
 if test -d "$new_file"; then

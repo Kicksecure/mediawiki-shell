@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euEo pipefail
 
-source /usr/libexec/helper-scripts/log_run_die.sh
-source /usr/libexec/helper-scripts/has.sh
-source /usr/libexec/helper-scripts/not_as_root.sh
+# shellcheck disable=SC1091
+{
+  source /usr/libexec/helper-scripts/log_run_die.sh
+  source /usr/libexec/helper-scripts/has.sh
+  source /usr/libexec/helper-scripts/not_as_root.sh
+}
 
 collect_reqs(){
   local collect
@@ -34,18 +37,12 @@ missing_variable() {
 }
 
 error_output() {
-  [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
-  [[ -v TITLE ]] || TITLE=""
-  [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
-  [[ -v counter_chunk ]] || counter_chunk="unset"
-  [[ -v counter_currently ]] || counter_currently="unset"
-  [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
   stecho "error_msg: '${1:-unset}'
-WIKI_INDEX: '$WIKI_INDEX'
-TITLE: '$TITLE'
-TMPFOLDER: '$TMPFOLDER'
-counter_chunk: '$counter_chunk'
-counter_currently: '$counter_currently'
+WIKI_INDEX: '${WIKI_INDEX-unset}'
+TITLE: '${TITLE-unset}'
+TMPFOLDER: '${TMPFOLDER-unset}'
+counter_chunk: '${counter_chunk-unset}'
+counter_currently: '${counter_currently-unset}'
 ###" >&2
 }
 

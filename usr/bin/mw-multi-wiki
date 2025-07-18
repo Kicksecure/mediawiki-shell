@@ -36,8 +36,10 @@ wiki_url="$1"
 wiki_url_target="$2"
 output_dir="${3-"${default_output_dir}"}"
 
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+
 # TODO: ben: option parsing
-[[ -v WIKI_API ]] || WIKI_API="${wiki_url}/api.php"
 [[ -v continue_from_page ]] || continue_from_page=""
 [[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
 #[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"

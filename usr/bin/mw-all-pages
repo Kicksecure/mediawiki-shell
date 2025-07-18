@@ -8,18 +8,15 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI QUERY OUTPUT [API_ENDPOINT]
-Defaults:
-  API_ENDPOINT=WIKI/${default_wiki_api_endpoint}
+  printf '%s\n' "Usage: ${0##*/} WIKI QUERY OUTPUT
 Example:
   ${0##*/} https://www.kicksecure.com/w
   ${0##*/} https://www.kicksecure.com/w [allpages|unreviewedpages|querypage]
   ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt
-  ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt https://www.kicksecure.com/w/api.php" >&2
+  ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt" >&2
   exit 1
 }
 
-default_wiki_api_endpoint="api.php"
 if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
@@ -27,7 +24,9 @@ fi
 wiki_url="$1"
 query_type="$2"
 allpages_file="$3"
-wiki_api_endpoint="${4-"$wiki_url/api.php"}"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 # TODO: ben: option argument
 [[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
@@ -78,8 +77,8 @@ safe-rm -f -- "$allpages_file"
 log info "allpages_file              : $allpages_file"
 log info "wiki_namespace_list_default: $wiki_namespace_list_default"
 log info "wiki_namespace_list_extra  : $wiki_namespace_list_extra"
-log info "SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-log info "wiki_api_endpoint: $wiki_api_endpoint"
+log info "wiki_url  : $wiki_url"
+log info "WIKI_API: $WIKI_API"
 log info "query_type: $query_type"
 
 ## Not required for public wiki.
@@ -92,7 +91,7 @@ for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_defau
 
   while true; do
     log info "api_full_link:"
-    api_full_link="${wiki_api_endpoint}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
+    api_full_link="${WIKI_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
     stecho "$api_full_link"
 
     query_result=$($curl "${curl_opts[@]}" "$api_full_link")

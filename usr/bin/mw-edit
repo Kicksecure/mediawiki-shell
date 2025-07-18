@@ -6,9 +6,9 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI PAGE NEW_FILE
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE INPUT
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software /tmp/a" >&2
   exit 1
 }
 

@@ -8,7 +8,7 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} ORIGIN_DIR
+  printf '%s\n' "Usage: ${0##*/} INPUT_DIR
 Example:
   ${0##*/} ~/sourcesown/wiki-backup/">&2
   exit 1
@@ -17,16 +17,16 @@ Example:
 if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
-origin_dir="$1"
+input_dir="$1"
 
 not_as_root
 
 mkdir -p -- "$TMPFOLDER/wiki-links"
 
-test -d "${origin_dir}kicksecure-wiki-backup"
-test -d "${origin_dir}whonix-wiki-backup"
+test -d "${input_dir}kicksecure-wiki-backup"
+test -d "${input_dir}whonix-wiki-backup"
 
-for dir in "${origin_dir}kicksecure-wiki-backup" "${origin_dir}whonix-wiki-backup"; do
+for dir in "${input_dir}kicksecure-wiki-backup" "${input_dir}whonix-wiki-backup"; do
   git -C "${dir}" config pull.ff only
   git -C "${dir}" pull
 done

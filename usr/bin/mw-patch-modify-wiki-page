@@ -5,13 +5,13 @@ set -euEo pipefail
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-
 usage(){
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE [OUTPUT]
 Defaults:
   OUTPUT=${default_new_file}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software ${default_new_file}" >&2
   exit 1
 }
 

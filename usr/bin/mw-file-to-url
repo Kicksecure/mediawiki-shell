@@ -6,7 +6,7 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT ORIGIN
+  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE
 Example:
   ${0##*/} /tmp/a File:Ubuntu_software_icon.png" >&2
   exit 1

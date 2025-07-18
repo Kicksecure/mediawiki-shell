@@ -18,9 +18,10 @@ error_out_maybe() {
 usage(){
   printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET [OUTPUT_DIR]
 Defaults:
-  OUTPUT=${default_page_title_local}
+  OUTPUT_DIR=${default_output_dir}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' /my-mirr-dir" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org'
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' ${default_output_dir}" >&2
   exit 1
 }
 

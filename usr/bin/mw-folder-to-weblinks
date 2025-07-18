@@ -8,7 +8,7 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} wiki_web ORIGIN_DIR
+  printf '%s\n' "Usage: ${0##*/} WIKI_WEB INPUT_DIR
 Example:
   ${0##*/} 'https://www.kicksecure.com/wiki'
   ${0##*/} 'https://www.kicksecure.com/wiki' ~/sourcesown/wiki-backup/whonix-wiki-backup" >&2
@@ -19,11 +19,11 @@ if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 wiki_web="$1"
-origin_dir="$2"
+input_dir="$2"
 
 not_as_root
 
-files_list+=("$origin_dir"/*.mw)
+files_list+=("$input_dir"/*.mw)
 
 total=0
 for file_name in "${files_list[@]}"; do

@@ -6,12 +6,15 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI PAGE INPUT
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE INPUT [EDIT_MSG]
+Defaults:
+  EDIT_MSG=${default_edit_msg}
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software /tmp/a" >&2
   exit 1
 }
 
+default_edit_msg="mediawiki-shell-bot-default-edit-message"
 if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
@@ -19,12 +22,10 @@ fi
 wiki_url="$1"
 page_title="$3"
 new_file="$3"
+edit_msg="${4-"${default_edit_msg}"}"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
-
-# TODO: ben: option parsing
-[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-edit-message"
 
 if [ ! -r "$new_file" ]; then
   log error "Local file '$new_file' does not exist or is not readable!"
@@ -80,7 +81,7 @@ curl_run \
   --data-urlencode "token=$csrf_token" \
   --output "${TMPFOLDER}/edit-result.json" \
   --request "POST" \
-  "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
+  "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_msg}&bot"
 
 log info "Network for edit page ok."
 

@@ -6,24 +6,26 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE
+  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE [EDIT_MSG]
+Defaults:
+  EDIT_MSG=${default_edit_msg}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png 'custom message'" >&2
   exit 1
 }
 
+default_edit_msg="mediawiki-shell-bot-default-upload-message"
 if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 wiki_url="$1"
 origin="$2"
 destination="$3"
+edit_msg="${4-"${default_edit_msg}"}"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
-
-# TODO: ben: options
-[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-upload-message"
 
 log info "Uploading file '${wiki_url}' '$origin'..."
 
@@ -69,7 +71,7 @@ curl_run \
   --form "token=$csrf_token" \
   --form "filename=$destination" \
   --form "file=@$origin" \
-  --form "comment=$edit_message" \
+  --form "comment=$edit_msg" \
   --form "ignorewarnings=yes" \
   --output "${TMPFOLDER}/upload-result.json" \
   --request "POST" \

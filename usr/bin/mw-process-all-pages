@@ -6,21 +6,40 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI SCRIPT [ARGS]
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT [ARGS]
+Options:
+  --continue-from-page=N     Continue from page index.
+Note:
+  ARGS are passed to the SCRIPT.
 Example:
   ${0##*/}" >&2
   exit 1
 }
 
-if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
+continue_from_page=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    continue-from-page) get_arg; continue_from_page="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+if [[ -z "${2-}" ]]; then
   usage
 fi
 wiki_url="$1"
 wiki_script="$2"
 shift 2
-
-# TODO: ben: parse options
-[[ -v continue_from_page ]] || continue_from_page=""
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config

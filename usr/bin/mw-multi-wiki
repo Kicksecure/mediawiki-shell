@@ -8,34 +8,61 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET [OUTPUT_DIR]
+  printf '%s\n' "Usage: ${0##*/} [WIKI] [WIKI_TARGET] [OUTPUT_DIR]
+Options:
+  --continue-from-page=N      Continue from page index
+  --multiwiki-category=X      Category of multiwiki (default: ${default_multiwiki_category})
+  --multiwiki-extra-pages=X   Extra multiwiki pages to append
 Defaults:
+  WIKI=${default_wiki_url}
+  WIKI_TARGET=${default_wiki_url_target}
   OUTPUT_DIR=${default_output_dir}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org'
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' ${default_output_dir}" >&2
+  ${0##*/}
+  ${0##*/} ${default_wiki_url}
+  ${0##*/} ${default_wiki_url} ${default_wiki_url_target}
+  ${0##*/} ${default_wiki_url} ${default_wiki_url_target} ${default_output_dir}" >&2
   exit 1
 }
 
-[[ -v wiki_url_target ]] || wiki_url_target='https://www.whonix.org/w'
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
 
+default_wiki_url="https://www.kicksecure.com/w"
+default_wiki_url_target="https://www.whonix.org/w"
 default_output_dir="$HOME/mediawiki-shell/mirror-multi-wiki"
-if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+
+default_multiwiki_category="MultiWiki"
+continue_from_page=""
+multiwiki_extra_pages=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    continue-from-page) get_arg; continue_from_page="${arg}";;
+    multiwiki-category) get_arg; multiwiki_category="${arg}";;
+    multiwiki-extra-pages) get_arg; multiwiki_extra_pages="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+multiwiki_category="${multiwiki_category-"${default_multiwiki_category}"}"
+
+if [[ -z "${2-}" ]]; then
   usage
 fi
 
-wiki_url="$1"
-wiki_url_target="$2"
+wiki_url="${1-"${default_wiki_url}"}"
+wiki_url_target="${2-"${default_wiki_url_target}"}"
 output_dir="${3-"${default_output_dir}"}"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
-
-# TODO: ben: option parsing
-[[ -v continue_from_page ]] || continue_from_page=""
-[[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
-#[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
-[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list=""
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
@@ -45,7 +72,7 @@ log info "wiki_url   : $wiki_url"
 log info "WIKI_API   : $WIKI_API"
 log info "allpages_file     : $allpages_file"
 log info "multiwiki_category: $multiwiki_category"
-log info "wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
+log info "multiwiki_extra_pages: $multiwiki_extra_pages"
 
 mkdir --parents -- "$output_dir"
 
@@ -72,7 +99,7 @@ all_pages="$(
 ## TODO: cmcontinue
 #https://www.kicksecure.com/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmcontinue=page|434f444553454c454354|748
 
-for wiki_multi_extra_wiki_pages_item in $wiki_multi_extra_wiki_pages_list; do
+for wiki_multi_extra_wiki_pages_item in $multiwiki_extra_pages; do
   stecho "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
 done
 

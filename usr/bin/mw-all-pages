@@ -8,7 +8,11 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI QUERY OUTPUT
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI QUERY OUTPUT
+Options:
+  --article-sanity-test=X        Guarantee that string is present on the fetched pages
+  --namespace-default-list=N     Page collection per namespace (default: ${default_namespace_default_list})
+  --namespace-extra-list=N       Extra page collection per namespace
 Example:
   ${0##*/} https://www.kicksecure.com/w
   ${0##*/} https://www.kicksecure.com/w [allpages|unreviewedpages|querypage]
@@ -17,29 +21,48 @@ Example:
   exit 1
 }
 
-if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
+article_sanity_test=""
+## https://www.mediawiki.org/wiki/Manual:Namespace
+## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
+## https://www.whonix.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces
+default_namespace_default_list="0 4 6 8 10 12 14"
+## NOTE to self by Patrick: also set by other script:
+## wiki-backup-with-mediawiki-shell
+## 500: site-specific namespace Moved
+## 274: site-specific namespace Widgets
+namespace_extra_list=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    article-sanity-test) get_arg; article_sanity_test="${arg}";;
+    namespace-default-list) get_arg; namespace_default_list="${arg}";;
+    namespace-extra-list) get_arg; namespace_extra_list="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+namespace_default_list="${namespace_default_list-"${default_namespace_default_list}"}"
+
+if [[ -z "${3-}" ]]; then
   usage
 fi
 
 wiki_url="$1"
 query_type="$2"
 allpages_file="$3"
+range_arg query_type "${query_type}" allpages unreviewedpages querypage
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
-
-# TODO: ben: option argument
-[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
-## https://www.mediawiki.org/wiki/Manual:Namespace
-## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
-## https://www.whonix.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces
-[[ -v wiki_namespace_list_default ]] || wiki_namespace_list_default="0 4 6 8 10 12 14"
-## NOTE to self by Patrick: also set by other script:
-## wiki-backup-with-mediawiki-shell
-## 500: site-specific namespace Moved
-## 274: site-specific namespace Widgets
-#[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra="500 274"
-[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra=""
 
 api_extra_args=""
 case "$query_type" in
@@ -62,8 +85,8 @@ case "$query_type" in
     api_limit_keyword_and_content="qplimit=500"
     api_extra_args="&qppage=Unusedimages"
     ## Upstream does not support name spaces for this API call.
-    wiki_namespace_list_extra=""
-    wiki_namespace_list_default=0
+    namespace_extra_list=""
+    namespace_default_list=0
     ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
     ;;
   *)
@@ -75,8 +98,8 @@ esac
 safe-rm -f -- "$allpages_file"
 
 log info "allpages_file              : $allpages_file"
-log info "wiki_namespace_list_default: $wiki_namespace_list_default"
-log info "wiki_namespace_list_extra  : $wiki_namespace_list_extra"
+log info "namespace_default_list: $namespace_default_list"
+log info "namespace_extra_list  : $namespace_extra_list"
 log info "wiki_url  : $wiki_url"
 log info "WIKI_API: $WIKI_API"
 log info "query_type: $query_type"
@@ -84,7 +107,7 @@ log info "query_type: $query_type"
 ## Not required for public wiki.
 #mw-login-test "$wiki_url"
 
-for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_default; do
+for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
   log info "wiki_namespace_item: $wiki_namespace_item"
 
   api_continue_or_not=""
@@ -138,16 +161,15 @@ if [ ! -s "$allpages_file" ]; then
 fi
 result_test="$(stcat "$allpages_file")"
 
-if [ -z "$wiki_article_must_include_sanity_test" ]; then
-  log info "wiki_article_must_include_sanity_test not configured, ok."
+if [ -z "$article_sanity_test" ]; then
+  log info "article_sanity_test not configured, ok."
   exit
 fi
 
-## TODO: stecho too much. ARG_MAX potentially hit. grep based on file instead.
-if grep -i -- "$wiki_article_must_include_sanity_test" "$allpages_file" >/dev/null 2>&1; then
-  log info "result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
+if grep -i -- "$article_sanity_test" "$allpages_file" >/dev/null 2>&1; then
+  log info "result_test does contain article_sanity_test '$article_sanity_test', ok. "
 else
-  log error "See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'"
+  log error "See script source code. result_test does not contain '$article_sanity_test'! allpages_file: '$allpages_file'"
   log error "result_test: '$result_test'"
   exit 1
 fi

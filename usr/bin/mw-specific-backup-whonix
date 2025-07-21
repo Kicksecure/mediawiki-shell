@@ -27,5 +27,4 @@ wiki_url="${1-"${default_wiki_url}"}"
 output_dir="${2-"${default_output_dir}"}"
 fetcher="${3-"${default_fetcher}"}"
 
-# TODO: ben: to patrick: output_dir isn't used by mw-process-all-pages
 mw-process-all-pages "${wiki_url}" "${fetcher}" "${output_dir}"

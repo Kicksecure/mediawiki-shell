@@ -19,7 +19,6 @@ wiki_url="$1"
 wiki_script="$2"
 
 # TODO: ben: parse options
-[[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 [[ -v continue_from_page ]] || continue_from_page=""
 
 # shellcheck source=../share/mediawiki-shell/wiki-config

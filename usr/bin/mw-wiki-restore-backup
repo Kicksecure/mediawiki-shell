@@ -7,14 +7,6 @@ source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-# TODO: ben: Unused function and variable. Confirm deletion.
-error_out_maybe() {
-  if [ "$wiki_error_on_fetch" = "true" ]; then
-    return 1
-  fi
-  return 0
-}
-
 usage(){
   printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT_DIR
 Example:
@@ -29,8 +21,6 @@ fi
 
 wiki_url="$1"
 output_dir="$2"
-
-[[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"

@@ -89,6 +89,8 @@ while IFS=$'\n' read -r item_from_all_pages; do
     wiki_article_to_fetch="$wiki_article_to_fetch" \
     mw-retry-wrapper "$wiki_script" "$@"
 
+  # The '$background_pid' is set by helper-scripts' log_run_die.sh.
+  # shellcheck disable=SC2154
   pid_list+=" $background_pid"
 
   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then

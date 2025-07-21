@@ -1,22 +1,6 @@
 #!/usr/bin/env bash
 set -euEo pipefail
 
-## Create a credentials file in /usr/share/mediawiki-shell/credentials or
-## ~/.mediawikishell_credentials with the following contents commented out:
-#
-#case "${WIKI_URL-}" in
-#  *".whonix."*)
-#    WIKI_API_USER_NAME="username"
-#    WIKI_API_USER_PASS="password"
-#    ;;
-#  *".kicksecure."*)
-#    WIKI_API_USER_NAME="username"
-#    WIKI_API_USER_PASS="password"
-#    ;;
-#esac
-#WIKI_API="$WIKI_URL/api.php"
-#WIKI_INDEX="$WIKI_URL/index.php"
-
 error_message_if_missing_wiki_url_variable() {
   die 1 "environment variable WIKI_URL missing! Run for example:
   WIKI_URL=https://www.whonix.org/w ${0##*/}"

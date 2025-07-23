@@ -6,7 +6,7 @@ set -euEo pipefail
 source /usr/share/mediawiki-shell/common
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT [ARGS]
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT OUTPUT_DIR
 Options:
   --continue-from-page=N     Continue from page index.
 Note:
@@ -34,12 +34,12 @@ while true; do
   shift "${shift_n:-1}"
 done
 
-if [[ -z "${2-}" ]]; then
+if [[ -z "${3-}" ]]; then
   usage
 fi
 wiki_url="$1"
 wiki_script="$2"
-shift 2
+output_dir="$3"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
@@ -62,17 +62,12 @@ counter_total="$(awk 'END {print NR}' "$allpages_file")"
 counter_currently=0
 counter_chunk=0
 chunk_max_size=10
-pid_list=""
 start_from_here="not-yet"
 
 while IFS=$'\n' read -r item_from_all_pages; do
   counter_currently=$((counter_currently + 1))
   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
   backup_filename_item=$(set_backup_filename_item "$backup_page_item")
-
-  ## XXX
-  wiki_page_item="$backup_page_item"
-  wiki_article_to_fetch="$backup_page_item"
 
   counter_chunk=$((counter_chunk + 1))
 
@@ -96,34 +91,16 @@ while IFS=$'\n' read -r item_from_all_pages; do
   TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
   mkdir --parents -- "$TMPFOLDER_SEPARATE"
 
-  # TODO: ben: verify variables being passed
-  run_background=1 log_run \
+  log_run \
     info \
     env \
     counter_currently="$counter_currently" \
     counter_chunk="$counter_chunk" \
     TMPFOLDER="$TMPFOLDER_SEPARATE" \
-    backup_page_item="$backup_page_item" \
-    backup_filename_item="$backup_filename_item" \
-    wiki_page_item="$wiki_page_item" \
-    wiki_article_to_fetch="$wiki_article_to_fetch" \
-    mw-retry-wrapper "$wiki_script" "$@"
-
-  # The '$background_pid' is set by helper-scripts' log_run_die.sh.
-  # shellcheck disable=SC2154
-  pid_list+=" $background_pid"
+    mw-retry-wrapper "$wiki_script" "$wiki_url" "$output_dir/$backup_filename_item" "$backup_page_item"
 
   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then
     counter_chunk=0
-    log info "wait $pid_list"
-
-    for check_pid in $pid_list; do
-      if ! wait "$check_pid"; then
-        log error "check_pid '$check_pid' failed!"
-      fi
-    done
-
-    pid_list=""
   fi
 
 done <"$allpages_file"

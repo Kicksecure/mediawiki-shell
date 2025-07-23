@@ -61,7 +61,7 @@ exit_handler() {
   trap - INT HUP ABRT QUIT EXIT
   local exit_code=$1
   if [ "$exit_code" = "0" ]; then
-    log notice "END: with OK exit code: '$exit_code'"
+    log info "END: with OK exit code: '$exit_code'"
   else
     log error "END: with ERROR exit code: '$exit_code'"
   fi

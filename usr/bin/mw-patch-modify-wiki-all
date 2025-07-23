@@ -24,7 +24,7 @@ wiki_url="$1"
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 log info "TMPFOLDER: $TMPFOLDER"
-log info "WIKI_URL : $WIKI_URL"
+log info "wiki_url : $wiki_url"
 log info "WIKI_API : $WIKI_API"
 
 mw-process-all-pages "${wiki_url}" "${0##*/}"

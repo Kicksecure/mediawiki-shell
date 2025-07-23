@@ -53,10 +53,6 @@ done
 
 multiwiki_category="${multiwiki_category-"${default_multiwiki_category}"}"
 
-if [[ -z "${2-}" ]]; then
-  usage
-fi
-
 wiki_url="${1-"${default_wiki_url}"}"
 wiki_url_target="${2-"${default_wiki_url_target}"}"
 output_dir="${3-"${default_output_dir}"}"

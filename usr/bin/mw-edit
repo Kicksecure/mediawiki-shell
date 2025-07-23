@@ -37,7 +37,7 @@ if [ ! -s "$new_file" ]; then
   exit 0
 fi
 
-log info "Editing page '${WIKI_URL}' | '${WIKI_API}' | '$page_title'..."
+log info "Editing page '${wiki_url}' | '${WIKI_API}' | '$page_title'..."
 #log info "Fetching edit token..."
 
 mw-login-test "$wiki_url"

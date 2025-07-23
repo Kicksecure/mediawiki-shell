@@ -24,7 +24,7 @@ page_file="$2"
 # shellcheck source=../share/mediawiki-shell/wiki-config
 WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-log info "WIKI_URL      : $WIKI_URL"
+log info "wiki_url      : $wiki_url"
 log info "WIKI_API    : $WIKI_API"
 log info "page_file: $page_file"
 

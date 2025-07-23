@@ -29,7 +29,7 @@ WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 #export wiki_namespace_list_extra="500 274"
 
 log info "TMPFOLDER : $TMPFOLDER"
-log info "WIKI_URL  : $WIKI_URL"
+log info "wiki_url  : $wiki_url"
 log info "WIKI_API  : $WIKI_API"
 
 login_function() {

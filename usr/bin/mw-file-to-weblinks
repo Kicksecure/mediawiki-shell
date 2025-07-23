@@ -29,7 +29,7 @@ tr -s '[:blank:]' '[\n*]' <"$file_name" | while IFS= read -r word; do
     continue
   fi
   [[ $word =~ .*https?://.* ]] || true
-  if [ -n "${BASH_REMATCH[0]}" ]; then
+  if [ -n "${BASH_REMATCH-}" ]; then
     printf "%s\n" "${BASH_REMATCH[0]}"
   fi
 done

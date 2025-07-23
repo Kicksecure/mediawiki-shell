@@ -106,8 +106,7 @@ mkdir --parents -- "$TMPFOLDER/webarchive"
 touch -- "$TMPFOLDER/webarchive/already-archived.txt"
 touch -- "$TMPFOLDER/webarchive/already-known-down.txt"
 
-stecho "$TMPFOLDER/webarchive/already-archived.txt"
-stecho "$TMPFOLDER/webarchive/already-known-down.txt"
+log notice "See results on '$TMPFOLDER/webarchive/already-archived.txt' and '$TMPFOLDER/webarchive/already-known-down.txt'"
 
 file_name="$TMPFOLDER/wiki-links/links-sorted.txt"
 test -r "$file_name"

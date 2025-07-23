@@ -99,7 +99,7 @@ if [ "$upload_result_jq" = "Success" ]; then
   exit 0
 fi
 
-stecho "${TMPFOLDER}/upload-result.json"
+log error "Check result on the file: ${TMPFOLDER}/upload-result.json"
 jq . <<<"$edit_result_output" | stcat >&2
 log error "Upload file error."
 exit 1

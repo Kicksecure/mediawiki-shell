@@ -140,8 +140,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
   copy_wiki_pages_exit_code=0
 
   TMPFOLDER="$TMPFOLDER" \
-    mw-copy-wiki-pages "$wiki_url" "$wiki_url_target" "$backup_page_item" \
-    "mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix" ||
+    mw-copy-wiki-pages "$wiki_url" "$wiki_url_target" "$backup_page_item" ||
     {
       copy_wiki_pages_exit_code="$?"
       true
@@ -169,8 +168,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
   copy_wiki_file_exit_code=0
 
   TMPFOLDER="$TMPFOLDER" \
-    mw-copy-wiki-file "$wiki_url" "$wiki_url_target" "$backup_page_item" \
-    "mediawiki-shell-bot-mirror-multi-wiki-file-from-kicksecure-to-whonix" ||
+    mw-copy-wiki-file "$wiki_url" "$wiki_url_target" "$backup_page_item" ||
     {
       copy_wiki_file_exit_code="$?"
       true

@@ -10,13 +10,14 @@ log info "START"
 usage(){
   printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET PAGE [OUTPUT]
 Defaults:
-  OUTPUT=${default_page_title_local}
+  OUTPUT=${default_page_title_local_pretty}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' Ubuntu_software" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' Ubuntu_software
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' Ubuntu_software $TMPFOLDER/Ubuntu_software" >&2
   exit 1
 }
 
-default_page_title_local="$TMPFOLDER/fetched-wiki-page"
+default_page_title_local_pretty="$TMPFOLDER/PAGE"
 if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
@@ -24,6 +25,7 @@ fi
 wiki_url="$1"
 wiki_url_target="$2"
 page_title="$3"
+default_page_title_local="$TMPFOLDER/$page_title"
 page_title_local="${4-"${default_page_title_local}"}"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config

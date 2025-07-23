@@ -187,7 +187,7 @@ curl_run() {
   }
 
   if [ ! "$curl_exit_code" = "0" ]; then
-    log error "curl result failed with exit code '$curl_exit_code'. output_file: $output_file"
+    log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' :output_file: $output_file"
     stcat "$output_file" >&2
     exit 1
   fi

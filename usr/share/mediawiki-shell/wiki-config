@@ -13,6 +13,10 @@ require_pass(){
 }
 
 [[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable
+case "${WIKI_URL}" in
+  kicksecure) WIKI_URL="https://www.kicksecure.com/w";;
+  whonix) WIKI_URL="https://www.whonix.org/w";;
+esac
 # The file '~/.credentials' is for backwards compatibility and should be
 # removed on future releases.
 for f in /usr/share/mediawiki-shell/credentials ~/.mediawikishell_credentials ~/.credentials; do

@@ -1,48 +1,52 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euEo pipefail
 
-set -e
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
 
-if [ -z "$WIKI_API_USER_PASS" ]; then
-   echo "$0: ERROR: Password not supplied!" >&2
-   exit 1
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
 fi
 
-true "$0: INFO: Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
+wiki_url="$1"
 
-rm -f "${TMPFOLDER}/login-token.json"
-rm -f "${TMPFOLDER}/login-result.json"
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+require_pass
+
+log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
+safe-rm -f -- "${TMPFOLDER}"/login-{token,result}.json
+curl_run \
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Content-Type: application/json" \
+  --header "Accept-Language: en-GB" \
+  --output "${TMPFOLDER}/login-token.json" \
+  --request "POST" \
+  "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
+log info "Login Token received."
+login_token="$(jq --raw-output '.query.tokens.logintoken' -- "${TMPFOLDER}/login-token.json")"
 
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Content-Type: application/json" \
-   --header "Accept-Language: en-GB" \
-   --output "${TMPFOLDER}/login-token.json" \
-   --request "POST" \
-   "${WIKI_API}?action=query&meta=tokens&type=login&format=json"
-
-true "$0: INFO: Login Token received."
-
-login_token=$(cat "${TMPFOLDER}/login-token.json" | jq --raw-output '.query.tokens.logintoken')
-
-## Sensitive?
-#echo "$0: INFO: login_token: $login_token"
-
-curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
-   --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
-   --data-urlencode "lgdomain=${USERDOMAIN}" \
-   --data-urlencode "lgtoken=${login_token}" \
-   --output "${TMPFOLDER}/login-result.json" \
-   --request "POST" \
-   "${WIKI_API}?action=login&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
+  --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
+  --data-urlencode "lgdomain=${USERDOMAIN}" \
+  --data-urlencode "lgtoken=${login_token}" \
+  --output "${TMPFOLDER}/login-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=login&format=json"
 
 ## XXX:
 ## If already logged in:
@@ -50,13 +54,12 @@ curl_run \
 ## "result": "Aborted",
 ## "reason": "Cannot log in when using MediaWiki\\Session\\BotPasswordSessionProvider sessions."
 
-RESULT=$(cat "${TMPFOLDER}/login-result.json" | jq -r '.login.result')
+result="$(jq --raw-output '.login.result' -- "${TMPFOLDER}/login-result.json")"
 
-if [ "$RESULT" = "Success" ]; then
-   true "$0: INFO: Successfully logged in as '$WIKI_API_USER_NAME'."
-   exit 0
+if [ "$result" = "Success" ]; then
+  log info "Successfully logged in as '$WIKI_API_USER_NAME'."
+  exit 0
 fi
 
-cat "${TMPFOLDER}/login-result.json" | jq >&2
-echo "$0: ERROR: Login failed!" >&2
-exit 1
+reason="$(jq -r ".login.reason" <<<"$(stcat "${TMPFOLDER}/login-result.json")")"
+die 1 "Login failed to '$WIKI_API' as '$WIKI_API_USER_NAME': ${result}: ${reason}"

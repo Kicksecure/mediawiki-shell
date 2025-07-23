@@ -113,9 +113,8 @@ for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
   api_continue_or_not=""
 
   while true; do
-    log info "api_full_link:"
     api_full_link="${WIKI_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
-    stecho "$api_full_link"
+    log info "api_full_link: $api_full_link"
 
     query_result=$($curl "${curl_opts[@]}" "$api_full_link")
 

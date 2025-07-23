@@ -5,6 +5,9 @@
 ## Also destroys colors.
 #retry --times=5 --delay=3 -- "$@" < /dev/null
 
+# shellcheck disable=SC1091
+source /usr/libexec/helper-scripts/log_run_die.sh
+
 # Function to execute the command and capture the exit status
 execute_command() {
   "$@"

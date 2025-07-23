@@ -62,4 +62,4 @@ if [ "$result" = "Success" ]; then
 fi
 
 reason="$(jq -r ".login.reason" <<<"$(stcat "${TMPFOLDER}/login-result.json")")"
-die 1 "Login failed: ${result}: ${reason}"
+die 1 "Login failed to '$WIKI_API' as '$WIKI_API_USER_NAME': ${result}: ${reason}"

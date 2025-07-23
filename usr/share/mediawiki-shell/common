@@ -181,7 +181,7 @@ curl_run() {
   curl_exit_code=0
 
   # Run curl with the modified arguments
-  $curl "${args[@]}" || {
+  log_run info "$curl" "${args[@]}" || {
     curl_exit_code=$?
     true
   }

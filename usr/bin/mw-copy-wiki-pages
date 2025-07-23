@@ -12,8 +12,8 @@ usage(){
 Defaults:
   OUTPUT=${default_page_title_local_pretty}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' Ubuntu_software
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' Ubuntu_software $TMPFOLDER/Ubuntu_software" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software $TMPFOLDER/Ubuntu_software" >&2
   exit 1
 }
 

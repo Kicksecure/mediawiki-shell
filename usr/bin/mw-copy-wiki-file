@@ -12,8 +12,8 @@ usage(){
 Defaults:
   OUTPUT=${default_page_file_local_pretty}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' File:Ubuntu_software_icon.png
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org' File:Ubuntu_software_icon.png $TMPFOLDER/File:Ubuntu_software_icon.png" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png $TMPFOLDER/File:Ubuntu_software_icon.png" >&2
   exit 1
 }
 

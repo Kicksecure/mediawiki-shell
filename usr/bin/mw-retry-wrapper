@@ -15,7 +15,7 @@ execute_command() {
   if [ $exit_code -eq 0 ]; then
     log info "Command exited with status: $exit_code"
   else
-    log warning "Command exited with status: $exit_code"
+    log warn "Command exited with status: $exit_code"
   fi
   return $exit_code
 }
@@ -35,7 +35,7 @@ attempt_command() {
       log info "Command succeeded on attempt $retry_counter."
       return 0
     fi
-    log warning "Command failed on attempt $retry_counter. Retrying in $retry_delay seconds..."
+    log warn "Command failed on attempt $retry_counter. Retrying in $retry_delay seconds..."
     sleep "$retry_delay"
   done
 

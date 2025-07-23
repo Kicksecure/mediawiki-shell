@@ -54,7 +54,7 @@ page_pending_status_json=$(
 )
 
 if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
-  log warning "'$wiki_url' '$page_file' has PENDING EDITS!"
+  log warn "'$wiki_url' '$page_file' has PENDING EDITS!"
   exit 10
 fi
 

@@ -148,10 +148,10 @@ wiki_link_archiver() {
         if [ "${archive_today_exit_code}" = '0' ]; then
           break
         else
-          log warning "New CAPTCHA cookie required!"
-          log warning "Please paste in the CAPTCHA cookie obtained from your web browser."
-          log warning "Alternatively, press N to skip this link without changing the cookie."
-          log warning "Press Enter to continue."
+          log warn "New CAPTCHA cookie required!"
+          log warn "Please paste in the CAPTCHA cookie obtained from your web browser."
+          log warn "Alternatively, press N to skip this link without changing the cookie."
+          log warn "Press Enter to continue."
           read -r captcha_cookie_refresh_response
           if [ "${captcha_cookie_refresh_response,,}" = 'n' ]; then
             break

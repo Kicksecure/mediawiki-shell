@@ -148,7 +148,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   case "$copy_wiki_pages_exit_code" in
     10)
-      log warning "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      log warn "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
       ;;
     0)
       log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
@@ -176,7 +176,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   case "$copy_wiki_file_exit_code" in
     10)
-      log warning "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      log warn "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
       ;;
     0)
       log info "FILE - backup_page_item '$backup_page_item' mirroring success."

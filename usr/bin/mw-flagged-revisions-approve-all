@@ -85,5 +85,5 @@ done <"$allpages_file"
 if [ "$error_counter" = "0" ]; then
   log info "Success."
 else
-  log warning "$error_counter error(s) detected."
+  log warn "$error_counter error(s) detected."
 fi

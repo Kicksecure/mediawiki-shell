@@ -87,7 +87,7 @@ wiki_link_archiver() {
   # Generates full list of links, this takes a long time so any user input
   # querying that can be moved before this line should be.
   if [ "${skip_link_compilation}" = 'n' ]; then
-    mw-wiki-to-weblinks
+    mw-wiki-to-weblinks "${input_dir}"
   fi
 
   readarray -t full_link_list <"${full_link_list_file}"
@@ -169,8 +169,9 @@ wiki_link_archiver() {
 
 ## Set global tunables
 ## These paths are taken from mw-wiki-to-weblinks.
-kicksecure_wiki_path="${HOME}/sourcesown/wiki-backup/kicksecure-wiki-backup"
-whonix_wiki_path="${HOME}/sourcesown/wiki-backup/whonix-wiki-backup"
+input_dir="${HOME}/sourcesown/"
+kicksecure_wiki_path="${input_dir}/wiki-backup/kicksecure-wiki-backup"
+whonix_wiki_path="${input_dir}/wiki-backup/whonix-wiki-backup"
 ## Both SSH and HTTPS variants of the repo links are provided for convenience,
 ## uncomment whichever ones you want to use
 #kicksecure_wiki_git_repo='git@github.com:Kicksecure/kicksecure-wiki-backup.git'
@@ -178,8 +179,8 @@ whonix_wiki_path="${HOME}/sourcesown/wiki-backup/whonix-wiki-backup"
 kicksecure_wiki_git_repo='https://github.com/Kicksecure/kicksecure-wiki-backup.git'
 whonix_wiki_git_repo='https://github.com/Whonix/whonix-wiki-backup.git'
 full_link_list_file="${HOME}/mediawiki-shell-temp/wiki-links/links-sorted.txt"
-archived_link_list_file="${HOME}/sourcesown/wiki-backup/wiki-archived-link-list"
-error_link_list_file="${HOME}/sourcesown/wiki-backup/wiki-error-link-list"
+archived_link_list_file="${input_dir}/wiki-backup/wiki-archived-link-list"
+error_link_list_file="${input_dir}/wiki-backup/wiki-error-link-list"
 ## Set this to 'y' if you want to skip running mw-wiki-to-weblinks.
 skip_link_compilation='n'
 

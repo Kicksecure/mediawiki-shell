@@ -35,7 +35,7 @@ touch -- "$page_file_local"
 test -w "$page_file_local"
 
 ## mw-file-to-url gets already encoded URL from MediaWiki API.
-page_file_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" page_file="$page_file" mw-file-to-url
+mw-file-to-url "${TMPFOLDER}/wiki-remote-file-url.txt" "$page_file"
 
 url="$(stcat "${TMPFOLDER}/wiki-remote-file-url.txt")"
 ## url contains encoded URL.

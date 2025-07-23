@@ -6,12 +6,12 @@ Create a credentials file in `/usr/share/mediawiki-shell/credentials` or
 ```sh
 case "${WIKI_URL-}" in
   *".whonix."*)
-    WIKI_API_USER_NAME="username"
-    WIKI_API_USER_PASS="password"
+    WIKI_API_USER_NAME='username'
+    WIKI_API_USER_PASS='password'
     ;;
   *".kicksecure."*)
-    WIKI_API_USER_NAME="username"
-    WIKI_API_USER_PASS="password"
+    WIKI_API_USER_NAME='username'
+    WIKI_API_USER_PASS='password'
     ;;
 esac
 WIKI_API="$WIKI_URL/api.php"

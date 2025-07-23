@@ -29,7 +29,7 @@ WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 #mw-login-test "$wiki_url"
 
-log_run mw-fetch "$wiki_url" "$page_title" "$new_file"
+log_run info mw-fetch "$wiki_url" "$page_title" "$new_file"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
@@ -97,4 +97,4 @@ search="{{project_name_customworkstation_long}}"
 replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
-log_run env mw-edit "$wiki_url" "$page_title" "$filename"
+log_run info mw-edit "$wiki_url" "$page_title" "$filename"

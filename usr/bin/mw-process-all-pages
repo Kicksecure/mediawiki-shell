@@ -98,6 +98,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   # TODO: ben: verify variables being passed
   run_background=1 log_run \
+    info \
     env \
     counter_currently="$counter_currently" \
     counter_chunk="$counter_chunk" \

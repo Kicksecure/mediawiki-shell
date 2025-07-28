@@ -71,7 +71,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   counter_chunk=$((counter_chunk + 1))
 
-  ## TODO:
+  ## TODO: continue from specific page?
   #continue_from_page="Network_Time_Synchronization"
 
   if [ -z "$continue_from_page" ] ||[ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then

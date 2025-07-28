@@ -40,7 +40,7 @@ if ! test -w "$output_dir"; then
 fi
 
 mw-login-test "$wiki_url"
-## TODO
+## TODO: unfinished script
 die 1 "UNFINISHED SCRIPT!"
 
 ## Remove trailing spaces.

@@ -1,37 +1,59 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -euEo pipefail
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
+usage(){
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT OUTPUT_DIR
+Options:
+  --continue-from-page=N     Continue from page index.
+Note:
+  ARGS are passed to the SCRIPT.
+Example:
+  ${0##*/}" >&2
+  exit 1
+}
 
-## These variables should be set by the calling script as environment variables.
-check_vars_exist SOURCE_WIKI_URL wiki_script
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
 
-[[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
-[[ -v continue_from_page ]] || continue_from_page=""
+continue_from_page=""
 
-## XXX
-WIKI_URL="$SOURCE_WIKI_URL"
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    continue-from-page) get_arg; continue_from_page="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
 
-source /usr/share/mediawiki-shell/wiki-config
+if [[ -z "${3-}" ]]; then
+  usage
+fi
+wiki_url="$1"
+wiki_script="$2"
+output_dir="$3"
 
-echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-# ## XXX
-DESTINATION_WIKI_URL="$SOURCE_WIKI_URL"
+log info "TMPFOLDER : $TMPFOLDER"
+log info "wiki_url  : $wiki_url"
 
 ## Not required for public wiki.
-#mw-logout
-#mw-login
+#mw-login-test "$wiki_url"
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 
 safe-rm -f -- "$allpages_file"
-log_run env QUERY_TYPE=allpages SOURCE_WIKI_URL="$SOURCE_WIKI_URL" mw-all-pages "$allpages_file"
+mw-all-pages "$wiki_url" allpages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -40,69 +62,45 @@ counter_total="$(awk 'END {print NR}' "$allpages_file")"
 counter_currently=0
 counter_chunk=0
 chunk_max_size=10
-pid_list=""
 start_from_here="not-yet"
 
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( $counter_currently + 1 ))
-   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-   backup_filename_item=$(set_backup_filename_item "$backup_page_item")
+while IFS=$'\n' read -r item_from_all_pages; do
+  counter_currently=$((counter_currently + 1))
+  backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+  backup_filename_item=$(set_backup_filename_item "$backup_page_item")
 
-   ## XXX
-   wiki_page_item="$backup_page_item"
-   wiki_article_to_fetch="$backup_page_item"
+  counter_chunk=$((counter_chunk + 1))
 
-   counter_chunk=$(( $counter_chunk + 1 ))
+  ## TODO: continue from specific page?
+  #continue_from_page="Network_Time_Synchronization"
 
-   ## TODO:
-   #continue_from_page="Network_Time_Synchronization"
+  if [ -z "$continue_from_page" ] ||[ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
+    start_from_here=true
+  fi
 
-   if [ "$continue_from_page" = "" ]; then
-      start_from_here=true
-   else
-      if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-         start_from_here=true
-      fi
-   fi
+  if [ ! "$start_from_here" = "true" ]; then
+    log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+    continue
+  fi
+  log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
 
-   if [ ! "$start_from_here" = "true" ]; then
-      echo "SKIP: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
-      continue
-   fi
-   echo "DO: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+  if [ "$backup_page_item" = "Changelog" ]; then
+    continue
+  fi
 
-   if [ "$backup_page_item" = "Changelog" ]; then
-      continue
-   fi
+  TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
+  mkdir --parents -- "$TMPFOLDER_SEPARATE"
 
-   TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
-   mkdir --parents "$TMPFOLDER_SEPARATE"
+  log_run \
+    info \
+    env \
+    counter_currently="$counter_currently" \
+    counter_chunk="$counter_chunk" \
+    TMPFOLDER="$TMPFOLDER_SEPARATE" \
+    mw-retry-wrapper "$wiki_script" "$wiki_url" "$output_dir/$backup_filename_item" "$backup_page_item"
 
-   log_run_background \
-      env \
-         counter_currently="$counter_currently" \
-         counter_chunk="$counter_chunk" \
-         TMPFOLDER="$TMPFOLDER_SEPARATE" \
-         WIKI_URL="$SOURCE_WIKI_URL" \
-         backup_page_item="$backup_page_item" \
-         backup_filename_item="$backup_filename_item" \
-         wiki_page_item="$wiki_page_item" \
-         wiki_article_to_fetch="$wiki_article_to_fetch" \
-         mw-retry-wrapper $wiki_script
+  if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then
+    counter_chunk=0
+  fi
 
-   pid_list+=" $pid"
-
-   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ] ; then
-      counter_chunk=0
-      echo "$0: INFO: wait $pid_list"
-
-      for check_pid in $pid_list ; do
-         if ! wait "$check_pid" ; then
-            error "check_pid '$check_pid' failed!"
-         fi
-      done
-
-      pid_list=""
-   fi
-
-done < "$allpages_file"
+done <"$allpages_file"

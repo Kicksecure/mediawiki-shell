@@ -1,34 +1,30 @@
-#!/bin/bash
-
-## TODO:
-## create a file:
-## credentials
-## with the following contents:
-#[[ -v WIKI_API_USER_NAME ]] || WIKI_API_USER_NAME="username"
-#[[ -v WIKI_API_USER_PASS ]] || WIKI_API_USER_PASS="password"
-
-#[[ -v WIKI_URL ]] || WIKI_URL="https://www.whonix.org/w"
-
-## DO NOT EDIT BELOW THIS LINE
-## UNLESS YOU KNOW WHAT YOU ARE DOING!
+#!/usr/bin/env bash
+set -euEo pipefail
 
 error_message_if_missing_wiki_url_variable() {
-   echo "ERROR: environment variable WIKI_URL missing! Run for example:
+  die 1 "environment variable WIKI_URL missing! Run for example:
+  WIKI_URL=https://www.whonix.org/w ${0##*/}"
+}
 
-WIKI_URL=https://www.whonix.org/w $0
-" >&2
-   exit 1
+require_pass(){
+  if [ -z "${WIKI_API_USER_PASS-}" ]; then
+    die 1 "Password not supplied!"
+  fi
 }
 
 [[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable
-
-[[ -v WIKI_API ]] || WIKI_API="${WIKI_URL}/api.php"
-[[ -v WIKI_INDEX ]] || WIKI_INDEX="${WIKI_URL}/index.php"
-
-if test -f /usr/share/mediawiki-shell/credentials ; then
-   source /usr/share/mediawiki-shell/credentials
-fi
-
-if test -f ~/.credentials ; then
-   source ~/.credentials
-fi
+case "${WIKI_URL}" in
+  kicksecure) WIKI_URL="https://www.kicksecure.com/w";;
+  whonix) WIKI_URL="https://www.whonix.org/w";;
+esac
+# The file '~/.credentials' is for backwards compatibility and should be
+# removed on future releases.
+for f in /usr/share/mediawiki-shell/credentials ~/.mediawikishell_credentials ~/.credentials; do
+  test -f "$f" || continue
+  log info "Sourcing credentials file: $f"
+  # shellcheck source=credentials disable=SC1090,SC1091
+  source -- "$f"
+done
+unset f
+[[ -v WIKI_API ]] || WIKI_API="$WIKI_URL/api.php"
+[[ -v WIKI_INDEX ]] || WIKI_INDEX="$WIKI_URL/index.php"

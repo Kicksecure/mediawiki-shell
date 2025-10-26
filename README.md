@@ -1,8 +1,24 @@
 # bash shell scripts for usage of MediaWiki API #
 
-Description here.
+Create a credentials file in `/usr/share/mediawiki-shell/credentials` or
+`~/.mediawikishell_credentials` with the following contents:
 
-TODO
+```sh
+case "${WIKI_URL-}" in
+  *".whonix."*)
+    WIKI_API_USER_NAME='username'
+    WIKI_API_USER_PASS='password'
+    ;;
+  *".kicksecure."*)
+    WIKI_API_USER_NAME='username'
+    WIKI_API_USER_PASS='password'
+    ;;
+esac
+WIKI_API="$WIKI_URL/api.php"
+WIKI_INDEX="$WIKI_URL/index.php"
+```
+
+If using a different wiki, add an entry to the `case` block.
 
 ## How to install `mediawiki-shell` using apt-get ##
 

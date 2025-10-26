@@ -1,31 +1,30 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-echo "$0: START"
+set -euEo pipefail
 
-#set -x
-set -e
-
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## example:
-[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL='https://www.kicksecure.com/w'
-SOURCE_WIKI_URL="$DESTINATION_WIKI_URL"
+log info "START"
 
-## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
-[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI
+Example:
+  ${0##*/} https://www.kicksecure.com/w" >&2
+  exit 1
+}
 
-## XXX: required by /usr/share/mediawiki-shell/common but not elegant.
-WIKI_URL="$SOURCE_WIKI_URL"
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
+wiki_url="$1"
 
-echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-wiki_script=mw-patch-modify-wiki-page
-export WIKI_URL SOURCE_WIKI_URL wiki_script
+log info "TMPFOLDER: $TMPFOLDER"
+log info "wiki_url : $wiki_url"
+log info "WIKI_API : $WIKI_API"
 
-mw-process-all-pages
+mw-process-all-pages "${wiki_url}" "${0##*/}" "$TMPFOLDER"

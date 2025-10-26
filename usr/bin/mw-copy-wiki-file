@@ -1,63 +1,66 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-echo "$0: START"
+set -euEo pipefail
 
-set -e
-
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## example:
-#SOURCE_WIKI_URL='https://www.kicksecure.com/w' DESTINATION_WIKI_URL='https://www.whonix.org/w' wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-copy-wiki-file
+log info "START"
 
-wiki_remote_file_title="$(echo "$wiki_remote_file_name" | str_replace "File:" "")"
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET PAGE_FILE [OUTPUT]
+Defaults:
+  OUTPUT=${default_page_file_local_pretty}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png $TMPFOLDER/File:Ubuntu_software_icon.png" >&2
+  exit 1
+}
 
-[[ -v wiki_remote_file_save_to_path ]] || wiki_remote_file_save_to_path="$TMPFOLDER/wiki_remote_file_title"
+default_page_file_local_pretty="$TMPFOLDER/wiki_remote_file_title"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
+wiki_url="$1"
+wiki_url_target="$2"
+page_file="$3"
+default_page_file_local="$TMPFOLDER/${page_file}"
+page_file_local="${4-"${default_page_file_local}"}"
 
-[[ -v wiki_source_api ]] || wiki_source_api="${SOURCE_WIKI_URL}/api.php"
+wiki_remote_file_title="$(stecho "$page_file" | str_replace "File:" "")"
 
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-logout
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-login
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
-check_vars_exist wiki_remote_file_name wiki_remote_file_save_to_path
+#mw-login-test "$wiki_url"
 
-echo "$0: INFO: Downloading file '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'..."
+log info "Downloading file '$page_file' '$page_file_local'..."
+mw-file-download "$wiki_url" "$page_file" "$page_file_local"
+log info "Download file success."
 
-WIKI_URL="$SOURCE_WIKI_URL" wiki_remote_file_name="$wiki_remote_file_name" wiki_remote_file_save_to_path="$wiki_remote_file_save_to_path" mw-file-download
-
-echo "$0: INFO: Download file success."
-
-echo "$0: INFO: Checking for pending changes for file..."
-echo "$0: INFO: wiki_source_api: $wiki_source_api"
+log info "Checking for pending changes for file..."
+log info "WIKI_API: $WIKI_API"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      $curl_opts \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_remote_file_name"
+page_pending_status_json=$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_file"
 )
 
-if printf '%s\n' "$page_pending_status_json" | jq | grep -- pending_since >/dev/null 2>/dev/null; then
-   echo "$0: WARNING: '$SOURCE_WIKI_URL' '$wiki_remote_file_name' has PENDING EDITS!"
-   exit 10
+if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
+  log warn "'$wiki_url' '$page_file' has PENDING EDITS!"
+  exit 10
 fi
 
-echo "$0: INFO: No pending edits for file, ok."
+log info "No pending edits for file, ok."
+log info "Uploading file... '$wiki_url_target' '$page_file' '$page_file_local'"
 
-echo "$0: INFO: Uploading file... '$DESTINATION_WIKI_URL' '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'"
+mw-file-upload "${wiki_url_target}" "${page_file_local}" "$wiki_remote_file_title"
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-wiki_remote_upload_file_title="$wiki_remote_file_title" \
-wiki_remote_file_name="$wiki_remote_file_name" \
-wiki_upload_file_path="$wiki_remote_file_save_to_path" \
-mw-file-upload
-
-echo "$0: INFO: Upload file success."
+log info "Upload file success."

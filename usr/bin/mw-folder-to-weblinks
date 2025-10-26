@@ -1,57 +1,59 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Does not unduplicate. That should be done with a different script.
 
-## example:
-## See mw-wiki-to-weblinks.
+set -euEo pipefail
 
-#set -x
-set -e
-
-## XXX
-WIKI_URL=""
-
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
 
-## TODO: no root check
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI_WEB INPUT_DIR
+Example:
+  ${0##*/} 'https://www.kicksecure.com/wiki'
+  ${0##*/} 'https://www.kicksecure.com/wiki' ~/sourcesown/wiki-backup/whonix-wiki-backup" >&2
+  exit 1
+}
 
-files_list+="$wiki_folder"/*.mw
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+wiki_web="$1"
+input_dir="$2"
+
+not_as_root
+
+files_list+=("$input_dir"/*.mw)
 
 total=0
-for file_name in $files_list ; do
-   total=$(( total + 1 ))
+for file_name in "${files_list[@]}"; do
+  total=$((total + 1))
 done
 
 counter=0
-for file_name in $files_list ; do
-   counter=$(( counter + 1 ))
-   base_name=$(basename "$file_name")
-   without_file_extension=${base_name%.mw}
-   echo "## $counter / $total | file_name: '$base_name' | $WIKI_WEB/$without_file_extension"
-   test -r "$file_name"
+for file_name in "${files_list[@]}"; do
+  counter=$((counter + 1))
+  base_name=$(basename "$file_name")
+  without_file_extension=${base_name%.mw}
+  log debug "## $counter / $total | file_name: '$base_name' | $wiki_web/$without_file_extension"
+  test -r "$file_name"
 
-   web_links_list=$(mw-file-to-weblinks "$file_name")
-
-   for web_link_item in $web_links_list ; do
-      web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
-      if [ "$web_link_cleaned" = "" ]; then
-         continue
-      fi
-
-      ## Thanks to:
-      ## Dennis Williamson
-      ## https://stackoverflow.com/users/26428/dennis-williamson
-      ## https://stackoverflow.com/a/3184819/2605155
-      regex='^(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
-      string="$web_link_cleaned"
-      if [[ $string =~ $regex ]]; then
-         echo "$web_link_cleaned"
-      else
-         echo "## invalid link: $web_link_cleaned"
-      fi
-
-   done
-   #echo ""
-
+  web_links_list=$(mw-file-to-weblinks "$file_name")
+  for web_link_item in $web_links_list; do
+    web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
+    if [ -z "$web_link_cleaned" ]; then
+      continue
+    fi
+    ## Thanks to:
+    ## Dennis Williamson
+    ## https://stackoverflow.com/users/26428/dennis-williamson
+    ## https://stackoverflow.com/a/3184819/2605155
+    regex='^(https?)://[-[:alnum:]\+&@#/%?=~_|!:,.;]*[-[:alnum:]\+&@#/%=~_|]'
+    string="$web_link_cleaned"
+    if [[ $string =~ $regex ]]; then
+      stprint "$web_link_cleaned"
+    else
+      stecho "## invalid link: $web_link_cleaned"
+    fi
+  done
 done

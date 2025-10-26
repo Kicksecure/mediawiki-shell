@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -euEo pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI..]
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w'" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+not_as_root
+
+for wiki_url in "${@}"; do
+  mw-logout "$wiki_url"
+  mw-login "$wiki_url"
+done

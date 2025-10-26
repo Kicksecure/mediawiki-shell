@@ -1,54 +1,70 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-## example:
-## WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name_fetch_to_file=/tmp/a wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-file-to-link
+set -euEo pipefail
 
-set -e
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
 
-stecho "$0: INFO: Fetching imageinfo '${WIKI_API}' '$wiki_remote_file_name'..."
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE
+Example:
+  ${0##*/} /tmp/a File:Ubuntu_software_icon.png" >&2
+  exit 1
+}
 
-if test -d "$wiki_remote_file_name_fetch_to_file" ; then
-   stecho "$0: ERRROR: wiki_remote_file_name_fetch_to_file '$wiki_remote_file_name_fetch_to_file' is a folder!" >&2
-   exit 1
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
 fi
 
-safe-rm -f -- "$wiki_remote_file_name_fetch_to_file"
-touch -- "$wiki_remote_file_name_fetch_to_file"
-test -w "$wiki_remote_file_name_fetch_to_file"
+wiki_url="$1"
+output="$2"
+origin="$3"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+
+log info "Fetching imageinfo '${WIKI_API}' '$origin'..."
+
+if test -d "$output"; then
+  log error "output '$output' is a folder!"
+  exit 1
+fi
+
+safe-rm -f -- "$output"
+touch -- "$output"
+test -w "$output"
 
 ## https://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&titles=File:Limbo%20Royal%20Blood.jpg
-api_link="${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=$wiki_remote_file_name"
+api_link="${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=$origin"
 
 ## MediaWiki API return json, which contains an already encoded URL.
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --output "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json" \
-   --request "GET" \
-   "$api_link"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json" \
+  --request "GET" \
+  "$api_link"
 
-stecho "$0: INFO: Network for imageinfo ok."
+log info "Network for imageinfo ok."
 
 query_result=$(stcat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 
 ## example query_result in case of error:
 ## {"error":{"code":"internal_api_error_DBConnectionError","info":"[98c54e341525482101c71b32] Caught exception of type Wikimedia\\Rdbms\\DBConnectionError","errorclass":"Wikimedia\\Rdbms\\DBConnectionError"}}
 
-stecho "$0: INFO: Saving URL in file wiki_remote_file_name_fetch_to_file: '$wiki_remote_file_name_fetch_to_file'"
+log info "Saving URL in file output: '$output'"
 
 url="$(stecho "$query_result" | jq -r ".query.pages[].imageinfo[].url")"
 ## url contains encoded URL.
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg
 
-overwrite "$wiki_remote_file_name_fetch_to_file" "$url"
+overwrite "$output" "$url"
 
-test -r "$wiki_remote_file_name_fetch_to_file"
+test -r "$output"
 
-stecho "$0: INFO: Fetch imageinfo success."
+log info "Fetch imageinfo success."

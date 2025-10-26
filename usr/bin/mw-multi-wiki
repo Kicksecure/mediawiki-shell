@@ -1,175 +1,191 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-missing_variable() {
-   stecho "$0: ERROR: missing variable '$1'!"
-   exit 1
-}
+set -euEo pipefail
 
-error_out_maybe() {
-   if [ "$wiki_error_on_fetch" = "true" ]; then
-      ## error out
-      return 1
-   else
-      ## ignore error
-      return 0
-   fi
-}
-
-stecho "$0: START"
-
-set -e
-
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-[[ -v multiwiki_category ]] || multiwiki_category='MultiWiki'
-#[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list="'MediaWiki:Build.json'"
-[[ -v wiki_multi_extra_wiki_pages_list ]] || wiki_multi_extra_wiki_pages_list=""
+log info "START"
 
-## example:
-[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.kicksecure.com/w'
-[[ -v DESTINATION_WIKI_URL ]] || DESTINATION_WIKI_URL=(
-   'https://www.whonix.org/w'
-)
-[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/mirror-multi-wiki
+usage(){
+  printf '%s\n' "Usage: ${0##*/} [WIKI] [WIKI_TARGET] [OUTPUT_DIR]
+Options:
+  --continue-from-page=N      Continue from page index
+  --multiwiki-category=X      Category of multiwiki (default: ${default_multiwiki_category})
+  --multiwiki-extra-pages=X   Extra multiwiki pages to append
+Defaults:
+  WIKI=${default_wiki_url}
+  WIKI_TARGET=${default_wiki_url_target}
+  OUTPUT_DIR=${default_output_dir}
+Example:
+  ${0##*/}
+  ${0##*/} ${default_wiki_url}
+  ${0##*/} ${default_wiki_url} ${default_wiki_url_target}
+  ${0##*/} ${default_wiki_url} ${default_wiki_url_target} ${default_output_dir}" >&2
+  exit 1
+}
 
-## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
-[[ -v wiki_backup_folder ]] || missing_variable wiki_backup_folder
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
 
-[[ -v SOURCE_WIKI_API ]] || SOURCE_WIKI_API="${SOURCE_WIKI_URL}/api.php"
+default_wiki_url="https://www.kicksecure.com/w"
+default_wiki_url_target="https://www.whonix.org/w"
+default_output_dir="$HOME/mediawiki-shell/mirror-multi-wiki"
 
-[[ -v continue_from_page ]] || continue_from_page=""
+default_multiwiki_category="MultiWiki"
+continue_from_page=""
+multiwiki_extra_pages=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    continue-from-page) get_arg; continue_from_page="${arg}";;
+    multiwiki-category) get_arg; multiwiki_category="${arg}";;
+    multiwiki-extra-pages) get_arg; multiwiki_extra_pages="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+multiwiki_category="${multiwiki_category-"${default_multiwiki_category}"}"
+
+wiki_url="${1-"${default_wiki_url}"}"
+wiki_url_target="${2-"${default_wiki_url_target}"}"
+output_dir="${3-"${default_output_dir}"}"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
 
-temp_article="${TMPFOLDER}/temp_article.txt"
+log info "TMPFOLDER         : $TMPFOLDER"
+log info "wiki_url   : $wiki_url"
+log info "WIKI_API   : $WIKI_API"
+log info "allpages_file     : $allpages_file"
+log info "multiwiki_category: $multiwiki_category"
+log info "multiwiki_extra_pages: $multiwiki_extra_pages"
 
-stecho "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-stecho "$0: INFO: SOURCE_WIKI_URL   : $SOURCE_WIKI_URL"
-stecho "$0: INFO: SOURCE_WIKI_API   : $SOURCE_WIKI_API"
-stecho "$0: INFO: allpages_file     : $allpages_file"
-stecho "$0: INFO: multiwiki_category: $multiwiki_category"
-stecho "$0: INFO: wiki_multi_extra_wiki_pages_list: $wiki_multi_extra_wiki_pages_list"
+mkdir --parents -- "$output_dir"
 
-mkdir --parents "$wiki_backup_folder"
-
-if ! test -d "$wiki_backup_folder" ; then
-   stecho "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   stecho "mkdir --parents '$wiki_backup_folder'"
-   exit 1
+if ! test -d "$output_dir"; then
+  log error "output_dir '$output_dir' does not exist! Run...?:"
+  stecho "mkdir --parents -- '$output_dir'"
+  exit 1
 fi
 
-if ! test -w "$wiki_backup_folder" ; then
-   stecho "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   stecho "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
+if ! test -w "$output_dir"; then
+  log error "output_dir '$output_dir' unwriteable! Run...?:"
+  stecho "chown --recursive -- '$USER:$USER' '$output_dir'"
+  exit 1
 fi
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-logout
+mw-login-test "$wiki_url"
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-login
-
-all_pages="$($curl \
-   $curl_opts \
-   "${SOURCE_WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
+all_pages="$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
 )"
 
 ## TODO: cmcontinue
 #https://www.kicksecure.com/w/api.php?action=query&format=json&list=categorymembers&cmtitle=Category:MultiWiki&cmcontinue=page|434f444553454c454354|748
 
-for wiki_multi_extra_wiki_pages_item in $wiki_multi_extra_wiki_pages_list ; do
-   stecho "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
+for wiki_multi_extra_wiki_pages_item in $multiwiki_extra_pages; do
+  stecho "$wiki_multi_extra_wiki_pages_item" | tee -a "$allpages_file" >/dev/null
 done
 
 stecho "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
 
 test -f "$allpages_file"
-result_test="$(stcat "$allpages_file")"
-counter_total="$(awk 'END {print NR}' "$allpages_file")"
-
-if [ "$result_test" = "" ]; then
-   stecho "$0 ERROR: result_test is empty!"
-   exit 1
+if [ ! -s "$allpages_file" ]; then
+  log error "allpages_file file is empty!" >&2
+  exit 1
 fi
+counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 ## continue_from_page="Template:VM" mw-multi-wiki
 continue_next=no
-if [ "$continue_from_page" = "" ]; then
-   continue_next=yes
+if [ -z "$continue_from_page" ]; then
+  continue_next=yes
 fi
 
 counter_currently=0
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( $counter_currently + 1 ))
+while IFS=$'\n' read -r item_from_all_pages; do
+  counter_currently=$((counter_currently + 1))
 
-   backup_page_item="$item_from_all_pages"
-   ## remove last letter ("'")
-   backup_page_item="${backup_page_item::-1}"
-   ## remove first letter ("'")
-   backup_page_item="${backup_page_item:1}"
+  backup_page_item="$item_from_all_pages"
+  ## remove last letter ("'")
+  backup_page_item="${backup_page_item::-1}"
+  ## remove first letter ("'")
+  backup_page_item="${backup_page_item:1}"
 
-   search=" "
-   replace="_"
-   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
+  search=" "
+  replace="_"
+  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
-   stecho "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+  stecho "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
-   if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-      continue_next=yes
-   fi
-   if [ "$continue_next" = "no" ]; then
-      continue
-   fi
+  if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
+    continue_next=yes
+  fi
+  if [ "$continue_next" = "no" ]; then
+    continue
+  fi
 
-   copy_wiki_pages_exit_code=0
+  copy_wiki_pages_exit_code=0
 
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
-   TMPFOLDER="$TMPFOLDER" \
-   copy_wiki_pages_item="$backup_page_item" \
-   edit_message="mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix" \
-      mw-copy-wiki-pages \
-         || { copy_wiki_pages_exit_code="$?" ; true; }
+  TMPFOLDER="$TMPFOLDER" \
+    mw-copy-wiki-pages "$wiki_url" "$wiki_url_target" "$backup_page_item" ||
+    {
+      copy_wiki_pages_exit_code="$?"
+      true
+    }
 
-   if [ "$copy_wiki_pages_exit_code" = "10" ]; then
-      stecho "$0: WARNING: PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
-   elif [ "$copy_wiki_pages_exit_code" = "0" ]; then
-      stecho "$0: INFO: PAGE - backup_page_item '$backup_page_item' mirroring success."
-   else
-      stecho "$0: ERROR: PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
-      exit 1
-   fi
+  case "$copy_wiki_pages_exit_code" in
+    10)
+      log warn "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      ;;
+    0)
+      log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
+      ;;
+    *)
+      die 1 "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      ;;
+  esac
 
-   if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>/dev/null; then
-      stecho "FILE | No, not a file, ok."
-      continue
-   fi
+  if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>&1; then
+    stecho "FILE | No, not a file, ok."
+    continue
+  fi
 
-   stecho "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+  stecho "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
-   copy_wiki_file_exit_code=0
+  copy_wiki_file_exit_code=0
 
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_URL="$DESTINATION_WIKI_URL" \
-   TMPFOLDER="$TMPFOLDER" \
-   wiki_remote_file_name="$backup_page_item" \
-   edit_message="mediawiki-shell-bot-mirror-multi-wiki-file-from-kicksecure-to-whonix" \
-      mw-copy-wiki-file \
-         || { copy_wiki_file_exit_code="$?" ; true; }
+  TMPFOLDER="$TMPFOLDER" \
+    mw-copy-wiki-file "$wiki_url" "$wiki_url_target" "$backup_page_item" ||
+    {
+      copy_wiki_file_exit_code="$?"
+      true
+    }
 
-   if [ "$copy_wiki_file_exit_code" = "10" ]; then
-      stecho "$0: WARNING: FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
-   elif [ "$copy_wiki_file_exit_code" = "0" ]; then
-      stecho "$0: INFO: FILE - backup_page_item '$backup_page_item' mirroring success."
-   else
-      stecho "$0: ERROR: FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
-      exit 1
-   fi
+  case "$copy_wiki_file_exit_code" in
+    10)
+      log warn "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      ;;
+    0)
+      log info "FILE - backup_page_item '$backup_page_item' mirroring success."
+      ;;
+    *)
+      die 1 "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_file_exit_code'"
+      ;;
+  esac
 
-   continue
+  continue
 
-done < "$allpages_file"
+done <"$allpages_file"

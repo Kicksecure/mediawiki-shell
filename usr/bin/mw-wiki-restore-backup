@@ -1,59 +1,48 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-error_out_maybe() {
-   if [ "$wiki_error_on_fetch" = "true" ]; then
-      ## error out
-      return 1
-   else
-      ## ignore error
-      return 0
-   fi
-}
+set -euEo pipefail
 
-echo "$0: START"
-
-set -e
-
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-#[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/mediawiki-shell/whonix-wiki-backup"
-
-## These variables should be set by the calling script as environment variables.
-check_vars_exist SOURCE_WIKI_URL wiki_backup_folder
-
-[[ -v wiki_error_on_fetch ]] || wiki_error_on_fetch=true
-
-## XXX
-WIKI_URL="$SOURCE_WIKI_URL"
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
+log info "START"
+
+usage(){
+  printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT_DIR
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'
+  ${0##*/} 'https://www.kicksecure.com/w' ~/mediawiki-shell/kicksecure-wiki-backup" >&2
+  exit 1
+}
+
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+wiki_url="$1"
+output_dir="$2"
+
 allpages_file="${TMPFOLDER}/allpages.txt"
-rm -f "$allpages_file"
+safe-rm -f -- "$allpages_file"
 
-echo "$0: INFO: TMPFOLDER         : $TMPFOLDER"
-echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
-echo "$0: INFO: SOURCE_WIKI_URL: $SOURCE_WIKI_URL"
+log info "TMPFOLDER : $TMPFOLDER"
+log info "output_dir: $output_dir"
+log info "wiki      : $wiki_url"
 
-mkdir -p "$wiki_backup_folder"
+mkdir -p -- "$output_dir"
 
-if ! test -d "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   echo "mkdir --parents '$wiki_backup_folder'"
-   exit 1
+if ! test -d "$output_dir"; then
+  die 1 "output_dir '$output_dir' does not exist! Run?: mkdir --parents -- '$output_dir'"
 fi
 
-if ! test -w "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
+if ! test -w "$output_dir"; then
+  die 1 "output_dir '$output_dir' unwriteable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
 fi
 
-mw-logout
-mw-login
-
-## TODO
-echo "ERROR: UNFINISHED SCRIPT!"
-exit 1
+mw-login-test "$wiki_url"
+## TODO: unfinished script
+die 1 "UNFINISHED SCRIPT!"
 
 ## Remove trailing spaces.
-wiki_page_content=$(echo "$wiki_page_content" | sed 's/[[:space:]]*$//')
+# shellcheck disable=SC2001,SC2317
+wiki_page_content="$(sed 's/[[:space:]]*$//' <<<"$wiki_page_content")"

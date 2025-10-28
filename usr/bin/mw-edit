@@ -1,16 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI PAGE INPUT [EDIT_MSG]
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE [EDIT_MSG]
 Defaults:
   EDIT_MSG=${default_edit_msg}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software /tmp/a" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a Ubuntu_software" >&2
   exit 1
 }
 
@@ -19,17 +25,22 @@ if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
+new_file="$2"
 page_title="$3"
-new_file="$3"
 edit_msg="${4-"${default_edit_msg}"}"
 
+check_vars_exist new_file page_title
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+if [ -d "$new_file" ]; then
+  die 1 "new_file '$new_file' is a folder!"
+fi
 
 if [ ! -r "$new_file" ]; then
-  log error "Local file '$new_file' does not exist or is not readable!"
-  exit 2
+  die 2 "Local file '$new_file' does not exist or is not readable!"
 fi
 
 if [ ! -s "$new_file" ]; then
@@ -37,10 +48,10 @@ if [ ! -s "$new_file" ]; then
   exit 0
 fi
 
-log info "Editing page '${wiki_url}' | '${WIKI_API}' | '$page_title'..."
+log info "Editing page '${WIKI_URL}' | '${WIKI_API}' | '$page_title'..."
 #log info "Fetching edit token..."
 
-mw-login-test "$wiki_url"
+mw-login-test "$WIKI_URL"
 
 curl_run \
   "${curl_opts[@]}" \
@@ -53,13 +64,12 @@ curl_run \
   --request "GET" \
   "${WIKI_API}?action=query&meta=tokens&format=json"
 
-csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
   log info "Edit token for page OK."
 else
-  log error "Edit token for page not set."
-  exit 1
+  die 1 "Edit token for page not set."
 fi
 
 #log info "Editing '$page_title'..."
@@ -89,13 +99,12 @@ test -r "${TMPFOLDER}/edit-result.json"
 
 edit_result_output="$(stcat "${TMPFOLDER}/edit-result.json")"
 
-edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
+edit_result_jq="$(jq -r ".edit.result" <<<"$edit_result_output")"
 
 if [ "$edit_result_jq" = "Success" ]; then
+  log info "Edit page success."
   exit 0
 fi
 
-jq . <<<"$edit_result_output" >&2
-log error "Edit page error."
-
-exit 1
+jq . <<<"$edit_result_output" | stcat >&2
+die 1 "Edit page error."

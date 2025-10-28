@@ -1,14 +1,20 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI..]
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI...]
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'
   ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w'" >&2

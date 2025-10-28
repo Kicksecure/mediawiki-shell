@@ -1,8 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-usage(){
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+usage() {
   printf '%s\n' "Usage: ${0##*/} [WIKI] [OUTPUT_DIR] [FETCHER]
 Defaults:
   WIKI=${default_wiki_url}

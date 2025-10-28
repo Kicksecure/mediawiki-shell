@@ -1,6 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -10,17 +16,17 @@ log info "START"
 # shellcheck disable=SC2317
 exit_handler() {
   [[ -v retry_counter ]] || retry_counter=0
-  if [ "$retry_counter" -gt 1 ]; then
+  if (( retry_counter > 1 )); then
     log notice "success after attempt $retry_counter"
   fi
 }
 
 trap exit_handler EXIT
 
-usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI OUTPUT PAGE
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE OUTPUT
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a Some_Article" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' Some_Article /tmp/a" >&2
   exit 1
 }
 
@@ -29,21 +35,21 @@ if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
 fi
 
 wiki_url="$1"
-output="$2"
-page="$3"
+page="$2"
+output="$3"
+
+check_vars_exist page output
 
 output_dir="$(dirname "${output}")"
 log info "output_dir: $output_dir"
 
 mkdir -p -- "$output_dir"
 if ! test -d "$output_dir"; then
-  log error "output_dir '$output_dir' does not exist! Run?: mkdir --parents -- '$output_dir'"
-  exit 1
+  die 1 "output_dir '$output_dir' does not exist! Run?: mkdir --parents -- '$output_dir'"
 fi
 
 if ! test -w "$output_dir"; then
-  log error "output_dir '$output_dir' unwriteable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
-  exit 1
+  die 1 "output_dir '$output_dir' unwriteable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
 fi
 
 for retry_counter in {1..5}; do
@@ -53,4 +59,5 @@ for retry_counter in {1..5}; do
   sleep 5
 done
 
+## Failed even after retry attempts. Therefore exit non-zero.
 exit 1

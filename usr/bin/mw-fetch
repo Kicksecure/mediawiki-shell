@@ -1,11 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE OUTPUT
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software /tmp/a" >&2
@@ -16,18 +22,19 @@ if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 page_title="$2"
 new_file="$3"
 
+check_vars_exist page_title new_file
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 log info "Fetching '${WIKI_INDEX}' '$page_title' '$new_file'..."
 
 if test -d "$new_file"; then
-  log error "new_file '$new_file' is a folder!"
-  exit 1
+  die 1 "new_file '$new_file' is a folder!"
 fi
 
 safe-rm -f -- "$new_file"

@@ -1,10 +1,17 @@
-#!/usr/bin/env bash
-set -euEo pipefail
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'" >&2
@@ -15,13 +22,13 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
-require_pass
+source /usr/share/mediawiki-shell/wiki-config
+require_auth_data
 
-log info "Login into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
+log info "Logging into '$WIKI_API' as '$WIKI_API_USER_NAME'... Requesting Login token..."
 safe-rm -f -- "${TMPFOLDER}"/login-{token,result}.json
 curl_run \
   "${curl_opts[@]}" \
@@ -61,5 +68,5 @@ if [ "$result" = "Success" ]; then
   exit 0
 fi
 
-reason="$(jq -r ".login.reason" <<<"$(stcat "${TMPFOLDER}/login-result.json")")"
+reason="$(jq -r ".login.reason" < <(stcat "${TMPFOLDER}/login-result.json"))"
 die 1 "Login failed to '$WIKI_API' as '$WIKI_API_USER_NAME': ${result}: ${reason}"

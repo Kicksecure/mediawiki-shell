@@ -1,13 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 ## Does not unduplicate. That should be done with a different script.
-
-set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} INPUT_DIR
 Example:
   ${0##*/} ~/sourcesown/wiki-backup/">&2
@@ -35,10 +41,10 @@ safe-rm -f -- "$TMPFOLDER/wiki-links/all-links.txt"
 
 log info "Try: tail -f -- $TMPFOLDER/wiki-links/all-links.txt"
 
-mw-folder-to-weblinks https://www.kicksecure.com/wiki ~/sourcesown/wiki-backup/kicksecure-wiki-backup | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
-mw-folder-to-weblinks https://www.whonix.org/wiki ~/sourcesown/wiki-backup/whonix-wiki-backup | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
+mw-folder-to-weblinks https://www.kicksecure.com/wiki "${input_dir}kicksecure-wiki-backup" | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
+mw-folder-to-weblinks https://www.whonix.org/wiki "${input_dir}whonix-wiki-backup" | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
 
-grep --invert-match -- "## " -- "$TMPFOLDER/wiki-links/all-links.txt" | tee -- "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
+grep --invert-match -- "## " "$TMPFOLDER/wiki-links/all-links.txt" | tee -- "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
 sort --unique -- "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee -- "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
 
 log info "Try: cat -- $TMPFOLDER/wiki-links/links-sorted.txt"

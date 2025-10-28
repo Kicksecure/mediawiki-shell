@@ -1,14 +1,20 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE
 Example:
-  ${0##*/} /tmp/a File:Ubuntu_software_icon.png" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png" >&2
   exit 1
 }
 
@@ -16,23 +22,24 @@ if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
-output="$2"
+WIKI_URL="$1"
+output_file="$2"
 origin="$3"
 
+check_vars_exist output_file origin
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 log info "Fetching imageinfo '${WIKI_API}' '$origin'..."
 
-if test -d "$output"; then
-  log error "output '$output' is a folder!"
-  exit 1
+if test -d "$output_file"; then
+  die 1 "output_file '$output_file' is a folder!"
 fi
 
-safe-rm -f -- "$output"
-touch -- "$output"
-test -w "$output"
+safe-rm -f -- "$output_file"
+touch -- "$output_file"
+test -w "$output_file"
 
 ## https://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&titles=File:Limbo%20Royal%20Blood.jpg
 api_link="${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=$origin"
@@ -56,15 +63,15 @@ query_result=$(stcat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 ## example query_result in case of error:
 ## {"error":{"code":"internal_api_error_DBConnectionError","info":"[98c54e341525482101c71b32] Caught exception of type Wikimedia\\Rdbms\\DBConnectionError","errorclass":"Wikimedia\\Rdbms\\DBConnectionError"}}
 
-log info "Saving URL in file output: '$output'"
+log info "Saving URL in file output_file: '$output_file'"
 
 url="$(stecho "$query_result" | jq -r ".query.pages[].imageinfo[].url")"
 ## url contains encoded URL.
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg
 
-overwrite "$output" "$url"
+overwrite "$output_file" "$url"
 
-test -r "$output"
+test -r "$output_file"
 
 log info "Fetch imageinfo success."

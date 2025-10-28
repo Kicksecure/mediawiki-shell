@@ -1,6 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -8,15 +14,12 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage(){
-  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI QUERY OUTPUT
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI (allpages|unreviewedpages|querypage) OUTPUT
 Options:
   --article-sanity-test=X        Guarantee that string is present on the fetched pages
   --namespace-default-list=N     Page collection per namespace (default: ${default_namespace_default_list})
   --namespace-extra-list=N       Extra page collection per namespace
 Example:
-  ${0##*/} https://www.kicksecure.com/w
-  ${0##*/} https://www.kicksecure.com/w [allpages|unreviewedpages|querypage]
-  ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt
   ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt" >&2
   exit 1
 }
@@ -56,13 +59,15 @@ if [[ -z "${3-}" ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 query_type="$2"
 allpages_file="$3"
+
+check_vars_exist query_type allpages_file
 range_arg query_type "${query_type}" allpages unreviewedpages querypage
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 api_extra_args=""
 case "$query_type" in
@@ -90,22 +95,21 @@ case "$query_type" in
     ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
     ;;
   *)
-    log error "query_type must be set to either: allpages, unreviewedpages or querypage"
-    exit 1
+    die 1 "query_type must be set to either: allpages, unreviewedpages or querypage"
     ;;
 esac
 
 safe-rm -f -- "$allpages_file"
 
-log info "allpages_file              : $allpages_file"
+log info "allpages_file         : $allpages_file"
 log info "namespace_default_list: $namespace_default_list"
 log info "namespace_extra_list  : $namespace_extra_list"
-log info "wiki_url  : $wiki_url"
-log info "WIKI_API: $WIKI_API"
+log info "WIKI_URL  : $WIKI_URL"
+log info "WIKI_API  : $WIKI_API"
 log info "query_type: $query_type"
 
 ## Not required for public wiki.
-#mw-login-test "$wiki_url"
+#mw-login-test "$WIKI_URL"
 
 for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
   log info "wiki_namespace_item: $wiki_namespace_item"
@@ -155,10 +159,8 @@ done
 
 test -f "$allpages_file"
 if [ ! -s "$allpages_file" ]; then
-  log error "allpages_file file is empty!" >&2
-  exit 1
+  die 1 "allpages_file file is empty!" >&2
 fi
-result_test="$(stcat "$allpages_file")"
 
 if [ -z "$article_sanity_test" ]; then
   log info "article_sanity_test not configured, ok."
@@ -168,7 +170,7 @@ fi
 if grep -i -- "$article_sanity_test" "$allpages_file" >/dev/null 2>&1; then
   log info "result_test does contain article_sanity_test '$article_sanity_test', ok. "
 else
-  log error "See script source code. result_test does not contain '$article_sanity_test'! allpages_file: '$allpages_file'"
-  log error "result_test: '$result_test'"
-  exit 1
+  log error "See script source code. result_test does not contain '$article_sanity_test'! allpages_file: '$allpages_file' allpages_file contents:"
+  stcat "$allpages_file" >&2
+  die 1 'article_sanity_test check failed, cannot continue.'
 fi

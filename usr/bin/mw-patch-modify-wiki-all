@@ -1,13 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI
 Example:
   ${0##*/} https://www.kicksecure.com/w" >&2
@@ -18,13 +24,13 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 log info "TMPFOLDER: $TMPFOLDER"
-log info "wiki_url : $wiki_url"
+log info "WIKI_URL : $WIKI_URL"
 log info "WIKI_API : $WIKI_API"
 
-mw-process-all-pages "${wiki_url}" "${0##*/}" "$TMPFOLDER"
+mw-process-all-pages "${WIKI_URL}" 'mw-patch-modify-wiki-page' "$TMPFOLDER"

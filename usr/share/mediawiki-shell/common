@@ -1,5 +1,12 @@
-#!/usr/bin/env bash
-set -euEo pipefail
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck disable=SC1091
 {
@@ -8,8 +15,8 @@ set -euEo pipefail
   source /usr/libexec/helper-scripts/not_as_root.sh
 }
 
-collect_reqs(){
-  local collect
+collect_reqs() {
+  local collect cmd
   collect=""
   for cmd in "${@}"; do
     if ! has "$cmd"; then
@@ -37,7 +44,7 @@ missing_variable() {
 }
 
 error_output() {
-  stecho "error_msg: '${1:-unset}'
+  stecho "error_msg: '${1:-none}'
 WIKI_INDEX: '${WIKI_INDEX-unset}'
 TITLE: '${TITLE-unset}'
 TMPFOLDER: '${TMPFOLDER-unset}'
@@ -59,7 +66,7 @@ trap error_handler ERR
 
 exit_handler() {
   trap - INT HUP ABRT QUIT EXIT
-  local exit_code=$1
+  local exit_code="${1:-}"
   if [ "$exit_code" = "0" ]; then
     log info "END: with OK exit code: '$exit_code'"
   else
@@ -81,7 +88,7 @@ set_backup_page_item() {
 
   backup_page_item="$(stecho "$1")"
   if [ -z "$backup_page_item" ]; then
-    log error "set_backup_filename_item is empty!"
+    die 1 "set_backup_filename_item is empty!"
   fi
 
   ## remove last letter ("'")
@@ -112,7 +119,7 @@ set_backup_filename_item() {
   backup_filename_item="$1"
 
   if [ -z "$backup_filename_item" ]; then
-    log error "backup_filename_item is empty!"
+    die 1 "backup_filename_item is empty!"
   fi
 
   ## Same format as git-mediawiki: replace '/' with '%2F'.
@@ -128,14 +135,14 @@ set_backup_filename_item() {
 }
 
 curl_get_output_parameter() {
-  local loop_counter
+  local loop_counter loop_max
   loop_counter=0
+  loop_max=50
 
   while true; do
-    loop_counter=$((loop_counter + 1))
-    if [ "$loop_counter" -ge 50 ]; then
-      log error "loop_max reached!"
-      exit 1
+    (( loop_counter++ )) || true
+    if (( loop_counter >= loop_max )); then
+      die 1 "loop_max reached!"
     fi
     case $1 in
       --output)
@@ -156,16 +163,15 @@ curl_run() {
   curl_get_output_parameter "$@"
 
   if [ -z "$output_file" ]; then
-    log error "output_file is empty!"
-    exit 1
+    die 1 "output_file is empty!"
   fi
 
   safe-rm -f -- "$output_file"
   touch -- "$output_file"
 
-  local args url encoded_url
-  # shellcheck disable=SC2124,SC1126
-  url="${@: -1}"
+  local temp_args args url encoded_url
+  args=( "$@" )
+  url="${args[$((${#args[@]} - 1))]}"
 
   [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
 
@@ -181,21 +187,18 @@ curl_run() {
   curl_exit_code=0
 
   # Run curl with the modified arguments
-  "$curl" "${args[@]}" || {
-    curl_exit_code=$?
-    true
-  }
+  "$curl" "${args[@]}" || curl_exit_code="$?"
 
-  if [ ! "$curl_exit_code" = "0" ]; then
-    log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' :output_file: $output_file"
+  if [ "$curl_exit_code" != "0" ]; then
+    log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' output_file: '$output_file'"
     stcat "$output_file" >&2
-    exit 1
+    die 1 'curl failure, cannot continue.'
   fi
 }
 
 trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
 
-[[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell-temp
+[[ -v TMPFOLDER ]] || TMPFOLDER="$HOME/mediawiki-shell-temp"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || set_curl_binary_default

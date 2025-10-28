@@ -1,13 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 ## Does not unduplicate. That should be done with a different script.
-
-set -euEo pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI_WEB INPUT_DIR
 Example:
   ${0##*/} 'https://www.kicksecure.com/wiki'
@@ -21,26 +27,28 @@ fi
 wiki_web="$1"
 input_dir="$2"
 
+check_vars_exist wiki_web input_dir
+
 not_as_root
 
-files_list+=("$input_dir"/*.mw)
+files_list=("$input_dir"/*.mw)
 
 total=0
 for file_name in "${files_list[@]}"; do
-  total=$((total + 1))
+  (( total++ )) || true
 done
 
 counter=0
 for file_name in "${files_list[@]}"; do
-  counter=$((counter + 1))
-  base_name=$(basename "$file_name")
-  without_file_extension=${base_name%.mw}
+  (( counter++ )) || true
+  base_name="$(basename "$file_name")"
+  without_file_extension="${base_name%.mw}"
   log debug "## $counter / $total | file_name: '$base_name' | $wiki_web/$without_file_extension"
   test -r "$file_name"
 
-  web_links_list=$(mw-file-to-weblinks "$file_name")
+  web_links_list="$(mw-file-to-weblinks "$file_name")"
   for web_link_item in $web_links_list; do
-    web_link_cleaned=$(mw-wiki-link-clean "$web_link_item")
+    web_link_cleaned="$(mw-wiki-link-clean "$web_link_item")"
     if [ -z "$web_link_cleaned" ]; then
       continue
     fi

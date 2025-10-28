@@ -1,18 +1,24 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT OUTPUT_DIR
 Options:
   --continue-from-page=N     Continue from page index.
 Note:
   ARGS are passed to the SCRIPT.
 Example:
-  ${0##*/}" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' 'mw-patch-modify-wiki-page' '/tmp/user/1000/mw'" >&2
   exit 1
 }
 
@@ -37,23 +43,25 @@ done
 if [[ -z "${3-}" ]]; then
   usage
 fi
-wiki_url="$1"
+WIKI_URL="$1"
 wiki_script="$2"
 output_dir="$3"
 
+check_vars_exist wiki_script output_dir
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 log info "TMPFOLDER : $TMPFOLDER"
-log info "wiki_url  : $wiki_url"
+log info "WIKI_URL  : $WIKI_URL"
 
 ## Not required for public wiki.
-#mw-login-test "$wiki_url"
+#mw-login-test "$WIKI_URL"
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 
 safe-rm -f -- "$allpages_file"
-mw-all-pages "$wiki_url" allpages "$allpages_file"
+mw-all-pages "$WIKI_URL" allpages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -65,16 +73,16 @@ chunk_max_size=10
 start_from_here="not-yet"
 
 while IFS=$'\n' read -r item_from_all_pages; do
-  counter_currently=$((counter_currently + 1))
-  backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-  backup_filename_item=$(set_backup_filename_item "$backup_page_item")
+  (( counter_currently++ )) || true
+  backup_page_item="$(set_backup_page_item "$item_from_all_pages")"
+  backup_filename_item="$(set_backup_filename_item "$backup_page_item")"
 
-  counter_chunk=$((counter_chunk + 1))
+  (( counter_chunk++ )) || true
 
   ## TODO: continue from specific page?
   #continue_from_page="Network_Time_Synchronization"
 
-  if [ -z "$continue_from_page" ] ||[ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
+  if [ -z "$continue_from_page" ] || [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
     start_from_here=true
   fi
 
@@ -97,7 +105,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
     counter_currently="$counter_currently" \
     counter_chunk="$counter_chunk" \
     TMPFOLDER="$TMPFOLDER_SEPARATE" \
-    mw-retry-wrapper "$wiki_script" "$wiki_url" "$output_dir/$backup_filename_item" "$backup_page_item"
+    mw-retry-wrapper "$wiki_script" "$WIKI_URL" "$backup_page_item" "$output_dir/$backup_filename_item"
 
   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then
     counter_chunk=0

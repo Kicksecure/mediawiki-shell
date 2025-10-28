@@ -1,11 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE [EDIT_MSG]
 Defaults:
   EDIT_MSG=${default_edit_msg}
@@ -19,27 +25,33 @@ default_edit_msg="mediawiki-shell-bot-default-upload-message"
 if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
-wiki_url="$1"
-origin="$2"
-destination="$3"
+
+WIKI_URL="$1"
+new_file="$2"
+page_file="$3"
 edit_msg="${4-"${default_edit_msg}"}"
 
+check_vars_exist new_file page_file
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
-log info "Uploading file '${wiki_url}' '$origin'..."
-
-if test -d "$origin"; then
-  log error "origin '$origin' is a folder!"
-  exit 1
+if [ -d "$new_file" ]; then
+  die 1 "new_file '$new_file' is a folder!"
 fi
 
-if ! test -r "$origin"; then
-  log error "origin '$origin' is not readable!"
-  exit 1
+if [ ! -r "$new_file" ]; then
+  die 2 "Local file '$new_file' does not exist or is not readable!"
 fi
 
-mw-login-test "$wiki_url"
+if [ ! -s "$new_file" ]; then
+  log info "Local file '$new_file' was empty."
+  exit 0
+fi
+
+log info "Uploading file '${WIKI_URL}' '$new_file'..."
+
+mw-login-test "$WIKI_URL"
 
 curl_run \
   "${curl_opts[@]}" \
@@ -52,13 +64,12 @@ curl_run \
   --request "GET" \
   "${WIKI_API}?action=query&meta=tokens&format=json"
 
-csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
   log info "Edit token for file OK."
 else
-  log error "Edit token for file not set."
-  exit 1
+  die 1 "Edit token for file not set."
 fi
 
 curl_run \
@@ -69,8 +80,8 @@ curl_run \
   --header "Connection: keep-alive" \
   --header "Expect:" \
   --form "token=$csrf_token" \
-  --form "filename=$destination" \
-  --form "file=@$origin" \
+  --form "filename=$page_file" \
+  --form "file=@$new_file" \
   --form "comment=$edit_msg" \
   --form "ignorewarnings=yes" \
   --output "${TMPFOLDER}/upload-result.json" \
@@ -82,18 +93,18 @@ log info "Network for file upload ok."
 test -r "${TMPFOLDER}/upload-result.json"
 
 edit_result_output="$(stcat "${TMPFOLDER}/upload-result.json")"
-if [ "$(echo "$edit_result_output" | jq -r ".error.code")" = "fileexists-no-change" ]; then
+if [ "$(jq -r ".error.code" <<<"$edit_result_output")" = "fileexists-no-change" ]; then
   log info "Upload file success."
   exit 0
 fi
 
-edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
+edit_result_jq="$(jq -r ".edit.result" <<<"$edit_result_output")"
 if [ "$edit_result_jq" = "Success" ]; then
   log info "Upload (edit) file success."
   exit 0
 fi
 
-upload_result_jq="$(echo "$edit_result_output" | jq -r ".upload.result")"
+upload_result_jq="$(jq -r ".upload.result" <<<"$edit_result_output")"
 if [ "$upload_result_jq" = "Success" ]; then
   log info "Upload (upload) file success."
   exit 0
@@ -101,5 +112,4 @@ fi
 
 log error "Check result on the file: ${TMPFOLDER}/upload-result.json"
 jq . <<<"$edit_result_output" | stcat >&2
-log error "Upload file error."
-exit 1
+die 1 "Upload file error."

@@ -1,15 +1,21 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 ## Takes a file as an input parameter.
 ## Goes through line by line of that file, goes through every line word by word
 ## and outputs all links included in that file or nothing.
 
-set -euEo pipefail
-
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} FILE
 Example:
   ${0##*/} ~/sourcesown/wiki-backup/kicksecure-wiki-backup/Secure_Downloads.mw" >&2
@@ -24,12 +30,12 @@ not_as_root
 file_name="$1"
 test -r "$file_name"
 
-tr -s '[:blank:]' '[\n*]' <"$file_name" | while IFS= read -r word; do
+while IFS= read -r word; do
   if [ -z "$word" ]; then
     continue
   fi
-  [[ $word =~ .*https?://.* ]] || true
-  if [ -n "${BASH_REMATCH-}" ]; then
+  [[ "$word" =~ .*https?://.* ]] || true
+  if [ -n "${BASH_REMATCH[0]-}" ]; then
     printf "%s\n" "${BASH_REMATCH[0]}"
   fi
-done
+done < <(tr -s '[:blank:]' '[\n*]' <"$file_name")

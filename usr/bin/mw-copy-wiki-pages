@@ -1,14 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET PAGE [OUTPUT]
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI WIKI_TARGET PAGE [OUTPUT]
+Options:
+  --edit-msg=X     Summary to specify for edit
 Defaults:
   OUTPUT=${default_page_title_local_pretty}
 Example:
@@ -17,27 +25,46 @@ Example:
   exit 1
 }
 
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
 default_page_title_local_pretty="$TMPFOLDER/PAGE"
-if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+edit_msg=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1-}" "${2-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    edit-msg) get_arg; edit_msg="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+if [[ -z "${3-}" ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 wiki_url_target="$2"
 page_title="$3"
 default_page_title_local="$TMPFOLDER/$page_title"
 page_title_local="${4-"${default_page_title_local}"}"
 
+check_vars_exist wiki_url_target page_title
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
-#mw-login-test "$wiki_url"
+#mw-login-test "$WIKI_URL"
 
-log info "Fetching page '$wiki_url' '$page_title'..."
-
-mw-fetch "$wiki_url" "$page_title" "$page_title_local"
-
+log info "Fetching page '$WIKI_URL' '$page_title' '$page_title_local'..."
+mw-fetch "$WIKI_URL" "$page_title" "$page_title_local"
 log info "Fetch page success."
+
 log info "Checking for pending changes for page..."
 log info "WIKI_API: $WIKI_API"
 
@@ -52,13 +79,17 @@ page_pending_status_json=$(
     "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
 )
 
-if jq . <<<"$page_pending_status_json" | grep -q -- pending_since >/dev/null 2>&1; then
-  log warn "'$wiki_url' '$page_title' page has PENDING EDITS!"
-  exit 10
+if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
+  die 10 "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
 fi
 
 log info "No pending edits for page, ok."
+log info "Editing page... '$wiki_url_target' '$page_file_local' '$page_title'"
 
-mw-edit "$wiki_url_target" "$page_title" "$page_title_local"
+if [ -n "$edit_msg" ]; then
+  mw-edit "$wiki_url_target" "$page_title_local" "$page_title" "$edit_msg"
+else
+  mw-edit "$wiki_url_target" "$page_title_local" "$page_title"
+fi
 
 log info "Edit page success."

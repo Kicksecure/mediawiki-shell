@@ -1,14 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-usage(){
-  printf '%s\n' "Usage: ${0##*/} WIKI WIKI_TARGET PAGE_FILE [OUTPUT]
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI WIKI_TARGET PAGE_FILE [OUTPUT]
+Options:
+  --edit-msg=X     Summary to specify for edit
 Defaults:
   OUTPUT=${default_page_file_local_pretty}
 Example:
@@ -17,26 +25,46 @@ Example:
   exit 1
 }
 
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
 default_page_file_local_pretty="$TMPFOLDER/wiki_remote_file_title"
-if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+edit_msg=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1-}" "${2-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    edit-msg) get_arg; edit_msg="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+if [[ -z "${3-}" ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 wiki_url_target="$2"
 page_file="$3"
 default_page_file_local="$TMPFOLDER/${page_file}"
 page_file_local="${4-"${default_page_file_local}"}"
 
+check_vars_exist wiki_url_target page_file
+
 wiki_remote_file_title="$(stecho "$page_file" | str_replace "File:" "")"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
-#mw-login-test "$wiki_url"
+#mw-login-test "$WIKI_URL"
 
-log info "Downloading file '$page_file' '$page_file_local'..."
-mw-file-download "$wiki_url" "$page_file" "$page_file_local"
+log info "Downloading file '$WIKI_URL' '$page_file' '$page_file_local'..."
+mw-file-download "$WIKI_URL" "$page_file" "$page_file_local"
 log info "Download file success."
 
 log info "Checking for pending changes for file..."
@@ -54,13 +82,16 @@ page_pending_status_json=$(
 )
 
 if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
-  log warn "'$wiki_url' '$page_file' has PENDING EDITS!"
-  exit 10
+  die 10 "'$WIKI_URL' '$page_file' has PENDING EDITS!"
 fi
 
 log info "No pending edits for file, ok."
-log info "Uploading file... '$wiki_url_target' '$page_file' '$page_file_local'"
+log info "Uploading file... '$wiki_url_target' '$page_file_local' '$wiki_remote_file_title'"
 
-mw-file-upload "${wiki_url_target}" "${page_file_local}" "$wiki_remote_file_title"
+if [ -n "$edit_msg" ]; then
+  mw-file-upload "$wiki_url_target" "$page_file_local" "$wiki_remote_file_title" "$edit_msg"
+else
+  mw-file-upload "$wiki_url_target" "$page_file_local" "$wiki_remote_file_title"
+fi
 
 log info "Upload file success."

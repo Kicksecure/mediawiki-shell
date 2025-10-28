@@ -1,13 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'" >&2
@@ -18,10 +24,10 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 ## TODO: abolish need for this and fetch all name spaces instead by default.
 ## Namespace 500 (Moved:) is not reviewable.
@@ -29,21 +35,18 @@ WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
 #export wiki_namespace_list_extra="500 274"
 
 log info "TMPFOLDER : $TMPFOLDER"
-log info "wiki_url  : $wiki_url"
+log info "WIKI_URL  : $WIKI_URL"
 log info "WIKI_API  : $WIKI_API"
 
 login_function() {
   log info "Logging in..."
-  mw-login-test "$wiki_url"
+  mw-login-test "$WIKI_URL"
   log info "Login ok."
 }
 
 approve_page() {
   approve_page_exit_code=0
-  mw-flagged-revisions-approve-page "$wiki_url" "$backup_page_item" || {
-    approve_page_exit_code="$?"
-    true
-  }
+  mw-flagged-revisions-approve-page "$WIKI_URL" "$backup_page_item" || approve_page_exit_code="$?"
 }
 
 login_function
@@ -51,7 +54,7 @@ login_function
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
 
-mw-all-pages "$wiki_url" unreviewedpages "$allpages_file"
+mw-all-pages "$WIKI_URL" unreviewedpages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -60,9 +63,10 @@ counter_total="$(awk 'END {print NR}' "$allpages_file")"
 counter_currently=0
 error_counter=0
 while IFS=$'\n' read -r item_from_all_pages; do
-  counter_currently=$((counter_currently + 1))
-  backup_page_item=$(set_backup_page_item "$item_from_all_pages")
+  (( counter_currently++ )) || true
+  backup_page_item="$(set_backup_page_item "$item_from_all_pages")"
   log info "$counter_currently / $counter_total"
+  printf '%s\n' "mw-flagged-revisions-approve-page '$WIKI_URL' '$backup_page_item'"
   approve_page
   if [ "$approve_page_exit_code" = "0" ]; then
     log info "Success at first attempt, ok."
@@ -77,7 +81,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
   if [ "$approve_page_exit_code" = "0" ]; then
     log info "Success after second attempt, ok."
   else
-    error_counter=$((error_counter + 1))
+    (( error_counter++ )) || true
     log error "Failed!"
   fi
 done <"$allpages_file"

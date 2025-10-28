@@ -1,11 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+
+
+usage() {
   printf '%s\n' "Usage: ${0##*/} LINK
 Examples:
   ${0##*/} 'http://en.wikipedia.org/wiki/Atomic_clock'
@@ -34,6 +42,7 @@ image:
 file:
 |image=
 archive.org
+{{stable
 {{project
 tor+https
 tor+http
@@ -95,7 +104,7 @@ scurl-download
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
 ## NOTE: case-sensitive. Capitalization is important.
-string_replace_tupils_list="\
+string_replace_tuples_list="\
 <u>[http:// http://
 <u>[https:// https://
 \"[https:// https://
@@ -131,7 +140,7 @@ if grep --ignore-case --fixed-strings "$grep_skip_fixed_string_list_to_exclude" 
 fi
 
 ## '<ref name=f_secure>https://blog.f-secure.com/cold-boot-attacks/'
-if grep --fixed-strings --ignore-case "name=" <<<"$link_result_cleaned"  >/dev/null 2>&1; then
+if grep --fixed-strings --ignore-case "name=" <<<"$link_result_cleaned" >/dev/null 2>&1; then
   longest_match_after_character=">"
   link_result_cleaned="${link_result_cleaned#*"${longest_match_after_character}"}"
 fi
@@ -149,16 +158,15 @@ while read -r replace_config_line; do
   log debug "second: $second"
 
   if [ -z "$first" ]; then
-    log error "first is empty!"
-    exit 1
+    die 1 "first is empty!"
   fi
 
-  link_result_cleaned=$(str_replace "$first" "$second" <<<"$link_result_cleaned" 2>/dev/null)
-done < <(stecho "$string_replace_tupils_list")
+  link_result_cleaned="$(str_replace "$first" "$second" <<<"$link_result_cleaned" 2>/dev/null)"
+done < <(stecho "$string_replace_tuples_list")
 
 first='"'
 second=""
-link_result_cleaned=$(str_replace "$first" "$second" <<<"$link_result_cleaned" 2>/dev/null)
+link_result_cleaned="$(str_replace "$first" "$second" <<<"$link_result_cleaned" 2>/dev/null)"
 
 case "$link_result_cleaned" in
   http://|https://|"()")

@@ -1,10 +1,17 @@
-#!/usr/bin/env bash
-set -euEo pipefail
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'" >&2
@@ -15,10 +22,10 @@ if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 log info "Logging out of $WIKI_API... Requesting CSRF token..."
 safe-rm -f -- "${TMPFOLDER}/logout-token.json"
@@ -45,9 +52,9 @@ curl_run \
   --request "POST" \
   "${WIKI_API}?action=logout&format=json"
 
-if [ "$(stcat "${TMPFOLDER}/logout.json")" = "{}" ] ||
-  [ "$(jq --raw-output '.warnings.logout."*"' -- "${TMPFOLDER}/logout.json")" = "You must be logged in." ]
-then
+if [ "$(stcat "${TMPFOLDER}/logout.json")" = "{}" ] || \
+  [ "$(jq --raw-output '.warnings.logout."*"' -- "${TMPFOLDER}/logout.json")" \
+  = "You must be logged in." ]; then
   log info "OK, logged out."
   exit 0
 fi

@@ -1,9 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ## Copyright (C) 2024 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
 ## See the file COPYING for copying conditions.
 
-set -euEo pipefail
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -18,13 +21,11 @@ ensure_dir_exists() {
 
   if [ ! -d "${dir_path}" ]; then
     if [ -e "${dir_path}" ]; then
-      log error "${dir_path} exists but is not a directory!"
-      exit 1
+      die 1 "'${dir_path}' exists but is not a directory!"
     fi
-    mkdir -p -- "${dir_path}" || {
-      log error "Could not create a directory at ${dir_path}!"
-      exit 1
-    }
+    if ! mkdir -p -- "${dir_path}"; then
+      die 1 "Could not create a directory at '${dir_path}'!"
+    fi
   fi
 }
 
@@ -36,10 +37,9 @@ ensure_file_exists() {
   file_dir="$(dirname -- "${file_path}")"
 
   ensure_dir_exists "${file_dir}"
-  touch -- "${file_path}" || {
-    log error "Could not touch ${file_path}!"
-    exit 1
-  }
+  if ! touch -- "${file_path}"; then
+    die 1 "Could not touch '${file_path}'!"
+  fi
 }
 
 ensure_wiki_git_up_to_date() {
@@ -60,8 +60,7 @@ ensure_wiki_git_up_to_date() {
       git clone --depth=1 "${wiki_git_repo}"
       popd >/dev/null
     else
-      log error "${wiki_path} has contents, but is not a Git repo!"
-      exit 1
+      die 1 "'${wiki_path}' has contents, but is not a Git repo!"
     fi
   fi
 
@@ -84,8 +83,8 @@ wiki_link_archiver() {
   echo 'Press Enter to begin archiving.'
   read -r captcha_cookie
 
-  # Generates full list of links, this takes a long time so any user input
-  # querying that can be moved before this line should be.
+  ## Generates full list of links, this takes a long time so any user input
+  ## querying that can be moved before this line should be.
   if [ "${skip_link_compilation}" = 'n' ]; then
     mw-wiki-to-weblinks "${input_dir}"
   fi
@@ -119,7 +118,7 @@ wiki_link_archiver() {
     ## skip it
     archive_today_exit_code='0'
     archive.today --find --url "${raw_link}" --captcha-cookie "${captcha_cookie}" || archive_today_exit_code="$?"
-    sleep $(((RANDOM % 11) + 5))
+    sleep $(( (RANDOM % 11) + 5 ))
     if [ "${archive_today_exit_code}" = '0' ]; then
       true
     else
@@ -128,15 +127,15 @@ wiki_link_archiver() {
       ## have a less secure HTTPS configuration.
       if [[ ${raw_link} =~ \.onion$ ]]; then
         # Route onion links through Tor, assumes that tor is running
-        curl --proxy socks5h://127.0.0.1:9050 --location --fail "${raw_link}" >/dev/null 2>&1 || {
+        if ! curl --proxy socks5h://127.0.0.1:9050 --location --fail "${raw_link}" >/dev/null 2>&1; then
           append-once "${error_link_list_file}" "${raw_link}"
           continue
-        }
+        fi
       else
-        curl --location --fail "${raw_link}" >/dev/null 2>&1 || {
+        if ! curl --location --fail "${raw_link}" >/dev/null 2>&1; then
           append-once "${error_link_list_file}" "${raw_link}"
           continue
-        }
+        fi
       fi
 
       ## Try to archive the page, prompting the user for a new CAPTCHA
@@ -144,7 +143,7 @@ wiki_link_archiver() {
       while true; do
         archive_today_exit_code='0'
         archive.today --archive --url "${raw_link}" --captcha-cookie "${captcha_cookie}" || archive_today_exit_code="$?"
-        sleep $(((RANDOM % 11) + 5))
+        sleep $(( (RANDOM % 11) + 5 ))
         if [ "${archive_today_exit_code}" = '0' ]; then
           break
         else

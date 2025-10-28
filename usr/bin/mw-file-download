@@ -1,11 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE_FILE OUTPUT
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' File:Ubuntu_software_icon.png /tmp/Ubuntu_software_icon.png" >&2
@@ -16,18 +22,19 @@ if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 page_file="$2"
 page_file_local="$3"
 
+check_vars_exist page_file page_file_local
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 log info "Downloading file '${WIKI_INDEX}' '$page_file'..."
 
 if test -d "$page_file_local"; then
-  log error "page_file_local '$page_file_local' is a folder!"
-  exit 1
+  die 1 "page_file_local '$page_file_local' is a folder!"
 fi
 
 safe-rm -f -- "$page_file_local"
@@ -35,7 +42,7 @@ touch -- "$page_file_local"
 test -w "$page_file_local"
 
 ## mw-file-to-url gets already encoded URL from MediaWiki API.
-mw-file-to-url "$wiki_url" "${TMPFOLDER}/wiki-remote-file-url.txt" "$page_file"
+mw-file-to-url "$WIKI_URL" "${TMPFOLDER}/wiki-remote-file-url.txt" "$page_file"
 
 url="$(stcat "${TMPFOLDER}/wiki-remote-file-url.txt")"
 ## url contains encoded URL.
@@ -46,10 +53,10 @@ log info "saving file to page_file_local: '$page_file_local'"
 
 curl_run_no_encode=true \
   curl_run \
-  "${curl_opts[@]}" \
-  --header "Accept-Language: en-GB" \
-  --header "Expect:" \
-  --output "$page_file_local" \
-  "$url"
+    "${curl_opts[@]}" \
+    --header "Accept-Language: en-GB" \
+    --header "Expect:" \
+    --output "$page_file_local" \
+    "$url"
 
 log info "Fetch file success."

@@ -1,4 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 ## using 'retry' with '< /dev/null' due to upstream bug:
 ## https://github.com/minfrin/retry/issues/20
@@ -10,8 +18,9 @@ source /usr/libexec/helper-scripts/log_run_die.sh
 
 # Function to execute the command and capture the exit status
 execute_command() {
+  local exit_code
   "$@"
-  local exit_code=$?
+  exit_code=$?
   if [ $exit_code -eq 0 ]; then
     log info "Command exited with status: $exit_code"
   else
@@ -30,8 +39,8 @@ attempt_command() {
   for retry_counter in $(seq 1 "$max_retries"); do
     log info "Attempt $retry_counter of $max_retries..."
     execute_command "$@"
-    exit_code=$?
-    if [ $exit_code -eq 0 ]; then
+    exit_code="$?"
+    if (( exit_code == 0 )); then
       log info "Command succeeded on attempt $retry_counter."
       return 0
     fi

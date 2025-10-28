@@ -1,13 +1,19 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euEo pipefail
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 log info "START"
 
-usage(){
+usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' File:10b.png" >&2
@@ -18,17 +24,19 @@ if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
 
-wiki_url="$1"
+WIKI_URL="$1"
 page_file="$2"
 
-# shellcheck source=../share/mediawiki-shell/wiki-config
-WIKI_URL="$wiki_url" source /usr/share/mediawiki-shell/wiki-config
+check_vars_exist page_file
 
-log info "wiki_url      : $wiki_url"
-log info "WIKI_API    : $WIKI_API"
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "WIKI_URL : $WIKI_URL"
+log info "WIKI_API : $WIKI_API"
 log info "page_file: $page_file"
 
-#mw-login-test "$wiki_url"
+#mw-login-test "$WIKI_URL"
 
 log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 
@@ -37,13 +45,12 @@ $curl \
   --output "${TMPFOLDER}/revid.json" \
   "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=${page_file}"
 
-lastrevid=$(jq -r ".query.pages[].lastrevid" "${TMPFOLDER}/revid.json")
+lastrevid=$(jq -r ".query.pages[].lastrevid" -- "${TMPFOLDER}/revid.json")
 
-if printf '%s\n' "$lastrevid" | grep -E -- '^[0-9]+$' >/dev/null 2>&1; then
+if grep -E -- '^[0-9]+$' <<<"$lastrevid" >/dev/null 2>&1; then
   true "Valid number."
 else
-  log error "lastrev not numeric!"
-  exit 1
+  die 1 "lastrev not numeric!"
 fi
 
 log info "Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
@@ -59,10 +66,10 @@ $curl \
   --request "POST" \
   "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
 
-csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/csrf_token.json")
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/csrf_token.json")
 
 ## not login-token
-#csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/login-token.json")
+#csrf_token=$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/login-token.json")
 
 ## Sensitive?
 #log info "XXX csrf_token: $csrf_token"
@@ -104,19 +111,19 @@ $curl \
 #    --output "${TMPFOLDER}/review-result.json" \
 #    --silent \
 #    --data-urlencode "token=${csrf_token}" \
-#    "${WIKI_API}?format=json&action=stabilize&title=${page_file}&default=stable&&reason=${comment}"
+#    "${WIKI_API}?format=json&action=stabilize&title=${page_file}&default=stable&reason=${comment}"
 
-review_result=$(jq --raw-output '.review.result' "${TMPFOLDER}/review-result.json")
+review_result=$(jq --raw-output '.review.result' -- "${TMPFOLDER}/review-result.json")
 
 if [ "$review_result" = "Success" ]; then
   log info "Success."
   exit 0
 fi
 
-echo "${TMPFOLDER}/review-result.json"
-jq "${TMPFOLDER}/review-result.json"
+printf '%s\n' "${TMPFOLDER}/review-result.json"
+jq -- "${TMPFOLDER}/review-result.json"
 
-review_error_code=$(jq --raw-output '.error.code' "${TMPFOLDER}/review-result.json")
+review_error_code=$(jq --raw-output '.error.code' -- "${TMPFOLDER}/review-result.json")
 if [ "$review_error_code" = "notreviewable" ]; then
   log notice "notreviewable"
   exit 0

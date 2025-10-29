@@ -30,7 +30,7 @@ If using a different wiki, add an entry to the `case` block.
 
 ## How to Build deb Package from Source Code
 
-Can be built using standard Debian package build tools such as: 
+Can be built using standard Debian package build tools such as:
 
 ```
 dpkg-buildpackage -b

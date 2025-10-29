@@ -86,7 +86,7 @@ if ! test -d "$output_dir"; then
 fi
 
 if ! test -w "$output_dir"; then
-  log error "output_dir '$output_dir' unwriteable! Run...?:"
+  log error "output_dir '$output_dir' unwritable! Run...?:"
   stecho "chown --recursive -- '$USER:$USER' '$output_dir'"
   die 1 "Cannot continue."
 fi

@@ -58,6 +58,8 @@ filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"
 
 replace_all_except_first() {
+  local linenum
+
   if ! grep --line-number -- "$search" "$filename" >/dev/null 2>&1; then
     return 0
   fi

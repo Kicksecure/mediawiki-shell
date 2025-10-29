@@ -30,6 +30,7 @@ collect_reqs() {
 collect_reqs retry curl jq safe-rm str_replace stprint
 
 check_vars_exist() {
+  local var_name
   for var_name in "$@"; do
     if [ -z "${!var_name+x}" ]; then
       die 1 "Variable '$var_name' is not set or is empty."
@@ -54,7 +55,7 @@ counter_currently: '${counter_currently-unset}'
 }
 
 error_handler() {
-  last_exit_code="$?"
+  local last_exit_code="$?"
   log error "
 BASH_COMMAND: '$BASH_COMMAND'
 failed with exit code '$last_exit_code'." >&2
@@ -158,6 +159,7 @@ curl_get_output_parameter() {
 }
 
 curl_run() {
+  local curl_run_no_encode args url curl_exit_code encoded_url
   ## Do not destroy "$@" in this function. Therefore passing it to a different
   ## helper function so it stays local there and unchanged here.
   curl_get_output_parameter "$@"
@@ -169,7 +171,6 @@ curl_run() {
   safe-rm -f -- "$output_file"
   touch -- "$output_file"
 
-  local temp_args args url encoded_url
   args=( "$@" )
   url="${args[$((${#args[@]} - 1))]}"
 

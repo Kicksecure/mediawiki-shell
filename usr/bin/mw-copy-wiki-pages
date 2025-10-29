@@ -84,7 +84,7 @@ if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; 
 fi
 
 log info "No pending edits for page, ok."
-log info "Editing page... '$wiki_url_target' '$page_file_local' '$page_title'"
+log info "Editing page... '$wiki_url_target' '$page_title_local' '$page_title'"
 
 if [ -n "$edit_msg" ]; then
   mw-edit "$wiki_url_target" "$page_title_local" "$page_title" "$edit_msg"

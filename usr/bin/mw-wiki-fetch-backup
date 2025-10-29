@@ -49,7 +49,7 @@ if ! test -d "$output_dir"; then
 fi
 
 if ! test -w "$output_dir"; then
-  die 1 "output_dir '$output_dir' unwriteable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
+  die 1 "output_dir '$output_dir' unwritable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
 fi
 
 for retry_counter in {1..5}; do

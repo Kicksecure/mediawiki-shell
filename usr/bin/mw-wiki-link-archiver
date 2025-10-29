@@ -43,7 +43,7 @@ ensure_file_exists() {
 }
 
 ensure_wiki_git_up_to_date() {
-  local wiki_path wiki_git_repo archive_today_exit_code
+  local wiki_path wiki_git_repo
 
   wiki_path="${1-}"
   wiki_git_repo="${2-}"
@@ -69,7 +69,8 @@ ensure_wiki_git_up_to_date() {
 
 wiki_link_archiver() {
   local full_link_list archived_link_list captcha_cookie raw_link \
-    archived_link link_in_archived_list captcha_cookie_refresh_response
+    archived_link link_in_archived_list captcha_cookie_refresh_response \
+    archive_today_exit_code
 
   ensure_file_exists "${full_link_list_file}"
   ensure_file_exists "${archived_link_list_file}"

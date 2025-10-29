@@ -50,7 +50,7 @@ lastrevid=$(jq -r ".query.pages[].lastrevid" -- "${TMPFOLDER}/revid.json")
 if grep -E -- '^[0-9]+$' <<<"$lastrevid" >/dev/null 2>&1; then
   true "Valid number."
 else
-  die 1 "lastrev not numeric!"
+  die 1 "lastrevid not numeric!"
 fi
 
 log info "Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"

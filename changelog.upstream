@@ -1,3 +1,47 @@
+commit 95a5dde482cc1a04b26bad39b478c12590b4359b
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Oct 29 03:20:32 2025 -0400
+
+    minor
+
+commit 0a1acdc84e5f5c96ab482a71b8fb2bd3cf65c654
+Merge: 0fe1e8f 7f7f519
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Oct 29 02:09:17 2025 -0400
+
+    Merge remote-tracking branch 'ArrayBolt3/arraybolt3/trixie'
+
+commit 7f7f5199beb7039482ae639824e5142a38dac01d
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Tue Oct 28 19:27:11 2025 -0500
+
+    more fixes
+
+commit e22d5a92e815173a1f1466662af528db40449235
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Tue Oct 28 00:04:57 2025 -0500
+
+    Fix minor bugs and misc issues
+
+commit d850424f8f93c7a26d5b4a6151ecabd5a1f545f2
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Oct 26 16:51:08 2025 -0500
+
+    Adjust README contents, create README_generic.md
+
+commit fb61714bae62e99f3257150d9099946ba7f5ca21
+Merge: 0fe1e8f 2a040f8
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Oct 26 16:40:47 2025 -0500
+
+    Merge remote-tracking branch 'ben-grande/refactor' into arraybolt3/trixie
+
+commit 0fe1e8fea5cac09ee7d3fc3ebdabff9a92492db0
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Fri Sep 19 16:15:18 2025 +0000
+
+    bumped changelog version
+
 commit 02ae8b8dd3d81ce45a3199b46d0e2e23de245790
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Sep 18 10:07:51 2025 -0400
@@ -27,6 +71,316 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Wed Aug 20 06:25:34 2025 -0400
 
     readme
+
+commit 2a040f8a7c16b91246ab895a7fd861b079130b5e
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 28 11:22:28 2025 +0200
+
+    Add inline comments to TODO
+
+commit d78a24e351b46fd9a57c358b09ea52c61bbfce3b
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:55:06 2025 +0200
+
+    Print files with logging
+
+commit aee31f07eb0c456e2a379f94765fdd2fee4541c8
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:50:57 2025 +0200
+
+    Logging curl runs can leak secrets
+
+commit 8dc85dbdb901b96f9e01e07ed579110b99071792
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:47:24 2025 +0200
+
+    Bind names to URLs
+
+commit 7d7080afc60295bc2f6d2565f9de3ee81e7c13d2
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:47:11 2025 +0200
+
+    Fix unbound variable
+
+commit 267d7e32845936bf7734eb982ed40b02f1dcecea
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:38:23 2025 +0200
+
+    Add URL to curl failure logging
+
+commit 28a8ff70e4ea6cbc39554c97d8073ae4d170998e
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:36:26 2025 +0200
+
+    Log curl calls
+
+commit 111bbd16becba2b2e450e35427bd47c27e5d76f2
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 10:33:05 2025 +0200
+
+    Do not expand password
+    
+    Password generators normally don't do quotes, so less things to worry.
+    But they may add special characters such as '$'. Use single quotes to
+    avoid expansion.
+
+commit 846aeb903190929a5117cd8ff3ca8a9010757745
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 09:55:19 2025 +0200
+
+    Fix retry wrapper derivative argument parser
+    
+    Running in the background multiple jobs prevents killing them all at
+    once without funny traps to kill the jobs.
+
+commit 591d2685556b7545276945b2648f2e567cea719f
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 09:04:15 2025 +0200
+
+    Fix log level warn
+
+commit 908d43d11781afcb3d96e17cd310832760f80014
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 09:03:47 2025 +0200
+
+    Minor corrections
+
+commit 809bebb6a7d5486cf90f080e897c4b742968e168
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 08:56:44 2025 +0200
+
+    Add missing log levels
+
+commit 255f1f6540a8826d1de61e7f1c68931ff119a343
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 08:51:33 2025 +0200
+
+    Remove option parser test file
+
+commit e502819704ffa9b4dffc255d28b5fc210b4610d6
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 08:50:37 2025 +0200
+
+    Add missing wiki URL
+
+commit 33e0506f10d3973a5d5394187299d118d9c06706
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 08:12:53 2025 +0200
+
+    Add missing wiki URL
+
+commit 874126588322c91a10822059e768c99223645716
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 08:06:04 2025 +0200
+
+    Download file with the same name as the page
+
+commit cffc004f800a60c6196fdf0486fc7b81ee83ae63
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 07:52:03 2025 +0200
+
+    Be verbose on login failure
+    
+    The login information is show with the 'info' loglevel because it would
+    be too verbose otherwise, but on failure, it is important to see the
+    host and username used.
+
+commit e766071bb1825d75d6427f104f2e156c298b3e99
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 07:49:02 2025 +0200
+
+    Prefer non-environment variable
+
+commit e23831958dd21e8fcb23e31adf8ae1785f82e372
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 07:48:53 2025 +0200
+
+    Rename mw-login-test
+
+commit c6a485c84d23e09ef177ac46d7abe72152025b09
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Wed Jul 23 07:26:13 2025 +0200
+
+    Minor cleanup
+
+commit ecd912f429bc0900a08845edcc4fe420f3a5894a
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 21 15:43:09 2025 +0200
+
+    Add more option parsing
+
+commit 9fb899ebd295a35c227aa84b051c1d3eb40f0916
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 21 12:19:41 2025 +0200
+
+    Allow edit message to be a positional parameter
+
+commit 9a1864e6e50e261fac5f5b7387a5886d2127736b
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 21 12:07:09 2025 +0200
+
+    Reference where a variable is set
+
+commit 5f1151249f77fb22801af4230950b6bd991d6620
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 21 11:57:51 2025 +0200
+
+    Pass argument array to retry wrapper
+
+commit 51cdb9cd54ea31f97a113bd8291758fca0f26dad
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 21 11:24:45 2025 +0200
+
+    Remove unused items
+
+commit cab99faa8981361b1f6bed29844bea24729a8e20
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 21 11:22:18 2025 +0200
+
+    Move credentials instruction to README
+
+commit b2371be06eca43f2782e2e1e3f2281c488a3ebcd
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 18 12:09:41 2025 +0200
+
+    Get wiki API from credentials
+
+commit 4d9d3b438327434bb0fb9d024b5d6dff09398a01
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 18 11:33:18 2025 +0200
+
+    Clear logout/login reason on failure
+
+commit d7f5df4bfd76a07f89f4fd5461431346ea4279e5
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 18 10:38:47 2025 +0200
+
+    Fix usage instructions
+
+commit 4efa38393cabfc1dc2b33b761f34542b1bbaf519
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Thu Jul 17 18:14:41 2025 +0200
+
+    Even more environment variable removal
+
+commit 230c62d3a4e6d64a5fbf17cedded27cfc567a1e7
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Thu Jul 17 12:35:47 2025 +0200
+
+    Another wave of removing environment variables
+
+commit d612e8fcf466a3c88baddc3b13b82a647d9d7568
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Thu Jul 17 10:10:49 2025 +0200
+
+    Fix instruction URL regex
+
+commit 8ebdab143f80fa6af872a49461531b95931d2306
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 18:46:07 2025 +0200
+
+    Remove unused code
+
+commit 495fa529e233b0508088f964489c1c80703f0f16
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 18:44:18 2025 +0200
+
+    Convert some scripts env vars to script arguments
+
+commit d8870a8a1722054cad301f0d4db11142433a4921
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 16:14:51 2025 +0200
+
+    Minor cleanup
+
+commit 5c41de4439c6e591a0b3918e7743c4e5a53a91fe
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 15:15:33 2025 +0200
+
+    Normal variable to array
+
+commit 6769f81bb17b186d2415f62ea204b5aa620e3f57
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 14:59:29 2025 +0200
+
+    Log only after source
+
+commit 78e1344004f1bcb545e34dc83995d804b3eef167
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 14:44:41 2025 +0200
+
+    Add end-of-options separator --
+
+commit 8a040ddd35b42475e734c7bc1faa80d76dcfce54
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 14:29:37 2025 +0200
+
+    Add missing log function
+
+commit 8fbe34c25e243f05d2ea4e21b75ce69986d658a4
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 12:33:24 2025 +0200
+
+    Clear redirects
+
+commit 041a6d77688bed6593d016ba3ccf68a4f200c900
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 12:22:14 2025 +0200
+
+    Substitute seq for {1..n}
+    
+    Except when the 'n' is a variable, as it does not perform both
+    expansions and 'eval' would be necessary.
+
+commit fc8764aa00a398b5ba9643b9b09a7f92d4a1ab8d
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 12:20:13 2025 +0200
+
+    Add safe terminal utils
+
+commit 9c6be0782dbdeb02b73b375e7d9ca913ed7b707f
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 12:05:15 2025 +0200
+
+    Check for empty file with -s
+
+commit e2db953422d735c9a926e9969164e444ae59d99f
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 11:40:19 2025 +0200
+
+    Compare empty against -z
+
+commit 6620c8b61cb7935aa5f40fe243053e940c1984ce
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Mon Jul 14 11:37:34 2025 +0200
+
+    Stricter shell options
+
+commit 67f83c9457ec92bd941efd352819f863e5d2b68b
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 11 17:53:54 2025 +0200
+
+    Minor fixes
+
+commit 6710c76d65c52d4804bede80b068982ee6a51c99
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 11 17:30:06 2025 +0200
+
+    Shell formatting
+    
+    shfmt -w -s -i 2 -ci usr/
+
+commit 8009f116628cb6c73265a7415579b9cc65ffa9a6
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 11 12:08:17 2025 +0200
+
+    Add logging helper
+
+commit 07aae4d5a0549b70a73bf52ab26c25aa4cc27386
+Author: Ben Grande <ben.grande.b@gmail.com>
+Date:   Fri Jul 11 11:07:51 2025 +0200
+
+    Shellcheck and pylint
 
 commit d593b98e3d6199db7e94790e20b3c794bce21064
 Author: Patrick Schleizer <adrelanos@whonix.org>

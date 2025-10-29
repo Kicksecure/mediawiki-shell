@@ -1,219 +1,218 @@
 #!/bin/bash
 
-#set -x
-set -e
-set -o pipefail
-set -o nounset
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-if ! command -v retry >/dev/null ; then
-   echo "ERROR: 'retry' command unavailable! Probably 'retry' package is not installed." >&2
-fi
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck disable=SC1091
+{
+  source /usr/libexec/helper-scripts/log_run_die.sh
+  source /usr/libexec/helper-scripts/has.sh
+  source /usr/libexec/helper-scripts/not_as_root.sh
+}
+
+collect_reqs() {
+  local collect cmd
+  collect=""
+  for cmd in "${@}"; do
+    if ! has "$cmd"; then
+      collect="${collect:+$collect }$cmd"
+    fi
+  done
+  if test ${#collect} -gt 0; then
+    die 1 "command(s) unavailable: $collect" >&2
+  fi
+}
+collect_reqs retry curl jq safe-rm str_replace stprint
 
 check_vars_exist() {
+  local var_name
   for var_name in "$@"; do
     if [ -z "${!var_name+x}" ]; then
-      echo "ERROR: Variable '$var_name' is not set or is empty." >&2
+      die 1 "Variable '$var_name' is not set or is empty."
       exit 1
     fi
   done
 }
 
 missing_variable() {
-   echo "$0: ERROR: MISSING VARIABLE: $@"
-   exit 1
+  log error "MISSING VARIABLE: $*"
+  exit 1
 }
 
 error_output() {
-   [[ -v 1 ]] || 1="unset"
-
-   [[ -v WIKI_INDEX ]] || WIKI_INDEX=""
-   [[ -v TITLE ]] || TITLE=""
-   [[ -v BASH_COMMAND ]] || BASH_COMMAND=""
-   [[ -v counter_chunk ]] || counter_chunk="unset"
-   [[ -v counter_currently ]] || counter_currently="unset"
-   [[ -v TMPFOLDER ]] || TMPFOLDER="unset"
-   echo "error_msg: '$1'
-WIKI_INDEX: '$WIKI_INDEX'
-TITLE: '$TITLE'
-TMPFOLDER: '$TMPFOLDER'
-counter_chunk: '$counter_chunk'
-counter_currently: '$counter_currently'
+  stecho "error_msg: '${1:-none}'
+WIKI_INDEX: '${WIKI_INDEX-unset}'
+TITLE: '${TITLE-unset}'
+TMPFOLDER: '${TMPFOLDER-unset}'
+counter_chunk: '${counter_chunk-unset}'
+counter_currently: '${counter_currently-unset}'
 ###" >&2
 }
 
 error_handler() {
-   last_exit_code="$?"
-   echo "###
-$0: ERROR:
+  local last_exit_code="$?"
+  log error "
 BASH_COMMAND: '$BASH_COMMAND'
 failed with exit code '$last_exit_code'." >&2
-
-   error_output "called-by-error_handler"
-
-   exit 1
+  error_output "called-by-error_handler"
+  exit 1
 }
 
 trap error_handler ERR
 
 exit_handler() {
-   local exit_code=$?
-   if [ "$exit_code" = "0" ]; then
-      echo "## $0: END: with OK exit code: '$exit_code'"
-   else
-      echo "## $0: END: with ERROR exit code: '$exit_code'"
-   fi
-   exit "$exit_code"
+  trap - INT HUP ABRT QUIT EXIT
+  local exit_code="${1:-}"
+  if [ "$exit_code" = "0" ]; then
+    log info "END: with OK exit code: '$exit_code'"
+  else
+    log error "END: with ERROR exit code: '$exit_code'"
+  fi
+  exit "$exit_code"
 }
 
 set_curl_binary_default() {
-   if command -v scurl &>/dev/null ; then
-      curl=scurl
-   else
-      curl=curl
-   fi
+  if has scurl; then
+    curl=scurl
+  else
+    curl=curl
+  fi
 }
 
 set_backup_page_item() {
-   local backup_page_item search replace
+  local backup_page_item search replace
 
-   backup_page_item="$1"
+  backup_page_item="$(stecho "$1")"
+  if [ -z "$backup_page_item" ]; then
+    die 1 "set_backup_filename_item is empty!"
+  fi
 
-   if [ "$backup_page_item" = "" ]; then
-      error "set_backup_filename_item is empty!"
-   fi
+  ## remove last letter ("'")
+  backup_page_item="${backup_page_item::-1}"
+  ## remove first letter ("'")
+  backup_page_item="${backup_page_item:1}"
 
-   ## remove last letter ("'")
-   backup_page_item="${backup_page_item::-1}"
-   ## remove first letter ("'")
-   backup_page_item="${backup_page_item:1}"
+  search="'\''"
+  replace="'"
+  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   search="'\''"
-   replace="'"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  search="&"
+  replace="%26"
+  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   search="&"
-   replace="%26"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  ## Same format as git-mediawiki: replace ' ' with '_'.
+  ## Replace spaces with underscore.
+  search=" "
+  replace="_"
+  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
 
-   ## Same format as git-mediawiki: replace ' ' with '_'.
-   ## Replace spaces with underscore.
-   search=" "
-   replace="_"
-   backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
-
-   echo "$backup_page_item"
+  echo "$backup_page_item"
 }
 
 set_backup_filename_item() {
-   local backup_filename_item search replace
+  local backup_filename_item search replace
 
-   backup_filename_item="$1"
+  backup_filename_item="$1"
 
-   if [ "$backup_filename_item" = "" ]; then
-      error "backup_filename_item is empty!"
-   fi
+  if [ -z "$backup_filename_item" ]; then
+    die 1 "backup_filename_item is empty!"
+  fi
 
-   ## Same format as git-mediawiki: replace '/' with '%2F'.
-   ## Also the file system does not accept files containing '/'.
-   search="/"
-   replace="%2F"
-   backup_filename_item=$(echo "$backup_filename_item" | str_replace "$search" "$replace")
+  ## Same format as git-mediawiki: replace '/' with '%2F'.
+  ## Also the file system does not accept files containing '/'.
+  search="/"
+  replace="%2F"
+  backup_filename_item=$(stecho "$backup_filename_item" | str_replace "$search" "$replace")
 
-   ## Same format as git-mediawiki: add '.mw' file extension.
-   backup_filename_item="${backup_filename_item}.mw"
+  ## Same format as git-mediawiki: add '.mw' file extension.
+  backup_filename_item="${backup_filename_item}.mw"
 
-   echo "$backup_filename_item"
+  stecho "$backup_filename_item"
 }
 
 curl_get_output_parameter() {
-   local loop_counter
-   loop_counter=0
+  local loop_counter loop_max
+  loop_counter=0
+  loop_max=50
 
-   while true ; do
-      loop_counter=$(( loop_counter + 1 ))
-      if [ "$loop_counter" -ge 50 ]; then
-         error "loop_max reached!"
-         exit 1
-      fi
-      case $1 in
-         --output)
-            output_file="$2"
-            shift 2
-            break
-            ;;
-         *)
-            shift
-            ;;
-      esac
-   done
+  while true; do
+    (( loop_counter++ )) || true
+    if (( loop_counter >= loop_max )); then
+      die 1 "loop_max reached!"
+    fi
+    case $1 in
+      --output)
+        output_file="$2"
+        shift 2
+        break
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
 }
 
 curl_run() {
-   ## Do not destroy "$@" in this function. Therefore passing it to a different
-   ## helper function so it stays local there and unchanged here.
-   curl_get_output_parameter "$@"
+  local curl_run_no_encode args url curl_exit_code encoded_url
+  ## Do not destroy "$@" in this function. Therefore passing it to a different
+  ## helper function so it stays local there and unchanged here.
+  curl_get_output_parameter "$@"
 
-   if [ -z "$output_file" ]; then
-      error "output_file is empty!"
-      exit 1
-   fi
+  if [ -z "$output_file" ]; then
+    die 1 "output_file is empty!"
+  fi
 
-   rm -f "$output_file"
-   touch "$output_file"
+  safe-rm -f -- "$output_file"
+  touch -- "$output_file"
 
-   local args url encoded_url
-   url="${@: -1}"
+  args=( "$@" )
+  url="${args[$((${#args[@]} - 1))]}"
 
-   [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
+  [[ -v curl_run_no_encode ]] || curl_run_no_encode=""
 
-   if [ "$curl_run_no_encode" = "true" ]; then
-      encoded_url="$url"
-   else
-      encoded_url="$(mw-urlencode "$url")"
-   fi
+  if [ "$curl_run_no_encode" = "true" ]; then
+    encoded_url="$url"
+  else
+    encoded_url="$(mw-urlencode "$url")"
+  fi
 
-   # Rebuild the arguments excluding the last parameter, then append the encoded URL
-   args=("${@:1:$#-1}" "$encoded_url")
+  # Rebuild the arguments excluding the last parameter, then append the encoded URL
+  args=("${@:1:$#-1}" "$encoded_url")
 
-   curl_exit_code=0
+  curl_exit_code=0
 
-   # Run curl with the modified arguments
-   $curl "${args[@]}" || { curl_exit_code=$?; true; }
+  # Run curl with the modified arguments
+  "$curl" "${args[@]}" || curl_exit_code="$?"
 
-   if [ ! "$curl_exit_code" = "0" ]; then
-      echo "$0: ERROR: curl result failed with exit code '$curl_exit_code'. output_file: $output_file" >&2
-      cat "$output_file" >&2
-      exit 1
-   fi
+  if [ "$curl_exit_code" != "0" ]; then
+    log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' output_file: '$output_file'"
+    stcat "$output_file" >&2
+    die 1 'curl failure, cannot continue.'
+  fi
 }
 
-log_run() {
-   echo "$0 running: $@"
-   "$@"
-}
+trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
 
-log_run_background() {
-   echo "$0 running: $@ &"
-   "$@" &
-   pid="$!"
-}
-
-trap exit_handler EXIT
-
-[[ -v TMPFOLDER ]] || TMPFOLDER=~/mediawiki-shell-temp
+[[ -v TMPFOLDER ]] || TMPFOLDER="$HOME/mediawiki-shell-temp"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || set_curl_binary_default
-[[ -v curl_opts ]] || curl_opts="\
-   --fail \
-   --no-progress-meter \
-   --show-error \
-   --retry-connrefused \
-   --retry 10 \
-   --retry-delay 5 \
-   --cookie nocache=true \
-   --user-agent mediawiki-shell \
-"
+[[ -v curl_opts ]] || curl_opts=(
+  "--fail"
+  "--no-progress-meter"
+  "--show-error"
+  "--retry-connrefused"
+  "--retry" "10"
+  "--retry-delay" "5"
+  "--cookie" "nocache=true"
+  "--user-agent" "mediawiki-shell"
+)
 
-mkdir --parents "$TMPFOLDER"
-chmod og-rw "$TMPFOLDER"
+mkdir --parents -- "$TMPFOLDER"
+chmod og-rw -- "$TMPFOLDER"

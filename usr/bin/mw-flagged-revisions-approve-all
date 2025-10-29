@@ -1,56 +1,60 @@
 #!/bin/bash
 
-echo "$0: START"
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-#set -x
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
 
-## These variables should be set by the calling script as environment variables.
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL For example: SOURCE_WIKI_URL='https://www.whonix.org/w'
-[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
+log info "START"
 
-## XXX: required by /usr/share/mediawiki-shell/common but not elegant.
-WIKI_URL="$SOURCE_WIKI_URL"
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+WIKI_URL="$1"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
 ## TODO: abolish need for this and fetch all name spaces instead by default.
 ## Namespace 500 (Moved:) is not reviewable.
 ## Namespace 500 (Widget:) is not reviewable.
 #export wiki_namespace_list_extra="500 274"
 
-source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
-
-echo "$0: INFO: TMPFOLDER        : $TMPFOLDER"
-echo "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-echo "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
+log info "TMPFOLDER : $TMPFOLDER"
+log info "WIKI_URL  : $WIKI_URL"
+log info "WIKI_API  : $WIKI_API"
 
 login_function() {
-   echo "$0: INFO: Logging in..."
-   WIKI_URL="$SOURCE_WIKI_URL" mw-logout
-   WIKI_URL="$SOURCE_WIKI_URL" mw-login
-   echo "$0: INFO: Login ok."
+  log info "Logging in..."
+  mw-login-test "$WIKI_URL"
+  log info "Login ok."
 }
 
 approve_page() {
-   approve_page_exit_code=0
-
-   SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   DESTINATION_WIKI_PAGE="$backup_page_item" \
-      mw-flagged-revisions-approve-page \
-         "$backup_page_item" || { approve_page_exit_code="$?" ; true; };
+  approve_page_exit_code=0
+  mw-flagged-revisions-approve-page "$WIKI_URL" "$backup_page_item" || approve_page_exit_code="$?"
 }
 
 login_function
 
 allpages_file="${TMPFOLDER}/allpages.txt"
-rm -f "$allpages_file"
+safe-rm -f -- "$allpages_file"
 
-QUERY_TYPE=unreviewedpages \
-SOURCE_WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-all-pages "$allpages_file"
+mw-all-pages "$WIKI_URL" unreviewedpages "$allpages_file"
 
 test -r "$allpages_file"
 
@@ -58,37 +62,32 @@ counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 counter_currently=0
 error_counter=0
-while IFS=$'\n' read -r item_from_all_pages ; do
-   counter_currently=$(( $counter_currently + 1 ))
-   backup_page_item=$(set_backup_page_item "$item_from_all_pages")
-   echo "$0: INFO: $counter_currently / $counter_total"
-   echo "\
-SOURCE_WIKI_URL='$SOURCE_WIKI_URL' \
-DESTINATION_WIKI_PAGE='$backup_page_item' \
-mw-flagged-revisions-approve-page \
-'$backup_page_item'"
+while IFS=$'\n' read -r item_from_all_pages; do
+  (( counter_currently++ )) || true
+  backup_page_item="$(set_backup_page_item "$item_from_all_pages")"
+  log info "$counter_currently / $counter_total"
+  printf '%s\n' "mw-flagged-revisions-approve-page '$WIKI_URL' '$backup_page_item'"
+  approve_page
+  if [ "$approve_page_exit_code" = "0" ]; then
+    log info "Success at first attempt, ok."
+    continue
+  elif [ "$approve_page_exit_code" = "254" ]; then
+    log info "Got exit code 254. Login probably expired."
+    login_function
+    log info "Try again..."
+    approve_page
+  fi
 
-   approve_page
-   if [ "$approve_page_exit_code" = "0" ]; then
-      echo "$0: INFO: Success at first attempt, ok."
-      continue
-   elif [ "$approve_page_exit_code" = "254" ]; then
-      echo "$0: INFO: Got exit code 254. Login probably expired."
-      login_function
-      echo "$0: INFO: Try again..."
-      approve_page
-   fi
-
-   if [ "$approve_page_exit_code" = "0" ]; then
-      echo "$0: INFO: Success after second attempt, ok."
-   else
-      error_counter=$(( $error_counter + 1 ))
-      echo "$0: ERROR: Failed!"
-   fi
-done < "$allpages_file"
+  if [ "$approve_page_exit_code" = "0" ]; then
+    log info "Success after second attempt, ok."
+  else
+    (( error_counter++ )) || true
+    log error "Failed!"
+  fi
+done <"$allpages_file"
 
 if [ "$error_counter" = "0" ]; then
-   echo "$0: INFO: Success."
+  log info "Success."
 else
-   echo "$0: WARNING: $error_counter error(s) detected."
+  log warn "$error_counter error(s) detected."
 fi

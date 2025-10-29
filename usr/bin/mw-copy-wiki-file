@@ -1,63 +1,97 @@
 #!/bin/bash
 
-echo "$0: START"
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## example:
-#SOURCE_WIKI_URL='https://www.kicksecure.com/w' DESTINATION_WIKI_URL='https://www.whonix.org/w' wiki_remote_file_name="File:Ubuntu_software_icon.png" mw-copy-wiki-file
+log info "START"
 
-wiki_remote_file_title="$(echo "$wiki_remote_file_name" | str_replace "File:" "")"
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI WIKI_TARGET PAGE_FILE [OUTPUT]
+Options:
+  --edit-msg=X     Summary to specify for edit
+Defaults:
+  OUTPUT=${default_page_file_local_pretty}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png $TMPFOLDER/File:Ubuntu_software_icon.png" >&2
+  exit 1
+}
 
-[[ -v wiki_remote_file_save_to_path ]] || wiki_remote_file_save_to_path="$TMPFOLDER/wiki_remote_file_title"
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
 
-[[ -v SOURCE_WIKI_URL ]] || missing_variable SOURCE_WIKI_URL
-[[ -v DESTINATION_WIKI_URL ]] || missing_variable DESTINATION_WIKI_URL
+default_page_file_local_pretty="$TMPFOLDER/wiki_remote_file_title"
+edit_msg=""
 
-[[ -v wiki_source_api ]] || wiki_source_api="${SOURCE_WIKI_URL}/api.php"
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1-}" "${2-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    edit-msg) get_arg; edit_msg="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
 
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-logout
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-login
+if [[ -z "${3-}" ]]; then
+  usage
+fi
 
-check_vars_exist wiki_remote_file_name wiki_remote_file_save_to_path
+WIKI_URL="$1"
+wiki_url_target="$2"
+page_file="$3"
+default_page_file_local="$TMPFOLDER/${page_file}"
+page_file_local="${4-"${default_page_file_local}"}"
 
-echo "$0: INFO: Downloading file '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'..."
+check_vars_exist wiki_url_target page_file
 
-WIKI_URL="$SOURCE_WIKI_URL" wiki_remote_file_name="$wiki_remote_file_name" wiki_remote_file_save_to_path="$wiki_remote_file_save_to_path" mw-file-download
+wiki_remote_file_title="$(stecho "$page_file" | str_replace "File:" "")"
 
-echo "$0: INFO: Download file success."
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
 
-echo "$0: INFO: Checking for pending changes for file..."
-echo "$0: INFO: wiki_source_api: $wiki_source_api"
+#mw-login-test "$WIKI_URL"
+
+log info "Downloading file '$WIKI_URL' '$page_file' '$page_file_local'..."
+mw-file-download "$WIKI_URL" "$page_file" "$page_file_local"
+log info "Download file success."
+
+log info "Checking for pending changes for file..."
+log info "WIKI_API: $WIKI_API"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      $curl_opts \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_remote_file_name"
+page_pending_status_json=$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_file"
 )
 
-if printf '%s\n' "$page_pending_status_json" | jq | grep -- pending_since >/dev/null 2>/dev/null; then
-   echo "$0: WARNING: '$SOURCE_WIKI_URL' '$wiki_remote_file_name' has PENDING EDITS!"
-   exit 10
+if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
+  die 10 "'$WIKI_URL' '$page_file' has PENDING EDITS!"
 fi
 
-echo "$0: INFO: No pending edits for file, ok."
+log info "No pending edits for file, ok."
+log info "Uploading file... '$wiki_url_target' '$page_file_local' '$wiki_remote_file_title'"
 
-echo "$0: INFO: Uploading file... '$DESTINATION_WIKI_URL' '$wiki_remote_file_name' '$wiki_remote_file_save_to_path'"
+if [ -n "$edit_msg" ]; then
+  mw-file-upload "$wiki_url_target" "$page_file_local" "$wiki_remote_file_title" "$edit_msg"
+else
+  mw-file-upload "$wiki_url_target" "$page_file_local" "$wiki_remote_file_title"
+fi
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-wiki_remote_upload_file_title="$wiki_remote_file_title" \
-wiki_remote_file_name="$wiki_remote_file_name" \
-wiki_upload_file_path="$wiki_remote_file_save_to_path" \
-mw-file-upload
-
-echo "$0: INFO: Upload file success."
+log info "Upload file success."

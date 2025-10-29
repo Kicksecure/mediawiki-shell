@@ -1,28 +1,36 @@
 #!/bin/bash
 
-## Example:
-## mw-wiki-link-clean "https://en.wikipedia.org/wiki/Atomic_clock"
-## Example:
-## mw-wiki-link-clean "[https://en.wikipedia.org/wiki/Atomic_clock"
-## Example:
-## mw-wiki-link-clean "https://en.wikipedia.org/wiki/Atomic_clock"
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-#set -x
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
-command -v str_replace >/dev/null
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
 
-## TODO: no root check
 
-link_result_cleaned="$1"
-if [ "$link_result_cleaned" = "" ]; then
-   echo "$0: ERROR: No link given!"
-   exit 1
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} LINK
+Examples:
+  ${0##*/} 'http://en.wikipedia.org/wiki/Atomic_clock'
+  ${0##*/} 'https://en.wikipedia.org/wiki/Atomic_clock'
+  ${0##*/} '[https://en.wikipedia.org/wiki/Atomic_clock'" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
 fi
+not_as_root
+link_result_cleaned="$(stprint "$1")"
 
 ## NOTE: does not support spaces?
 ## NOTE: case in-sensitive. No need to capitalization.
-grep_skip_fixed_string_list_to_exclude=$(echo "\
+grep_skip_fixed_string_list_to_exclude="\
 <pre>
 </pre>
 <code>
@@ -91,12 +99,12 @@ QubesOS_onion
 {{Check.torproject.org}}
 <!--
 scurl-download
-")
+"
 
 ## NOTE: does not support spaces
 ## NOTE: double quotes (") are hardcoded below in the script
 ## NOTE: case-sensitive. Capitalization is important.
-string_replace_tupils_list=$(echo "\
+string_replace_tuples_list="\
 <u>[http:// http://
 <u>[https:// https://
 \"[https:// https://
@@ -125,55 +133,45 @@ string_replace_tupils_list=$(echo "\
 </blockquote>
 <
 >
-")
+"
 
-if printf '%s\n' "$link_result_cleaned" | grep --ignore-case --fixed-strings "$grep_skip_fixed_string_list_to_exclude" >/dev/null 2>/dev/null ; then
-   exit 0
+if grep --ignore-case --fixed-strings "$grep_skip_fixed_string_list_to_exclude" <<<"$link_result_cleaned" >/dev/null 2>&1; then
+  exit 0
 fi
 
 ## '<ref name=f_secure>https://blog.f-secure.com/cold-boot-attacks/'
-if printf '%s\n' "$link_result_cleaned" | grep --fixed-strings --ignore-case "name=" >/dev/null 2>/dev/null ; then
-   longest_match_after_character=">"
-   link_result_cleaned="${link_result_cleaned#*$longest_match_after_character}"
+if grep --fixed-strings --ignore-case "name=" <<<"$link_result_cleaned" >/dev/null 2>&1; then
+  longest_match_after_character=">"
+  link_result_cleaned="${link_result_cleaned#*"${longest_match_after_character}"}"
 fi
 
-while read -r replace_config_line ; do
-   if [ "$replace_config_line" = "" ]; then
-      echo "ERROR! replace_config_line is empty!"
-      exit 1
-   fi
+while read -r replace_config_line; do
+  if [ -z "$replace_config_line" ]; then
+    log error "replace_config_line is empty!"
+    exit 1
+  fi
 
-   true "replace_config_line: '$replace_config_line'"
-   read -r first second <<< "$replace_config_line"
+  log debug "replace_config_line: '$replace_config_line'"
+  read -r first second <<<"$replace_config_line"
 
-   true "first: $first"
-   true "second: $second"
+  log debug "first: $first"
+  log debug "second: $second"
 
-   if [ "$first" = "" ]; then
-      echo "ERROR! first is empty!"
-      exit 1
-   fi
-   ## Second can be empty.
-   #if [ "$second" = "" ]; then
-      #echo "ERROR! second is empty!"
-      #exit 1
-   #fi
+  if [ -z "$first" ]; then
+    die 1 "first is empty!"
+  fi
 
-   link_result_cleaned=$(echo "$link_result_cleaned" | str_replace "$first" "$second" 2>/dev/null)
-done < <( echo "$string_replace_tupils_list" )
+  link_result_cleaned="$(str_replace "$first" "$second" <<<"$link_result_cleaned" 2>/dev/null)"
+done < <(stecho "$string_replace_tuples_list")
 
 first='"'
 second=""
-link_result_cleaned=$(echo "$link_result_cleaned" | str_replace "$first" "$second" 2>/dev/null)
+link_result_cleaned="$(str_replace "$first" "$second" <<<"$link_result_cleaned" 2>/dev/null)"
 
-if [ "$link_result_cleaned" = "https://" ]; then
-   exit 0
-fi
-if [ "$link_result_cleaned" = "http://" ]; then
-   exit 0
-fi
-if [ "$link_result_cleaned" = "()" ]; then
-   exit 0
-fi
+case "$link_result_cleaned" in
+  http://|https://|"()")
+    exit 0
+    ;;
+esac
 
-echo "$link_result_cleaned"
+stprint "$link_result_cleaned"

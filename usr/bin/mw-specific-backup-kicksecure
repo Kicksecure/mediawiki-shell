@@ -1,12 +1,36 @@
 #!/bin/bash
 
-set -x
-set -e
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL=https://www.kicksecure.com/w
-[[ -v wiki_backup_folder ]] || wiki_backup_folder=~/derivative-backup/kicksecure-wiki-backup
-[[ -v wiki_script ]] || wiki_script=mw-wiki-fetch-backup
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
-export SOURCE_WIKI_URL wiki_backup_folder wiki_script
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [WIKI] [OUTPUT_DIR] [FETCHER]
+Defaults:
+  WIKI=${default_wiki_url}
+  OUTPUT_DIR=${default_output_dir}
+  FETCHER=${default_fetcher}
+Example:
+  ${0##*/}
+  ${0##*/} ${default_wiki_url}
+  ${0##*/} ${default_wiki_url} ${default_output_dir}
+  ${0##*/} ${default_wiki_url} ${default_output_dir} ${default_fetcher}" >&2
+  exit 1
+}
 
-mw-process-all-pages
+default_wiki_url="https://www.kicksecure.com/w"
+default_output_dir="$HOME/derivative-backup/kicksecure-wiki-backup"
+default_fetcher="mw-wiki-fetch-backup"
+if [[ "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+wiki_url="${1-"${default_wiki_url}"}"
+output_dir="${2-"${default_output_dir}"}"
+fetcher="${3-"${default_fetcher}"}"
+
+mw-process-all-pages "${wiki_url}" "${fetcher}" "${output_dir}"

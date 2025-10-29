@@ -1,124 +1,62 @@
 #!/bin/bash
 
-echo "$0: START"
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
+log info "START"
+
+# shellcheck disable=SC2317
 exit_handler() {
-   [[ -v retry_counter ]] || retry_counter=0
-   if [ "$retry_counter" -gt 1 ]; then
-      ## >&2 is correct.
-      echo "$0: success after attempt $retry_counter" >&2
-   fi
+  [[ -v retry_counter ]] || retry_counter=0
+  if (( retry_counter > 1 )); then
+    log notice "success after attempt $retry_counter"
+  fi
 }
 
 trap exit_handler EXIT
 
-do_it() {
-   wiki_backup_file="${wiki_backup_folder}/${backup_filename_item}"
-
-   wiki_article_to_fetch="$backup_page_item" \
-   wiki_fetch_to_file="$wiki_backup_file" \
-   WIKI_URL="$SOURCE_WIKI_URL" \
-      mw-fetch
-
-   ## {{{
-   ## XXX
-
-   ## TODO: Should probably be done in mw-patch-modify-wiki-page
-
-   DESTINATION_WIKI_URL="$WIKI_URL"
-
-   ## Remove trailing spaces.
-   sed -i 's/[[:space:]]*$//' "$wiki_backup_file"
-
-#    if ! \
-#       WIKI_URL="$DESTINATION_WIKI_URL" \
-#       edit_message="remove-trailing-spaces" \
-#       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-#          echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
-#          return 1
-#    fi
-
-#   file_name="$wiki_backup_file"
-#
-#
-#   ## Ignore pages without header.
-#   if ! grep --ignore-case --fixed-strings --quiet -e "{{header" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   ## Ignore redirects.
-#   if grep --ignore-case --fixed-strings --quiet -e "#redirect [[" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   ## TODO: remove '!'
-#   ## Ignore pages without SEO.
-#   if ! grep --ignore-case --fixed-strings --quiet -e "{{#seo:" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   ## Ignore pages that already have a title.
-#   if grep --ignore-case --fixed-strings --quiet -e "{{title|" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   if grep --ignore-case --fixed-strings --quiet -e "title=" -- "$file_name"; then
-#     return 0
-#   fi
-#
-#   title="$backup_page_item"
-#   title="$(echo "$title" | str_replace ".mw" "")"
-#   title="$(echo "$title" | str_replace "_" " ")"
-#
-#    search="{{#seo:"
-#    replace="\
-# {{title|title=
-# $title
-# }}
-# {{#seo:"
-#
-#    str_replace "$search" "$replace" "$wiki_backup_file"
-#
-#    if ! \
-#       WIKI_URL="$DESTINATION_WIKI_URL" \
-#       edit_message="add-title" \
-#       mw-edit "$backup_page_item" "$wiki_backup_file" ; then
-#          echo "$0: ERROR: mw-edit '$backup_page_item' '$wiki_backup_file' failed!" >&2
-#          return 1
-#    fi
-
-   ## }}}
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE OUTPUT
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' Some_Article /tmp/a" >&2
+  exit 1
 }
 
-check_vars_exist wiki_backup_folder backup_filename_item backup_page_item SOURCE_WIKI_URL
-
-echo "$0: INFO: wiki_backup_folder: $wiki_backup_folder"
-
-mkdir -p "$wiki_backup_folder"
-
-if ! test -d "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' does not exist! Run...?:"
-   echo "mkdir --parents '$wiki_backup_folder'"
-   exit 1
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
 fi
 
-if ! test -w "$wiki_backup_folder" ; then
-   echo "$0: ERROR: wiki_backup_folder '$wiki_backup_folder' unwriteable! Run...?:"
-   echo "chown --recursive '$USER:$USER' '$wiki_backup_folder'"
-   exit 1
+wiki_url="$1"
+page="$2"
+output="$3"
+
+check_vars_exist page output
+
+output_dir="$(dirname "${output}")"
+log info "output_dir: $output_dir"
+
+mkdir -p -- "$output_dir"
+if ! test -d "$output_dir"; then
+  die 1 "output_dir '$output_dir' does not exist! Run?: mkdir --parents -- '$output_dir'"
 fi
 
-for retry_counter in $(seq 1 5) ; do
-   if do_it ; then
-      ## Success. Exit success.
-      exit 0
-   fi
-   ## Failed. Wait and try again.
-   sleep 5
+if ! test -w "$output_dir"; then
+  die 1 "output_dir '$output_dir' unwritable! Run?: chown --recursive -- '$USER:$USER' '$output_dir'"
+fi
+
+for retry_counter in {1..5}; do
+  if mw-fetch "$wiki_url" "$page" "$output"; then
+    exit 0
+  fi
+  sleep 5
 done
 
 ## Failed even after retry attempts. Therefore exit non-zero.

@@ -1,58 +1,78 @@
 #!/bin/bash
 
-set -e
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE [EDIT_MSG]
+Defaults:
+  EDIT_MSG=${default_edit_msg}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a Ubuntu_software" >&2
+  exit 1
+}
+
+default_edit_msg="mediawiki-shell-bot-default-edit-message"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+WIKI_URL="$1"
+new_file="$2"
+page_title="$3"
+edit_msg="${4-"${default_edit_msg}"}"
+
+check_vars_exist new_file page_title
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-TITLE="$1"
-filename_with_contents="$2"
-
-[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-edit-message"
-
-if [ -z "$filename_with_contents" ]; then
-  echo "$0: ERROR: Syntax: $0 <page_to_edit> <new_content_file>" >&2
-  exit 1
+if [ -d "$new_file" ]; then
+  die 1 "new_file '$new_file' is a folder!"
 fi
 
-if [ ! -r "$filename_with_contents" ]; then
-  echo "$0: ERROR: Local file '$filename_with_contents' does not exist!" >&2
-  exit 2
+if [ ! -r "$new_file" ]; then
+  die 2 "Local file '$new_file' does not exist or is not readable!"
 fi
 
-file_content="$(cat "$filename_with_contents")"
-
-if [ "$file_content" = "" ]; then
-  echo "$0: INFO: Local file '$filename_with_contents' was empty."
+if [ ! -s "$new_file" ]; then
+  log info "Local file '$new_file' was empty."
   exit 0
 fi
 
-echo "$0: INFO: Editing page '${WIKI_URL}' | '${WIKI_API}' | '$TITLE'..."
-#echo "$0: INFO: Fetching edit token..."
+log info "Editing page '${WIKI_URL}' | '${WIKI_API}' | '$page_title'..."
+#log info "Fetching edit token..."
 
-mw-logout
-mw-login
+mw-login-test "$WIKI_URL"
 
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --output "${TMPFOLDER}/fetch-edit-token.json" \
-   --request "GET" \
-   "${WIKI_API}?action=query&meta=tokens&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/fetch-edit-token.json" \
+  --request "GET" \
+  "${WIKI_API}?action=query&meta=tokens&format=json"
 
-csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   true "$0: INFO: Edit token for page OK."
+  log info "Edit token for page OK."
 else
-   echo "$0: ERROR: Edit token for page not set." >&2
-   exit 1
+  die 1 "Edit token for page not set."
 fi
 
-#echo "$0: INFO: Editing '$TITLE'..."
+#log info "Editing '$page_title'..."
 
 ## XXX
 ## &tags=mediawiki-shell
@@ -60,33 +80,31 @@ fi
 ## https://www.whonix.org/wiki/Special:Tags
 
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --header "Expect:" \
-   --data-urlencode "title=$TITLE" \
-   --data-urlencode "text@$filename_with_contents" \
-   --data-urlencode "token=$csrf_token" \
-   --output "${TMPFOLDER}/edit-result.json" \
-   --request "POST" \
-   "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_message}&bot"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --header "Expect:" \
+  --data-urlencode "title=$page_title" \
+  --data-urlencode "text@$new_file" \
+  --data-urlencode "token=$csrf_token" \
+  --output "${TMPFOLDER}/edit-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_msg}&bot"
 
-true "$0: INFO: Network for edit page ok."
+log info "Network for edit page ok."
 
 test -r "${TMPFOLDER}/edit-result.json"
 
-edit_result_output="$(cat "${TMPFOLDER}/edit-result.json")"
+edit_result_output="$(stcat "${TMPFOLDER}/edit-result.json")"
 
-edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
+edit_result_jq="$(jq -r ".edit.result" <<<"$edit_result_output")"
 
 if [ "$edit_result_jq" = "Success" ]; then
-   #echo "$edit_result_output" | jq
-   exit 0
+  log info "Edit page success."
+  exit 0
 fi
 
-echo "$edit_result_output" | jq >&2
-echo "$0: ERROR: Edit page error." >&2
-
-exit 1
+jq . <<<"$edit_result_output" | stcat >&2
+die 1 "Edit page error."

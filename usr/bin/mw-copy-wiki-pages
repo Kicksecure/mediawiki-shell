@@ -1,59 +1,95 @@
 #!/bin/bash
 
-echo "$0: START"
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## example:
-#SOURCE_WIKI_URL='https://www.kicksecure.com'
-#DESTINATION_WIKI_URL=(
-#   'https://www.whonix.org'
-#)
+log info "START"
 
-check_vars_exist SOURCE_WIKI_URL DESTINATION_WIKI_URL copy_wiki_pages_item
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI WIKI_TARGET PAGE [OUTPUT]
+Options:
+  --edit-msg=X     Summary to specify for edit
+Defaults:
+  OUTPUT=${default_page_title_local_pretty}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software $TMPFOLDER/Ubuntu_software" >&2
+  exit 1
+}
 
-[[ -v wiki_source_api ]] || wiki_source_api="${SOURCE_WIKI_URL}/api.php"
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
 
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-logout
-# WIKI_URL="$DESTINATION_WIKI_URL" \
-#    mw-login
+default_page_title_local_pretty="$TMPFOLDER/PAGE"
+edit_msg=""
 
-echo "$0: INFO: Fetching page '$SOURCE_WIKI_URL' '$copy_wiki_pages_item'..."
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1-}" "${2-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    edit-msg) get_arg; edit_msg="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
 
-wiki_article_to_fetch="$copy_wiki_pages_item" \
-wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
-WIKI_URL="$SOURCE_WIKI_URL" \
-   mw-fetch
+if [[ -z "${3-}" ]]; then
+  usage
+fi
 
-echo "$0: INFO: Fetch page success."
+WIKI_URL="$1"
+wiki_url_target="$2"
+page_title="$3"
+default_page_title_local="$TMPFOLDER/$page_title"
+page_title_local="${4-"${default_page_title_local}"}"
 
-echo "$0: INFO: Checking for pending changes for page..."
-echo "$0: INFO: wiki_source_api: $wiki_source_api"
+check_vars_exist wiki_url_target page_title
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+#mw-login-test "$WIKI_URL"
+
+log info "Fetching page '$WIKI_URL' '$page_title' '$page_title_local'..."
+mw-fetch "$WIKI_URL" "$page_title" "$page_title_local"
+log info "Fetch page success."
+
+log info "Checking for pending changes for page..."
+log info "WIKI_API: $WIKI_API"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      $curl_opts \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$copy_wiki_pages_item"
+page_pending_status_json=$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
 )
 
-if printf '%s\n' "$page_pending_status_json" | jq | grep -- pending_since >/dev/null 2>/dev/null; then
-   echo "$0: WARNING: '$SOURCE_WIKI_URL' '$copy_wiki_pages_item' page has PENDING EDITS!"
-   exit 10
+if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
+  die 10 "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
 fi
 
-echo "$0: INFO: No pending edits for page, ok."
+log info "No pending edits for page, ok."
+log info "Editing page... '$wiki_url_target' '$page_title_local' '$page_title'"
 
-wiki_page_content=$(cat "$TMPFOLDER/fetched-wiki-page")
+if [ -n "$edit_msg" ]; then
+  mw-edit "$wiki_url_target" "$page_title_local" "$page_title" "$edit_msg"
+else
+  mw-edit "$wiki_url_target" "$page_title_local" "$page_title"
+fi
 
-WIKI_URL="$DESTINATION_WIKI_URL" \
-   mw-edit "$copy_wiki_pages_item" "$TMPFOLDER/fetched-wiki-page"
-
-echo "$0: INFO: Edit page success."
+log info "Edit page success."

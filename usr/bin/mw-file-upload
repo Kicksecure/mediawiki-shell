@@ -1,94 +1,115 @@
 #!/bin/bash
 
-## example:
-## WIKI_URL=https://www.whonix.org/w wiki_upload_file_path=/tmp/a wiki_remote_upload_file_title="File:Ubuntu_software_icon.png" mw-file-upload
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE [EDIT_MSG]
+Defaults:
+  EDIT_MSG=${default_edit_msg}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png 'custom message'" >&2
+  exit 1
+}
+
+default_edit_msg="mediawiki-shell-bot-default-upload-message"
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+WIKI_URL="$1"
+new_file="$2"
+page_file="$3"
+edit_msg="${4-"${default_edit_msg}"}"
+
+check_vars_exist new_file page_file
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-check_vars_exist WIKI_URL wiki_upload_file_path wiki_remote_upload_file_title
-
-[[ -v edit_message ]] || edit_message="mediawiki-shell-bot-default-upload-message"
-
-echo "$0: INFO: Uploading file '${WIKI_URL}' '$wiki_upload_file_path'..."
-
-if test -d "$wiki_upload_file_path" ; then
-   echo "$0: ERROR: wiki_upload_file_path '$wiki_upload_file_path' is a folder!" >&2
-   exit 1
+if [ -d "$new_file" ]; then
+  die 1 "new_file '$new_file' is a folder!"
 fi
 
-if ! test -r "$wiki_upload_file_path" ; then
-   echo "$0: ERROR: wiki_upload_file_path '$wiki_upload_file_path' is not readable!" >&2
-   exit 1
+if [ ! -r "$new_file" ]; then
+  die 2 "Local file '$new_file' does not exist or is not readable!"
 fi
 
-mw-logout
-mw-login
+if [ ! -s "$new_file" ]; then
+  log info "Local file '$new_file' was empty."
+  exit 0
+fi
+
+log info "Uploading file '${WIKI_URL}' '$new_file'..."
+
+mw-login-test "$WIKI_URL"
 
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --compressed \
-   --output "${TMPFOLDER}/fetch-edit-token.json" \
-   --request "GET" \
-   "${WIKI_API}?action=query&meta=tokens&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/fetch-edit-token.json" \
+  --request "GET" \
+  "${WIKI_API}?action=query&meta=tokens&format=json"
 
-csrf_token=$(jq --raw-output '.query.tokens.csrftoken' "${TMPFOLDER}/fetch-edit-token.json")
+csrf_token=$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/fetch-edit-token.json")
 
 if [ "${#csrf_token}" = 42 ]; then
-   true "$0: INFO: Edit token for file OK."
+  log info "Edit token for file OK."
 else
-   echo "$0: ERROR: Edit token for file not set." >&2
-   exit 1
+  die 1 "Edit token for file not set."
 fi
 
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --header "Connection: keep-alive" \
-   --header "Expect:" \
-	--form "token=$csrf_token" \
-	--form "filename=$wiki_remote_upload_file_title" \
-	--form "file=@$wiki_upload_file_path" \
-	--form "comment=$edit_message" \
-	--form "ignorewarnings=yes" \
-   --output "${TMPFOLDER}/upload-result.json" \
-   --request "POST" \
-   "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --header "Expect:" \
+  --form "token=$csrf_token" \
+  --form "filename=$page_file" \
+  --form "file=@$new_file" \
+  --form "comment=$edit_msg" \
+  --form "ignorewarnings=yes" \
+  --output "${TMPFOLDER}/upload-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=upload&format=json&tags=mediawiki-shell&bot"
 
-echo "$0: INFO: Network for file upload ok."
+log info "Network for file upload ok."
 
 test -r "${TMPFOLDER}/upload-result.json"
 
-edit_result_output="$(cat "${TMPFOLDER}/upload-result.json")"
-
-if [ "$(echo "$edit_result_output" | jq -r ".error.code")" = "fileexists-no-change" ]; then
-   #echo "$edit_result_output" | jq
-   echo "$0: INFO: Upload file success."
-   exit 0
+edit_result_output="$(stcat "${TMPFOLDER}/upload-result.json")"
+if [ "$(jq -r ".error.code" <<<"$edit_result_output")" = "fileexists-no-change" ]; then
+  log info "Upload file success."
+  exit 0
 fi
 
-edit_result_jq="$(echo "$edit_result_output" | jq -r ".edit.result")"
-
+edit_result_jq="$(jq -r ".edit.result" <<<"$edit_result_output")"
 if [ "$edit_result_jq" = "Success" ]; then
-   echo "$0: INFO: Upload (edit) file success."
-   exit 0
+  log info "Upload (edit) file success."
+  exit 0
 fi
 
-upload_result_jq="$(echo "$edit_result_output" | jq -r ".upload.result")"
-
+upload_result_jq="$(jq -r ".upload.result" <<<"$edit_result_output")"
 if [ "$upload_result_jq" = "Success" ]; then
-   echo "$0: INFO: Upload (upload) file success."
-   exit 0
+  log info "Upload (upload) file success."
+  exit 0
 fi
 
-echo "${TMPFOLDER}/upload-result.json"
-echo "$edit_result_output" | jq >&2
-echo "$0: ERROR: Upload file error." >&2
-exit 1
+log error "Check result on the file: ${TMPFOLDER}/upload-result.json"
+jq . <<<"$edit_result_output" | stcat >&2
+die 1 "Upload file error."

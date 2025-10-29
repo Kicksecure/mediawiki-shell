@@ -1,63 +1,85 @@
 #!/bin/bash
 
-set -e
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-check_vars_exist WIKI_URL wiki_page_item
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE [OUTPUT]
+Defaults:
+  OUTPUT=${default_new_file}
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software ${default_new_file}" >&2
+  exit 1
+}
 
-[[ -v wiki_source_api ]] || wiki_source_api="${WIKI_URL}/api.php"
+default_new_file="$TMPFOLDER/fetched-wiki-page"
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
 
-# WIKI_URL="$WIKI_URL" \
-#    mw-logout
-# WIKI_URL="$WIKI_URL" \
-#    mw-login
+WIKI_URL="$1"
+page_title="$2"
+new_file="${3-"${default_new_file}"}"
 
-wiki_article_to_fetch="$wiki_page_item" \
-wiki_fetch_to_file="$TMPFOLDER/fetched-wiki-page" \
+check_vars_exist page_title
 
-log_run env WIKI_URL="$WIKI_URL" wiki_fetch_to_file="$wiki_fetch_to_file" mw-fetch
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+#mw-login-test "$WIKI_URL"
+
+log_run info mw-fetch "$WIKI_URL" "$page_title" "$new_file"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(\
-   $curl \
-      $curl_opts \
-      "${wiki_source_api}?format=json&action=query&prop=info%7Cflagged&titles=$wiki_page_item"
-)
+page_pending_status_json="$(
+  $curl \
+    "${curl_opts[@]}" \
+    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
+)"
 
-if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>/dev/null; then
-   printf '%s\n' "$0: WARNING: '$WIKI_URL' '$wiki_page_item' page has PENDING EDITS!"
-   exit 10
+if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>&1; then
+  die 10 "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
 fi
 
 filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"
 
 replace_all_except_first() {
-   if ! grep --line-number -- "$search" "$filename" >/dev/null 2>/dev/null; then
-      return 0
-   fi
+  local linenum
 
-   linenum=$(grep --line-number -- "$search" "$filename")
-   linenum=$(printf '%s\n' "$linenum" | head -n1)
-   linenum=$(printf '%s\n' "$linenum" | cut -d: -f1)
+  if ! grep --line-number -- "$search" "$filename" >/dev/null 2>&1; then
+    return 0
+  fi
 
-   # If {{project_name_long}} is found in the file
-   if [ -n "$linenum" ]; then
-      # Print the lines from the beginning of the file to the line number where the first occurrence is found
-      awk -v n="$linenum" 'NR<=n' "$filename" > "$tempfile"
+  linenum="$(grep --line-number -- "$search" "$filename")"
+  linenum="$(head -n1 <<<"$linenum")"
+  linenum="$(cut -d: -f1 <<<"$linenum")"
 
-      # Replace subsequent occurrences of {{project_name_long}} with {{project_name_short}}
-      # and append them to the temporary file
-      awk -v n="$linenum" 'NR>n' "$filename" | sed "s/$search/$replace/g" >> "$tempfile"
+  # If {{project_name_long}} is found in the file
+  if [ -n "$linenum" ]; then
+    # Print the lines from the beginning of the file to the line number where the first occurrence is found
+    awk -v n="$linenum" 'NR<=n' -- "$filename" >"$tempfile"
 
-      # Move the temporary file to the original file
-      mv "$tempfile" "$filename"
-   fi
+    # Replace subsequent occurrences of {{project_name_long}} with {{project_name_short}}
+    # and append them to the temporary file
+    awk -v n="$linenum" 'NR>n' -- "$filename" | sed "s/$search/$replace/g" >>"$tempfile"
+
+    # Move the temporary file to the original file
+    mv -- "$tempfile" "$filename"
+  fi
 }
 
 search="{{project_name_long}}"
@@ -84,4 +106,4 @@ search="{{project_name_customworkstation_long}}"
 replace="{{project_name_customworkstation_short}}"
 replace_all_except_first
 
-log_run env WIKI_URL="$WIKI_URL" mw-edit "$wiki_page_item" "$filename"
+log_run info mw-edit "$WIKI_URL" "$filename" "$page_title"

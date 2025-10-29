@@ -1,39 +1,62 @@
 #!/bin/bash
 
-set -e
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
 
-## example:
-#WIKI_URL=https://www.kicksecure.com/w wiki_remote_file_name="File:Ubuntu_software_icon.png" wiki_remote_file_save_to_path="/tmp/Ubuntu_software_icon.png" mw-file-download
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE_FILE OUTPUT
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' File:Ubuntu_software_icon.png /tmp/Ubuntu_software_icon.png" >&2
+  exit 1
+}
 
-echo "$0: INFO: Downloading file '${WIKI_INDEX}' '$wiki_remote_file_name'..."
-
-if test -d "$wiki_remote_file_save_to_path" ; then
-   echo "$0: ERRROR: wiki_remote_file_save_to_path '$wiki_remote_file_save_to_path' is a folder!" >&2
-   exit 1
+if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
 fi
 
-rm -f "$wiki_remote_file_save_to_path"
-touch "$wiki_remote_file_save_to_path"
-test -w "$wiki_remote_file_save_to_path"
+WIKI_URL="$1"
+page_file="$2"
+page_file_local="$3"
+
+check_vars_exist page_file page_file_local
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "Downloading file '${WIKI_INDEX}' '$page_file'..."
+
+if test -d "$page_file_local"; then
+  die 1 "page_file_local '$page_file_local' is a folder!"
+fi
+
+safe-rm -f -- "$page_file_local"
+touch -- "$page_file_local"
+test -w "$page_file_local"
 
 ## mw-file-to-url gets already encoded URL from MediaWiki API.
-wiki_remote_file_name_fetch_to_file="${TMPFOLDER}/wiki-remote-file-url.txt" wiki_remote_file_name="$wiki_remote_file_name" mw-file-to-url
+mw-file-to-url "$WIKI_URL" "${TMPFOLDER}/wiki-remote-file-url.txt" "$page_file"
 
-url="$(cat "${TMPFOLDER}/wiki-remote-file-url.txt")"
+url="$(stcat "${TMPFOLDER}/wiki-remote-file-url.txt")"
 ## url contains encoded URL.
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg
 
-echo "$0: INFO: saving file to wiki_remote_file_save_to_path: '$wiki_remote_file_save_to_path'"
+log info "saving file to page_file_local: '$page_file_local'"
 
 curl_run_no_encode=true \
-   curl_run \
-      $curl_opts \
-      --header "Accept-Language: en-GB" \
-      --header "Expect:" \
-      --output "$wiki_remote_file_save_to_path" \
-      "$url"
+  curl_run \
+    "${curl_opts[@]}" \
+    --header "Accept-Language: en-GB" \
+    --header "Expect:" \
+    --output "$page_file_local" \
+    "$url"
 
-echo "$0: INFO: Fetch file success."
+log info "Fetch file success."

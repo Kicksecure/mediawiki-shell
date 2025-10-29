@@ -1,33 +1,45 @@
 #!/usr/bin/python3 -su
 
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+# pylint: disable=invalid-name,missing-module-docstring
+
 import sys
 import urllib.parse
 
-def urlencode(url):
-    # Parse the URL into its components
+
+def urlencode(url):  # pylint: disable=missing-function-docstring
+    ## Parse the URL into its components
     parsed_url = urllib.parse.urlparse(url)
 
-    # Only encode the path and query, leaving the scheme and netloc (domain) intact
+    ## Only encode the path and query, leaving the scheme and netloc (domain) intact
     encoded_path = urllib.parse.quote(parsed_url.path)
-    encoded_query = urllib.parse.quote(parsed_url.query, safe='=&')
+    encoded_query = urllib.parse.quote(parsed_url.query, safe="=&")
 
-    # Rebuild the full URL with the encoded path and query
-    encoded_url = urllib.parse.urlunparse((
-        parsed_url.scheme,
-        parsed_url.netloc,
-        encoded_path,
-        '',  # params part (not used often in URLs)
-        encoded_query,
-        parsed_url.fragment
-    ))
+    ## Rebuild the full URL with the encoded path and query
+    encoded_url = urllib.parse.urlunparse(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            encoded_path,
+            "",  ## params part (not used often in URLs)
+            encoded_query,
+            parsed_url.fragment,
+        )
+    )
 
     return encoded_url
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: urlencode.py <URL>")
-        sys.exit(1)
 
+def main():  # pylint: disable=missing-function-docstring
     url = sys.argv[1]
     encoded_url = urlencode(url)
     print(encoded_url)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: mw-urlencode <URL>")
+        sys.exit(1)
+    main()

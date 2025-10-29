@@ -1,47 +1,50 @@
 #!/bin/bash
 
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
 ## Does not unduplicate. That should be done with a different script.
 
-#set -x
-set -e
-
-## XXX
-WIKI_URL=""
-
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
-source /usr/share/mediawiki-shell/wiki-config
 
-## TODO: no root check
+usage() {
+  printf '%s\n' "Usage: ${0##*/} INPUT_DIR
+Example:
+  ${0##*/} ~/sourcesown/wiki-backup/">&2
+  exit 1
+}
 
-mkdir -p "$TMPFOLDER/wiki-links"
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+input_dir="$1/"
 
-## TODO: path
-test -d ~/sourcesown/wiki-backup/kicksecure-wiki-backup
-test -d ~/sourcesown/wiki-backup/whonix-wiki-backup
+not_as_root
 
-cd ~/sourcesown/wiki-backup/kicksecure-wiki-backup
-git config pull.ff only
-git pull
+mkdir -p -- "$TMPFOLDER/wiki-links"
 
-cd ~/sourcesown/wiki-backup/whonix-wiki-backup
-git config pull.ff only
-git pull
+test -d "${input_dir}kicksecure-wiki-backup"
+test -d "${input_dir}whonix-wiki-backup"
 
-rm -f "$TMPFOLDER/wiki-links/all-links.txt"
+for dir in "${input_dir}kicksecure-wiki-backup" "${input_dir}whonix-wiki-backup"; do
+  git -C "${dir}" config pull.ff only
+  git -C "${dir}" pull
+done
 
-echo "INFO: See:"
-echo "tail -f $TMPFOLDER/wiki-links/all-links.txt"
+safe-rm -f -- "$TMPFOLDER/wiki-links/all-links.txt"
 
-WIKI_WEB=https://www.kicksecure.com/wiki \
-wiki_folder=~/sourcesown/wiki-backup/kicksecure-wiki-backup \
-   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+log info "Try: tail -f -- $TMPFOLDER/wiki-links/all-links.txt"
 
-WIKI_WEB=https://www.kicksecure.com/wiki \
-wiki_folder=~/sourcesown/wiki-backup/whonix-wiki-backup \
-   mw-folder-to-weblinks | tee -a "$TMPFOLDER/wiki-links/all-links.txt"
+mw-folder-to-weblinks https://www.kicksecure.com/wiki "${input_dir}kicksecure-wiki-backup" | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
+mw-folder-to-weblinks https://www.whonix.org/wiki "${input_dir}whonix-wiki-backup" | tee -a -- "$TMPFOLDER/wiki-links/all-links.txt"
 
-cat "$TMPFOLDER/wiki-links/all-links.txt" | grep --invert-match "## " | tee "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
-cat "$TMPFOLDER/wiki-links/links-without-comments.txt" | sort --unique | tee "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
+grep --invert-match -- "## " "$TMPFOLDER/wiki-links/all-links.txt" | tee -- "$TMPFOLDER/wiki-links/links-without-comments.txt" >/dev/null
+sort --unique -- "$TMPFOLDER/wiki-links/links-without-comments.txt" | tee -- "$TMPFOLDER/wiki-links/links-sorted.txt" >/dev/null
 
-echo "See:"
-echo "cat $TMPFOLDER/wiki-links/links-sorted.txt"
+log info "Try: cat -- $TMPFOLDER/wiki-links/links-sorted.txt"

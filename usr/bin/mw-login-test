@@ -14,23 +14,19 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI
+  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI...]
 Example:
-  ${0##*/} https://www.kicksecure.com/w" >&2
+  ${0##*/} 'https://www.kicksecure.com/w'
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w'" >&2
   exit 1
 }
 
 if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi
+not_as_root
 
-WIKI_URL="$1"
-
-# shellcheck source=../share/mediawiki-shell/wiki-config
-source /usr/share/mediawiki-shell/wiki-config
-
-log info "TMPFOLDER: $TMPFOLDER"
-log info "WIKI_URL : $WIKI_URL"
-log info "WIKI_API : $WIKI_API"
-
-mw-process-all-pages "${WIKI_URL}" 'mw-patch-modify-wiki-page' "$TMPFOLDER"
+for wiki_url in "${@}"; do
+  mw-logout "$wiki_url"
+  mw-login "$wiki_url"
+done

@@ -16,6 +16,8 @@ Package: mediawiki-shell
 Architecture: all
 Depends: helper-scripts, safe-rm, jq, retry, python3, ${misc:Depends}
 Description: bash shell scripts for usage of MediaWiki API
- Description here.
+ Download, upload changes to, and manage pages from MediaWiki wikis from the
+ command line.
  .
- TODO
+ This tool may work on other wiki sites, but is primarily intended for
+ management of the Kicksecure and Whonix wikis.

@@ -1,137 +1,176 @@
 #!/bin/bash
 
-stecho "$0: START"
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
 
-set -x
-set -e
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
 
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
-## These variables should be set by the calling script as environment variables.
-## example:
-#[[ -v SOURCE_WIKI_URL ]] || SOURCE_WIKI_URL='https://www.whonix.org/w'
-check_vars_exist SOURCE_WIKI_URL QUERY_TYPE
+log info "START"
 
-[[ -v SOURCE_TARGET_API ]] || SOURCE_TARGET_API="${SOURCE_WIKI_URL}/api.php"
-[[ -v 1 ]] || missing_variable "parameter 1 needs to be set to the allpages_file name. example: $0 /tmp/allpages.txt"
+usage(){
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI (allpages|unreviewedpages|querypage) OUTPUT
+Options:
+  --article-sanity-test=X        Guarantee that string is present on the fetched pages
+  --namespace-default-list=N     Page collection per namespace (default: ${default_namespace_default_list})
+  --namespace-extra-list=N       Extra page collection per namespace
+Example:
+  ${0##*/} https://www.kicksecure.com/w allpages /tmp/allpages.txt" >&2
+  exit 1
+}
 
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
+article_sanity_test=""
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 ## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
 ## https://www.whonix.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces
-[[ -v wiki_namespace_list_default ]] || wiki_namespace_list_default="0 4 6 8 10 12 14"
+default_namespace_default_list="0 4 6 8 10 12 14"
 ## NOTE to self by Patrick: also set by other script:
 ## wiki-backup-with-mediawiki-shell
 ## 500: site-specific namespace Moved
 ## 274: site-specific namespace Widgets
-#[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra="500 274"
-[[ -v wiki_namespace_list_extra ]] || wiki_namespace_list_extra=""
+namespace_extra_list=""
 
-[[ -v wiki_article_must_include_sanity_test ]] || wiki_article_must_include_sanity_test=""
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    article-sanity-test) get_arg; article_sanity_test="${arg}";;
+    namespace-default-list) get_arg; namespace_default_list="${arg}";;
+    namespace-extra-list) get_arg; namespace_extra_list="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
 
-api_extra_args=""
-if [ "$QUERY_TYPE" = "allpages" ]; then
-   list=allpages
-   namespace_keyword=apnamespace
-   api_continue_keyword=apcontinue
-   api_limit_keyword_and_content="aplimit=500"
-elif [ "$QUERY_TYPE" = "unreviewedpages" ]; then
-   list=unreviewedpages
-   namespace_keyword=urnamespace
-   api_continue_keyword=urstart
-   api_limit_keyword_and_content="urlimit=500"
-elif [ "$QUERY_TYPE" = "querypage" ]; then
-   list=querypage
-   namespace_keyword=""
-   api_continue_keyword=""
-   api_limit_keyword_and_content="qplimit=500"
-   api_extra_args="&qppage=Unusedimages"
-   ## Upstream does not support name spaces for this API call.
-   wiki_namespace_list_extra=""
-   wiki_namespace_list_default=0
-   ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
-else
-   stecho "$0: ERROR: QUERY_TYPE must be set to either QUERY_TYPE=allpages or QUERY_TYPE=unreviewedpages"
-   exit 1
+namespace_default_list="${namespace_default_list-"${default_namespace_default_list}"}"
+
+if [[ -z "${3-}" ]]; then
+  usage
 fi
 
-allpages_file="$1"
+WIKI_URL="$1"
+query_type="$2"
+allpages_file="$3"
+
+check_vars_exist query_type allpages_file
+range_arg query_type "${query_type}" allpages unreviewedpages querypage
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+api_extra_args=""
+case "$query_type" in
+  allpages)
+    list=allpages
+    namespace_keyword=apnamespace
+    api_continue_keyword=apcontinue
+    api_limit_keyword_and_content="aplimit=500"
+    ;;
+  unreviewedpages)
+    list=unreviewedpages
+    namespace_keyword=urnamespace
+    api_continue_keyword=urstart
+    api_limit_keyword_and_content="urlimit=500"
+    ;;
+  querypage)
+    list=querypage
+    namespace_keyword=""
+    api_continue_keyword=""
+    api_limit_keyword_and_content="qplimit=500"
+    api_extra_args="&qppage=Unusedimages"
+    ## Upstream does not support name spaces for this API call.
+    namespace_extra_list=""
+    namespace_default_list=0
+    ## https://www.kicksecure.com/w/api.php?action=query&list=querypage&qppage=Unusedimages
+    ;;
+  *)
+    die 1 "query_type must be set to either: allpages, unreviewedpages or querypage"
+    ;;
+esac
+
 safe-rm -f -- "$allpages_file"
 
-stecho "$0: INFO: allpages_file              : $allpages_file"
-stecho "$0: INFO: wiki_namespace_list_default: $wiki_namespace_list_default"
-stecho "$0: INFO: wiki_namespace_list_extra  : $wiki_namespace_list_extra"
-stecho "$0: INFO: SOURCE_WIKI_URL  : $SOURCE_WIKI_URL"
-stecho "$0: INFO: SOURCE_TARGET_API: $SOURCE_TARGET_API"
-stecho "$0: INFO: QUERY_TYPE: $QUERY_TYPE"
+log info "allpages_file         : $allpages_file"
+log info "namespace_default_list: $namespace_default_list"
+log info "namespace_extra_list  : $namespace_extra_list"
+log info "WIKI_URL  : $WIKI_URL"
+log info "WIKI_API  : $WIKI_API"
+log info "query_type: $query_type"
 
 ## Not required for public wiki.
-#mw-logout
-#mw-login
+#mw-login-test "$WIKI_URL"
 
-for wiki_namespace_item in $wiki_namespace_list_extra $wiki_namespace_list_default ; do
-   stecho "$0: INFO: wiki_namespace_item: $wiki_namespace_item"
+for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
+  log info "wiki_namespace_item: $wiki_namespace_item"
 
-   api_continue_or_not=""
+  api_continue_or_not=""
 
-   while true ; do
-      stecho "$0: INFO: api_full_link:"
-      api_full_link="${SOURCE_TARGET_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
-      stecho "$api_full_link"
+  while true; do
+    api_full_link="${WIKI_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
+    log info "api_full_link: $api_full_link"
 
-      query_result=$(\
-         $curl \
-            $curl_opts \
-            "$api_full_link"
-      )
+    query_result=$($curl "${curl_opts[@]}" "$api_full_link")
 
-      if [ "$QUERY_TYPE" = "allpages" ]; then
-         stecho "$query_result" | jq -r ".query.allpages[] | .title | @sh" | tee -a "$allpages_file" >/dev/null
-         ## If curl exits non-zero, consider no longer API continue.
-         ## If curl exits zero, set variable api_continue_or_not.
-         if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue | .apcontinue")" ; then
-            break
-         fi
-         ## If api_continue_or_not is set to "null", we're done.
-         if [ "$api_continue_or_not" = "null" ]; then
-            break
-         fi
-      elif [ "$QUERY_TYPE" = "unreviewedpages" ]; then
-         stecho "$query_result" | jq -r '.query.unreviewedpages[] | .title | @sh' | tee -a "$allpages_file" >/dev/null
-         if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue.urstart")" ; then
-            break
-         fi
-         if [ "$api_continue_or_not" = "null" ]; then
-            break
-         fi
-      elif [ "$QUERY_TYPE" = "querypage" ]; then
-         stecho "$query_result" | jq -r '.query.querypage.results[] | .title' | tee -a "$allpages_file" >/dev/null
-         ## Upstream does not support name spaces for this API call.
-         break
-      else
-         error "Not implemented!"
-         break
-      fi
-   done
+    case "$query_type" in
+      allpages)
+        stecho "$query_result" | jq -r ".query.allpages[] | .title | @sh" | tee -a -- "$allpages_file" >/dev/null
+        ## If curl exits non-zero, consider no longer API continue.
+        ## If curl exits zero, set variable api_continue_or_not.
+        if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue | .apcontinue")"; then
+          break
+        fi
+        ## If api_continue_or_not is set to "null", we're done.
+        if [ "$api_continue_or_not" = "null" ]; then
+          break
+        fi
+        ;;
+      unreviewedpages)
+        stecho "$query_result" | jq -r '.query.unreviewedpages[] | .title | @sh' | tee -a -- "$allpages_file" >/dev/null
+        if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue.urstart")"; then
+          break
+        fi
+        if [ "$api_continue_or_not" = "null" ]; then
+          break
+        fi
+        ;;
+      querypage)
+        stecho "$query_result" | jq -r '.query.querypage.results[] | .title' | tee -a -- "$allpages_file" >/dev/null
+        ## Upstream does not support name spaces for this API call.
+        break
+        ;;
+      *)
+        log error "Not implemented!"
+        break
+      ;;
+    esac
+  done
 done
 
 test -f "$allpages_file"
-result_test="$(stcat "$allpages_file")"
-if [ "$result_test" = "" ]; then
-   stecho "$0 ERROR: result_test is empty!" >&2
-   exit 1
+if [ ! -s "$allpages_file" ]; then
+  die 1 "allpages_file file is empty!" >&2
 fi
 
-if [ "$wiki_article_must_include_sanity_test" = "" ]; then
-   stecho "$0 INFO: wiki_article_must_include_sanity_test not configured, ok."
+if [ -z "$article_sanity_test" ]; then
+  log info "article_sanity_test not configured, ok."
+  exit
+fi
+
+if grep -i -- "$article_sanity_test" "$allpages_file" >/dev/null 2>&1; then
+  log info "result_test does contain article_sanity_test '$article_sanity_test', ok. "
 else
-   ## TODO: stecho too much. ARG_MAX potentially hit. grep based on file instead.
-   if stecho "$result_test" | grep -i -- "$wiki_article_must_include_sanity_test" >/dev/null 2>/dev/null; then
-      stecho "$0 INFO: result_test does contain wiki_article_must_include_sanity_test '$wiki_article_must_include_sanity_test', ok. "
-   else
-      stecho "$0 ERROR: See script source code. result_test does not contain '$wiki_article_must_include_sanity_test'! allpages_file: '$allpages_file'" >&2
-      stecho "" >&2
-      stecho "$0 result_test: '$result_test'" >&2
-      stecho "" >&2
-      exit 1
-   fi
+  log error "See script source code. result_test does not contain '$article_sanity_test'! allpages_file: '$allpages_file' allpages_file contents:"
+  stcat "$allpages_file" >&2
+  die 1 'article_sanity_test check failed, cannot continue.'
 fi

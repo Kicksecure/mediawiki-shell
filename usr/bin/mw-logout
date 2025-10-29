@@ -1,47 +1,65 @@
 #!/bin/bash
 
-set -e
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w'" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+WIKI_URL="$1"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-true "$0: INFO: Logging out of $WIKI_API... Requesting CSRF token..."
-
-rm -f -- "${TMPFOLDER}/logout-token.json"
-
-curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Content-Type: application/json" \
-   --header "Accept-Language: en-GB" \
-   --output "${TMPFOLDER}/logout-token.json" \
-   --request "POST" \
-   "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
-
-true "$0: INFO: Token received."
-
-csrf_token="$(cat -- "${TMPFOLDER}/logout-token.json" | jq --raw-output '.query.tokens.csrftoken')"
+log info "Logging out of $WIKI_API... Requesting CSRF token..."
+safe-rm -f -- "${TMPFOLDER}/logout-token.json"
 
 curl_run \
-   $curl_opts \
-   --cookie "$cookie_jar" \
-   --cookie-jar "$cookie_jar" \
-   --header "Accept-Language: en-GB" \
-   --data-urlencode "token=${csrf_token}" \
-   --output "${TMPFOLDER}/logout.json" \
-   --request "POST" \
-   "${WIKI_API}?action=logout&format=json"
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Content-Type: application/json" \
+  --header "Accept-Language: en-GB" \
+  --output "${TMPFOLDER}/logout-token.json" \
+  --request "POST" \
+  "${WIKI_API}?action=query&meta=tokens&type=csrf&format=json"
+log info "Token received."
+csrf_token="$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/logout-token.json")"
 
-if [ "$(cat -- "${TMPFOLDER}/logout.json")" = "{}" ] ; then
-   true "$0: INFO: OK, logged out."
-   exit 0
+curl_run \
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --data-urlencode "token=${csrf_token}" \
+  --output "${TMPFOLDER}/logout.json" \
+  --request "POST" \
+  "${WIKI_API}?action=logout&format=json"
+
+if [ "$(stcat "${TMPFOLDER}/logout.json")" = "{}" ] || \
+  [ "$(jq --raw-output '.warnings.logout."*"' -- "${TMPFOLDER}/logout.json")" \
+  = "You must be logged in." ]; then
+  log info "OK, logged out."
+  exit 0
 fi
 
-if [ "$(cat -- "${TMPFOLDER}/logout.json" | jq -r '.warnings.logout."*"')" = "You must be logged in." ] ; then
-   true "$0: INFO: OK, logged out."
-   exit 0
-fi
-
-cat -- "${TMPFOLDER}/logout.json" | jq >&2
-echo "$0: ERROR: Logout failed!" >&2
-exit 1
+logout_json="$(stcat "${TMPFOLDER}/logout.json")"
+result="$(jq -r .result <<<"${logout_json}")"
+reason="$(jq -r .reason <<<"${logout_json}")"
+die 1 "Logout failed: ${result}: ${reason}"

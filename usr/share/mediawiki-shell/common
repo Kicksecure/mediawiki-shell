@@ -159,7 +159,7 @@ curl_get_output_parameter() {
 }
 
 curl_run() {
-  local curl_run_no_encode args url curl_exit_code encoded_url
+  local curl_run_no_encode args url curl_exit_code encoded_url output_file
   ## Do not destroy "$@" in this function. Therefore passing it to a different
   ## helper function so it stays local there and unchanged here.
   curl_get_output_parameter "$@"

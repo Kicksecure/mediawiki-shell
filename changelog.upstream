@@ -1,3 +1,22 @@
+commit 40e0d6b1a0bcab4b801dbac37cb51d3fbe9bc3d9
+Merge: e92223e d9ab787
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon Dec 22 22:05:59 2025 -0500
+
+    Merge remote-tracking branch 'ArrayBolt3/arraybolt3/trixie'
+
+commit d9ab78716800dc1e027bdaa594ed78c0441534e8
+Author: Aaron Rainbolt <arraybolt3@ubuntu.com>
+Date:   Sun Dec 21 22:02:02 2025 -0600
+
+    Avoid curl_run function clobbering output_file in mw-file-to-url
+
+commit e92223ecd4fbfda68fa6f1b0cb1e58a265fdc475
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Oct 29 07:36:43 2025 +0000
+
+    bumped changelog version
+
 commit 95a5dde482cc1a04b26bad39b478c12590b4359b
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Wed Oct 29 03:20:32 2025 -0400

@@ -40,7 +40,7 @@ log info "page_file: $page_file"
 
 log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 
-$curl \
+cur_run \
   "${curl_opts[@]}" \
   --output "${TMPFOLDER}/revid.json" \
   "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=${page_file}"
@@ -55,7 +55,7 @@ fi
 
 log info "Requesting csrf_token...    ${TMPFOLDER}/csrf_token.json"
 
-$curl \
+curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \
   --cookie-jar "$cookie_jar" \
@@ -78,7 +78,7 @@ comment="mediawiki-shell-bot-flagged-revisions-mass-approve"
 
 log info "Requesting review-result... ${TMPFOLDER}/review-result.json"
 
-$curl \
+curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \
   --cookie-jar "$cookie_jar" \
@@ -104,7 +104,7 @@ $curl \
 #   }
 # }
 
-# $curl \
+# curl_run \
 #    "${curl_opts[@]}" \
 #    --cookie "$cookie_jar" \
 #    --cookie-jar "$cookie_jar" \

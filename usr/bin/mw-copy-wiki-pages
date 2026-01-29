@@ -89,7 +89,7 @@ log info "api_full_link: $api_full_link"
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
 page_pending_status_json="$(
-  $curl \
+  curl_run \
     "${curl_opts[@]}" \
     "$api_full_link"
 )"

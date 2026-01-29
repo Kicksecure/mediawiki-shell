@@ -98,7 +98,7 @@ fi
 mw-login-test "$default_wiki_url_target"
 
 all_pages="$(
-  $curl \
+  curl_run \
     "${curl_opts[@]}" \
     "${WIKI_API}?action=query&format=json&list=categorymembers&cmtitle=Category:$multiwiki_category&cmlimit=500"
 )"

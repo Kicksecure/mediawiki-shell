@@ -46,7 +46,7 @@ archive_check() {
 archive_save() {
   printf '%s\n' "Requesting web archive link... https://web.archive.org/save/$1"
 
-  curl_http_status_code="$($curl "${curl_web_archive_opts[@]}" "https://web.archive.org/save/$1")" || true
+  curl_http_status_code="$(curl_run "${curl_web_archive_opts[@]}" "https://web.archive.org/save/$1")" || true
   curl_output="$(stcat "$TMPFOLDER/webarchive/curl-output-temp")"
 
   if [ "$curl_http_status_code" = "302" ]; then

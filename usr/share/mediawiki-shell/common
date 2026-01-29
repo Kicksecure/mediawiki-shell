@@ -205,7 +205,7 @@ curl_run() {
   curl_exit_code=0
 
   # Run curl with the modified arguments
-  "$curl" "${args[@]}" || curl_exit_code="$?"
+  log_run notice "$curl" "${args[@]}" || curl_exit_code="$?"
 
   if [ "$curl_exit_code" != "0" ]; then
     log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' output_file: '$output_file'"

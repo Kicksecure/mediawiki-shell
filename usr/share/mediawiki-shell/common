@@ -112,8 +112,8 @@ set_backup_page_item() {
   replace="_"
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
-  search="_slash_"
-  replace="_"
+  search="/"
+  replace="_slash_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   search=":"

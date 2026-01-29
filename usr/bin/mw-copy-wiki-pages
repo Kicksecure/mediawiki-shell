@@ -18,7 +18,7 @@ usage() {
 Options:
   --edit-msg=X     Summary to specify for edit
 Defaults:
-  OUTPUT=${default_page_title_local_pretty}
+  OUTPUT=todo
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software
   ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software $TMPFOLDER/Ubuntu_software" >&2
@@ -28,7 +28,6 @@ Example:
 # shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
-default_page_title_local_pretty="$TMPFOLDER/PAGE"
 edit_msg=""
 
 while true; do
@@ -51,8 +50,12 @@ fi
 WIKI_URL="$1"
 wiki_url_target="$2"
 page_title="$3"
-default_page_title_local="$TMPFOLDER/$page_title"
-page_title_local="${4-"${default_page_title_local}"}"
+page_title_local="${4-}"
+if [ -n "$page_title_local" ]; then
+  page_title_local="$(set_backup_page_item "$page_title")"
+fi
+
+output_file="$TMPFOLDER/$page_title_local"
 
 check_vars_exist wiki_url_target page_title
 
@@ -61,8 +64,8 @@ source /usr/share/mediawiki-shell/wiki-config
 
 #mw-login-test "$WIKI_URL"
 
-log info "Fetching page '$WIKI_URL' '$page_title' '$page_title_local'..."
-mw-fetch "$WIKI_URL" "$page_title" "$page_title_local"
+log info "Fetching page '$WIKI_URL' '$page_title' '$output_file'..."
+mw-fetch "$WIKI_URL" "$page_title" "$output_file"
 log info "Fetch page success."
 
 log info "Checking for pending changes for page..."
@@ -84,12 +87,12 @@ if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; 
 fi
 
 log info "No pending edits for page, ok."
-log info "Editing page... '$wiki_url_target' '$page_title_local' '$page_title'"
+log info "Editing page... '$wiki_url_target' '$output_file' '$page_title'"
 
 if [ -n "$edit_msg" ]; then
-  mw-edit "$wiki_url_target" "$page_title_local" "$page_title" "$edit_msg"
+  mw-edit "$wiki_url_target" "$output_file" "$page_title" "$edit_msg"
 else
-  mw-edit "$wiki_url_target" "$page_title_local" "$page_title"
+  mw-edit "$wiki_url_target" "$output_file" "$page_title"
 fi
 
 log info "Edit page success."

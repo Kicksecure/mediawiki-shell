@@ -129,13 +129,9 @@ counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
 
-  backup_page_item="$(set_backup_page_item "$item_from_all_pages")"
+  log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages"
 
-  log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
-
-  if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-    continue_next=yes
-  elif [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
+  if [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
     continue_next=yes
   fi
   if [ "$continue_next" = "no" ]; then
@@ -150,22 +146,22 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   case "$copy_wiki_pages_exit_code" in
     10)
-      log warn "PAGE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      log warn "PAGE - Skipped item_from_all_pages '$item_from_all_pages' because of pending edits."
       ;;
     0)
-      log info "PAGE - backup_page_item '$backup_page_item' mirroring success."
+      log info "PAGE - item_from_all_pages '$item_from_all_pages' mirroring success."
       ;;
     *)
-      die 1 "PAGE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      die 1 "PAGE - item_from_all_pages '$item_from_all_pages' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
       ;;
   esac
 
-  if ! stecho "$backup_page_item" | grep --ignore-case -- "File:" >/dev/null 2>&1; then
+  if ! stecho "$item_from_all_pages" | grep --ignore-case --fixed-strings -- "File:" >/dev/null 2>&1; then
     log info "FILE | No, not a file, ok."
     continue
   fi
 
-  log info "FILE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
+  log info "FILE | $counter_currently / $counter_total | $item_from_all_pages | $item_from_all_pages"
 
   copy_wiki_file_exit_code=0
 
@@ -175,13 +171,13 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   case "$copy_wiki_file_exit_code" in
     10)
-      log warn "FILE - Skipped backup_page_item '$backup_page_item' because of pending edits."
+      log warn "FILE - Skipped item_from_all_pages '$item_from_all_pages' because of pending edits."
       ;;
     0)
-      log info "FILE - backup_page_item '$backup_page_item' mirroring success."
+      log info "FILE - item_from_all_pages '$item_from_all_pages' mirroring success."
       ;;
     *)
-      die 1 "FILE - backup_page_item '$backup_page_item' mirroring error! copy_wiki_file_exit_code: '$copy_wiki_file_exit_code'"
+      die 1 "FILE - item_from_all_pages '$item_from_all_pages' mirroring error! copy_wiki_file_exit_code: '$copy_wiki_file_exit_code'"
       ;;
   esac
 

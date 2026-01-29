@@ -110,7 +110,7 @@ for multiwiki_extra_pages_item in $multiwiki_extra_pages; do
   stecho "$multiwiki_extra_pages_item" | tee -a -- "$allpages_file" >/dev/null
 done
 
-stecho "$all_pages" | jq -r ".query.categorymembers[] | .title | @sh" | tee -a -- "$allpages_file" >/dev/null
+stecho "$all_pages" | jq -r ".query.categorymembers[] | .title" | tee -a -- "$allpages_file" >/dev/null
 
 test -f "$allpages_file"
 if [ ! -s "$allpages_file" ]; then

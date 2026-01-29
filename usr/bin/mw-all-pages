@@ -124,7 +124,7 @@ for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
 
     case "$query_type" in
       allpages)
-        stecho "$query_result" | jq -r ".query.allpages[] | .title | @sh" | tee -a -- "$allpages_file" >/dev/null
+        stecho "$query_result" | jq -r ".query.allpages[] | .title" | tee -a -- "$allpages_file" >/dev/null
         ## If curl exits non-zero, consider no longer API continue.
         ## If curl exits zero, set variable api_continue_or_not.
         if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue | .apcontinue")"; then
@@ -136,7 +136,7 @@ for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
         fi
         ;;
       unreviewedpages)
-        stecho "$query_result" | jq -r '.query.unreviewedpages[] | .title | @sh' | tee -a -- "$allpages_file" >/dev/null
+        stecho "$query_result" | jq -r '.query.unreviewedpages[] | .title' | tee -a -- "$allpages_file" >/dev/null
         if ! api_continue_or_not="$(stecho "$query_result" | jq -r ".continue.urstart")"; then
           break
         fi

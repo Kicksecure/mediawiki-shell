@@ -25,7 +25,7 @@ collect_reqs() {
     fi
   done
   if test ${#collect} -gt 0; then
-    die 1 "command(s) unavailable: $collect" >&2
+    die 1 "${FUNCNAME[0]}: command(s) unavailable: '$collect'" >&2
   fi
 }
 collect_reqs retry curl jq safe-rm str_replace stprint
@@ -90,7 +90,7 @@ set_backup_page_item() {
 
   backup_page_item="$(stecho "$1")"
   if [ -z "$backup_page_item" ]; then
-    die 1 "set_backup_filename_item is empty!"
+    die 1 "${FUNCNAME[0]}: 1 is empty!"
   fi
 
   ## remove last letter ("'")
@@ -141,7 +141,7 @@ set_backup_filename_item() {
   backup_filename_item="$1"
 
   if [ -z "$backup_filename_item" ]; then
-    die 1 "backup_filename_item is empty!"
+    die 1 "${FUNCNAME[0]}: 1 is empty!"
   fi
 
   ## Same format as git-mediawiki: replace '/' with '%2F'.
@@ -164,7 +164,7 @@ curl_get_output_parameter() {
   while true; do
     (( loop_counter++ )) || true
     if (( loop_counter >= loop_max )); then
-      die 1 "loop_max reached!"
+      die 1 "${FUNCNAME[0]}: loop_max reached!"
     fi
     case $1 in
       --output)
@@ -186,7 +186,7 @@ curl_run() {
   curl_get_output_parameter "$@"
 
   if [ -z "$output_file" ]; then
-    die 1 "output_file is empty!"
+    die 1 "${FUNCNAME[0]}: output_file is empty!"
   fi
 
   safe-rm -f -- "$output_file"

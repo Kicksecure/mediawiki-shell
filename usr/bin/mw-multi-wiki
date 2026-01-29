@@ -11,6 +11,8 @@ set -o pipefail
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
+source /usr/libexec/helper-scripts/strings.bsh
+
 log info "START"
 
 usage() {
@@ -91,7 +93,7 @@ if ! test -w "$output_dir"; then
   die 1 "Cannot continue."
 fi
 
-mw-login-test "$WIKI_URL"
+mw-login-test "$default_wiki_url_target"
 
 all_pages="$(
   $curl \
@@ -133,6 +135,12 @@ while IFS=$'\n' read -r item_from_all_pages; do
   search=" "
   replace="_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+
+  search="/"
+  replace="_"
+  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+
+  check_is_not_empty_and_only_one_line backup_page_item
 
   log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 

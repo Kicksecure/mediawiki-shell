@@ -25,7 +25,8 @@ Example:
 # shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
-continue_from_page=""
+## Allow overwriting using environment variable.
+#continue_from_page=""
 
 while true; do
   [[ "${1-}" =~ ^- ]] || break
@@ -83,17 +84,19 @@ while IFS=$'\n' read -r item_from_all_pages; do
   ## TODO: continue from specific page?
   #continue_from_page="Network_Time_Synchronization"
 
-  if [ -z "$continue_from_page" ] || [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
-    start_from_here=true
+  if [ -n "${continue_from_page-}" ]; then
+    if [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
+      start_from_here=true
+    fi
   fi
 
   if [ ! "$start_from_here" = "true" ]; then
-    log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+    log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
     continue
   fi
-  log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $backup_page_item | $backup_filename_item"
+  log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
 
-  if [ "$backup_page_item" = "Changelog" ]; then
+  if [ "$item_from_all_pages" = "Changelog" ]; then
     continue
   fi
 
@@ -106,7 +109,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
     counter_currently="$counter_currently" \
     counter_chunk="$counter_chunk" \
     TMPFOLDER="$TMPFOLDER_SEPARATE" \
-    mw-retry-wrapper "$wiki_script" "$WIKI_URL" "$backup_page_item" "$output_dir/$backup_filename_item"
+    mw-retry-wrapper "$wiki_script" "$WIKI_URL" "$item_from_all_pages" "$output_dir/$backup_filename_item"
 
   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then
     counter_chunk=0

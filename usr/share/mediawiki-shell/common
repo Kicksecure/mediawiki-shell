@@ -113,7 +113,7 @@ set_backup_page_item() {
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   search="/"
-  replace="#slash#"
+  replace="_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   ## Colon is safe in file names.
@@ -128,6 +128,8 @@ set_backup_page_item() {
 
   check_is_not_empty_and_only_one_line backup_page_item
   validate_safe_filename backup_page_item
+  ## Superfluous due to 'stecho'.
+  #printf '%s\n' "$backup_page_item" | unicode-show
 
   stecho "$backup_page_item"
 }

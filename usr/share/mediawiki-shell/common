@@ -103,7 +103,7 @@ set_backup_page_item() {
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   search="&"
-  replace="#ampersand#"
+  replace="_ampersand_"
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   ## Same format as git-mediawiki: replace ' ' with '_'.
@@ -112,16 +112,16 @@ set_backup_page_item() {
   replace="_"
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
-  search="#slash#"
+  search="_slash_"
   replace="_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   search=":"
-  replace="#colon#"
+  replace="_colon_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   search="."
-  replace="#dot#"
+  replace="_dot_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   check_is_not_empty_and_only_one_line backup_page_item

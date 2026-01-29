@@ -103,7 +103,7 @@ set_backup_page_item() {
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   search="&"
-  replace="_ampersand_"
+  replace="#ampersand#"
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   ## Same format as git-mediawiki: replace ' ' with '_'.
@@ -113,19 +113,21 @@ set_backup_page_item() {
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   search="/"
-  replace="_slash_"
+  replace="#slash#"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
-  search=":"
-  replace="_colon_"
-  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+  ## Colon is safe in file names.
+#   search=":"
+#   replace="#colon#"
+#   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
-  search="."
-  replace="_dot_"
-  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+  ## A single dot is safe in file names. Double dot is not
+#   search="."
+#   replace="_dot_"
+#   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   check_is_not_empty_and_only_one_line backup_page_item
-  check_is_alpha_numeric backup_page_item
+  validate_safe_filename backup_page_item
 
   stecho "$backup_page_item"
 }

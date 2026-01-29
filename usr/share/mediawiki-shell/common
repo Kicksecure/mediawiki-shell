@@ -171,6 +171,9 @@ curl_get_output_parameter() {
       *)
         shift
         ;;
+      --|"")
+        break
+        ;;
     esac
   done
 }

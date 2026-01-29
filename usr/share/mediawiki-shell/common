@@ -93,15 +93,11 @@ set_backup_page_item() {
     die 1 "${FUNCNAME[0]}: 1 is empty!"
   fi
 
+  ## Not longer needed since no longer using 'jq' with '@sh'.
   ## remove last letter ("'")
-  backup_page_item="${backup_page_item::-1}"
+  #backup_page_item="${backup_page_item::-1}"
   ## remove first letter ("'")
-  backup_page_item="${backup_page_item:1}"
-
-  ## TODO: ?
-  search="'\''"
-  replace="'"
-  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
+  #backup_page_item="${backup_page_item:1}"
 
   search="&"
   replace="#ampersand#"

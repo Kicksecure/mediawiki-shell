@@ -1,3 +1,93 @@
+commit 8c65da0799402046e91ad5f729c1371381efdd17
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:53:09 2026 -0500
+
+    fix
+
+commit aa09360bf3d776dcd841cc5a2740e8e7e57ae5e3
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:44:39 2026 -0500
+
+    fix
+
+commit 7fd8fc263ddd81a0db58205137a794d05566a742
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:36:17 2026 -0500
+
+    .
+
+commit 79bf15253e1a41cea662f7ad9c4d22e36a9406f4
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:19:35 2026 -0500
+
+    .
+
+commit f33e29fb7348aef3ace535e46e8525851ddc4f52
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:17:15 2026 -0500
+
+    .
+
+commit 0fe804d4966b840beacd3ef762a56a688d4c84d1
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:07:20 2026 -0500
+
+    .
+
+commit 8475f7cad258707e3b9133a7e72001068b8d8074
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 07:00:38 2026 -0500
+
+    .
+
+commit e05e37cc073c78fc86370a4f2690b52a76f51780
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:47:51 2026 -0500
+
+    fix
+
+commit 3d59dd86698d23161410d91307ba24d94fe0efe7
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:46:07 2026 -0500
+
+    fix
+
+commit 3d95281e4fd386a79285d3294ae80e8d35f4ac0d
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:41:54 2026 -0500
+
+    fix
+
+commit 129a41f4db3cf441fcb96723dc76044563c9ac59
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:26:20 2026 -0500
+
+    fix
+
+commit 55f8f3c625106bc31fcbfa2b343730ecb63a56ad
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:18:45 2026 -0500
+
+    fix
+
+commit baae48d9cf32b0b2f7140b39a739e505fd46b560
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:16:43 2026 -0500
+
+    fix
+
+commit 2db9e4856909c73546888fbce99bf82abdf50a97
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 06:11:28 2026 -0500
+
+    fix
+
+commit 533e381ba4c12b9c5ba8f3b8d5a5833d82519ecc
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jan 29 10:37:06 2026 +0000
+
+    bumped changelog version
+
 commit 40e4a2c95ac1a027b697c0f529077b06f7ee86dd
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Jan 29 05:36:02 2026 -0500

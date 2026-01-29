@@ -161,7 +161,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
     continue
   fi
 
-  log info "FILE | $counter_currently / $counter_total | $item_from_all_pages | $item_from_all_pages"
+  log info "FILE | $counter_currently / $counter_total | $item_from_all_pages"
 
   copy_wiki_file_exit_code=0
 

@@ -51,16 +51,25 @@ WIKI_URL="$1"
 wiki_url_target="$2"
 page_title="$3"
 page_title_local="${4-}"
-if [ -n "$page_title_local" ]; then
+if [ -z "$page_title_local" ]; then
+  log info "default output_file: yes"
   page_title_local="$(set_backup_page_item "$page_title")"
+  output_file="$TMPFOLDER/$page_title_local"
+else
+  log info "default output_file: no"
+  output_file="$page_title_local"
 fi
-
-output_file="$TMPFOLDER/$page_title_local"
 
 check_vars_exist wiki_url_target page_title
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
+
+log info "WIKI_URL             : $WIKI_URL"
+log info "wiki_url_target      : $wiki_url_target"
+log info "page_title           : $page_title"
+log info "page_title_local     : $page_title_local"
+log info "output_file          : $output_file"
 
 #mw-login-test "$WIKI_URL"
 

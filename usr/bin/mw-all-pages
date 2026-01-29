@@ -161,6 +161,7 @@ test -f "$allpages_file"
 if [ ! -s "$allpages_file" ]; then
   die 1 "allpages_file file is empty!" >&2
 fi
+unicode-show "$allpages_file"
 
 if [ -z "$article_sanity_test" ]; then
   log info "article_sanity_test not configured, ok."

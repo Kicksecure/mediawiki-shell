@@ -116,6 +116,7 @@ test -f "$allpages_file"
 if [ ! -s "$allpages_file" ]; then
   die 1 "allpages_file file is empty!"
 fi
+unicode-show "$allpages_file"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 ## mw-multi-wiki --continue-from-page="Template:VM"

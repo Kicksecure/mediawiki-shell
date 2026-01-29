@@ -57,7 +57,7 @@ safe-rm -f -- "$allpages_file"
 mw-all-pages "$WIKI_URL" unreviewedpages "$allpages_file"
 
 test -r "$allpages_file"
-
+unicode-show "$allpages_file"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
 counter_currently=0

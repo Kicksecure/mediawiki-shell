@@ -157,22 +157,47 @@ curl_get_output_parameter() {
   loop_counter=0
   loop_max=50
 
+  output_file=""
+
   while true; do
     (( loop_counter++ )) || true
     if (( loop_counter >= loop_max )); then
       die 1 "${FUNCNAME[0]}: loop_max reached!"
     fi
+
     case "${1-}" in
-      --output)
-        output_file="$2"
-        shift 2
+      "")
         break
+        ;;
+      --)
+        shift || true
+        break
+        ;;
+      --output)
+        if [ -z "${2-}" ]; then
+          die 1 "${FUNCNAME[0]}: --output given but missing value"
+        fi
+        output_file="$2"
+        shift 2 || true
+        ;;
+      --output=*)
+        output_file="${1#--output=}"
+        shift || true
+        ;;
+      -o)
+        if [ -z "${2-}" ]; then
+          die 1 "${FUNCNAME[0]}: -o given but missing value"
+        fi
+        output_file="$2"
+        shift 2 || true
+        ;;
+      -o*)
+        ## supports: -oFILE
+        output_file="${1#-o}"
+        shift || true
         ;;
       *)
-        shift
-        ;;
-      --|"")
-        break
+        shift || true
         ;;
     esac
   done
@@ -180,16 +205,30 @@ curl_get_output_parameter() {
 
 curl_run() {
   local curl_run_no_encode args url curl_exit_code encoded_url output_file
-  ## Do not destroy "$@" in this function. Therefore passing it to a different
-  ## helper function so it stays local there and unchanged here.
+  local created_temp_output output_is_stdout
+
   curl_get_output_parameter "$@"
 
-  if [ -z "$output_file" ]; then
-    die 1 "${FUNCNAME[0]}: output_file is empty!"
+  created_temp_output="false"
+  output_is_stdout="false"
+
+  ## If caller didn't provide an output file, capture to a temp file
+  if [ -z "${output_file-}" ]; then
+    created_temp_output="true"
+    output_file="$(mktemp -t curl_run.XXXXXXXX)" || die 1 "${FUNCNAME[0]}: mktemp failed"
+  else
+    ## If caller explicitly targets stdout, don't try to rm/touch/stcat it
+    case "$output_file" in
+      "-"|/dev/stdout|/dev/fd/1|/proc/self/fd/1)
+        output_is_stdout="true"
+        ;;
+    esac
   fi
 
-  safe-rm -f -- "$output_file"
-  touch -- "$output_file"
+  if [ "$output_is_stdout" != "true" ]; then
+    safe-rm -f -- "$output_file"
+    touch -- "$output_file"
+  fi
 
   args=( "$@" )
   url="${args[$((${#args[@]} - 1))]}"
@@ -202,18 +241,29 @@ curl_run() {
     encoded_url="$(mw-urlencode "$url")"
   fi
 
-  # Rebuild the arguments excluding the last parameter, then append the encoded URL
-  args=("${@:1:$#-1}" "$encoded_url")
-
   curl_exit_code=0
 
-  # Run curl with the modified arguments
+  ## Rebuild args: exclude last param (url), then append encoded url.
+  ## If we created a temp output, inject --output <temp> so we can capture it.
+  if [ "$created_temp_output" = "true" ]; then
+    args=("${@:1:$#-1}" "--output" "$output_file" "$encoded_url")
+  else
+    args=("${@:1:$#-1}" "$encoded_url")
+  fi
+
   log_run info "$curl" "${args[@]}" || curl_exit_code="$?"
 
   if [ "$curl_exit_code" != "0" ]; then
-    log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' output_file: '$output_file'"
-    stcat "$output_file" >&2
+    log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' output_file: '${output_file-}'"
+    if [ "$output_is_stdout" != "true" ] && [ -n "${output_file-}" ]; then
+      stcat "$output_file" >&2 || true
+    fi
     die 1 'curl failure, cannot continue.'
+  fi
+
+  # If caller didn't specify --output, behave like curl and print to stdout
+  if [ "$created_temp_output" = "true" ]; then
+    cat -- "$output_file"
   fi
 }
 

@@ -115,6 +115,10 @@ set_backup_page_item() {
   replace="_"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
+  search=":"
+  replace="_"
+  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+
   check_is_not_empty_and_only_one_line backup_page_item
   check_is_alpha_numeric backup_page_item
 

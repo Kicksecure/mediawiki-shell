@@ -251,7 +251,7 @@ curl_run() {
     args=("${@:1:$#-1}" "$encoded_url")
   fi
 
-  log_run info "$curl" "${args[@]}" || curl_exit_code="$?"
+  log_run debug "$curl" "${args[@]}" || curl_exit_code="$?"
 
   if [ "$curl_exit_code" != "0" ]; then
     log error "curl failed with exit code '$curl_exit_code': url: '$encoded_url' output_file: '${output_file-}'"

@@ -18,7 +18,7 @@ usage() {
 Options:
   --edit-msg=X     Summary to specify for edit
 Defaults:
-  OUTPUT=${default_page_file_local_pretty}
+  OUTPUT=todo
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png
   ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' File:Ubuntu_software_icon.png $TMPFOLDER/File:Ubuntu_software_icon.png" >&2
@@ -28,7 +28,6 @@ Example:
 # shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
-default_page_file_local_pretty="$TMPFOLDER/wiki_remote_file_title"
 edit_msg=""
 
 while true; do
@@ -51,8 +50,16 @@ fi
 WIKI_URL="$1"
 wiki_url_target="$2"
 page_file="$3"
-default_page_file_local="$TMPFOLDER/${page_file}"
-page_file_local="${4-"${default_page_file_local}"}"
+page_file_local="${4-}"
+
+if [ -z "$page_file_local" ]; then
+  log info "default output_file: yes"
+  page_file_local="$(set_backup_page_item "$page_file")"
+  output_file="$TMPFOLDER/$page_file_local"
+else
+  log info "default output_file: no"
+  output_file="$page_title_local"
+fi
 
 check_vars_exist wiki_url_target page_file
 
@@ -60,6 +67,12 @@ wiki_remote_file_title="$(stecho "$page_file" | str_replace "File:" "")"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
+
+log info "WIKI_URL             : $WIKI_URL"
+log info "wiki_url_target      : $wiki_url_target"
+log info "page_file            : $page_file"
+log info "page_file_local      : $page_file_local"
+log info "output_file          : $output_file"
 
 #mw-login-test "$WIKI_URL"
 
@@ -86,12 +99,12 @@ if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; 
 fi
 
 log info "No pending edits for file, ok."
-log info "Uploading file... '$wiki_url_target' '$page_file_local' '$wiki_remote_file_title'"
+log info "Uploading file... '$wiki_url_target' '$output_file' '$wiki_remote_file_title'"
 
 if [ -n "$edit_msg" ]; then
-  mw-file-upload "$wiki_url_target" "$page_file_local" "$wiki_remote_file_title" "$edit_msg"
+  mw-file-upload "$wiki_url_target" "$output_file" "$wiki_remote_file_title" "$edit_msg"
 else
-  mw-file-upload "$wiki_url_target" "$page_file_local" "$wiki_remote_file_title"
+  mw-file-upload "$wiki_url_target" "$output_file" "$wiki_remote_file_title"
 fi
 
 log info "Upload file success."

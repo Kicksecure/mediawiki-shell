@@ -170,7 +170,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
   copy_wiki_file_exit_code=0
 
   TMPFOLDER="$TMPFOLDER" \
-    mw-copy-wiki-file "--edit-msg=${edit_msg}" "$WIKI_URL" "$wiki_url_target" "$backup_page_item" \
+    mw-copy-wiki-file "--edit-msg=${edit_msg}" "$WIKI_URL" "$wiki_url_target" "$item_from_all_pages" \
       || copy_wiki_file_exit_code="$?"
 
   case "$copy_wiki_file_exit_code" in

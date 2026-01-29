@@ -69,6 +69,7 @@ wiki_remote_file_title="$(stecho "$page_file" | str_replace "File:" "")"
 source /usr/share/mediawiki-shell/wiki-config
 
 log info "WIKI_URL             : $WIKI_URL"
+log info "WIKI_API             : $WIKI_API"
 log info "wiki_url_target      : $wiki_url_target"
 log info "page_file            : $page_file"
 log info "page_file_local      : $page_file_local"
@@ -76,12 +77,11 @@ log info "output_file          : $output_file"
 
 #mw-login-test "$WIKI_URL"
 
-log info "Downloading file '$WIKI_URL' '$page_file' '$page_file_local'..."
-mw-file-download "$WIKI_URL" "$page_file" "$page_file_local"
+log info "Downloading file...: mw-file-download '$WIKI_URL' '$page_file' '$output_file'"
+mw-file-download "$WIKI_URL" "$page_file" "$output_file"
 log info "Download file success."
 
 log info "Checking for pending changes for file..."
-log info "WIKI_API: $WIKI_API"
 
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
@@ -94,12 +94,14 @@ page_pending_status_json=$(
     "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_file"
 )
 
+log debug "$page_pending_status_json: '$page_pending_status_json'"
+
 if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
   die 10 "'$WIKI_URL' '$page_file' has PENDING EDITS!"
 fi
 
 log info "No pending edits for file, ok."
-log info "Uploading file... '$wiki_url_target' '$output_file' '$wiki_remote_file_title'"
+log info "Uploading file...: mw-file-upload '$wiki_url_target' '$output_file' '$wiki_remote_file_title'"
 
 if [ -n "$edit_msg" ]; then
   mw-file-upload "$wiki_url_target" "$output_file" "$wiki_remote_file_title" "$edit_msg"

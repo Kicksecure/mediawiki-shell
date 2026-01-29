@@ -36,6 +36,10 @@ check_vars_exist new_file page_file
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
+log info "WIKI_URL             : $WIKI_URL"
+log info "new_file             : $new_file"
+log info "page_file            : $page_file"
+
 if [ -d "$new_file" ]; then
   die 1 "new_file '$new_file' is a folder!"
 fi

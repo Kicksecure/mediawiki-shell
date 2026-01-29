@@ -78,6 +78,7 @@ log info "WIKI_API             : $WIKI_API"
 log info "allpages_file        : $allpages_file"
 log info "multiwiki_category   : $multiwiki_category"
 log info "multiwiki_extra_pages: $multiwiki_extra_pages"
+log info "continue_from_page   : ${continue_from_page-}"
 
 mkdir --parents -- "$output_dir"
 
@@ -131,6 +132,8 @@ while IFS=$'\n' read -r item_from_all_pages; do
   log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 
   if [ "${backup_page_item,,}" = "${continue_from_page,,}" ]; then
+    continue_next=yes
+  elif [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
     continue_next=yes
   fi
   if [ "$continue_next" = "no" ]; then

@@ -99,19 +99,26 @@ set_backup_page_item() {
 
   search="'\''"
   replace="'"
-  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   search="&"
   replace="%26"
-  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
   ## Same format as git-mediawiki: replace ' ' with '_'.
   ## Replace spaces with underscore.
   search=" "
   replace="_"
-  backup_page_item=$(echo "$backup_page_item" | str_replace "$search" "$replace")
+  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
-  echo "$backup_page_item"
+  search="/"
+  replace="_"
+  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+
+  check_is_not_empty_and_only_one_line backup_page_item
+  check_is_alpha_numeric backup_page_item
+
+  stecho "$backup_page_item"
 }
 
 set_backup_filename_item() {

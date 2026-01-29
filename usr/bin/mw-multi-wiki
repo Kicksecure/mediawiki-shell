@@ -126,26 +126,7 @@ counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
 
-  backup_page_item="$item_from_all_pages"
-  ## remove last letter ("'")
-  backup_page_item="${backup_page_item::-1}"
-  ## remove first letter ("'")
-  backup_page_item="${backup_page_item:1}"
-
-  ## {{{ normalize file name
-
-  search=" "
-  replace="_"
-  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
-
-  search="/"
-  replace="_"
-  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
-
-  check_is_not_empty_and_only_one_line backup_page_item
-  check_is_alpha_numeric backup_page_item
-
-  ## }}}
+  backup_page_item="$(set_backup_page_item "$item_from_all_pages")"
 
   log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages | $backup_page_item"
 

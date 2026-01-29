@@ -162,7 +162,7 @@ curl_get_output_parameter() {
     if (( loop_counter >= loop_max )); then
       die 1 "${FUNCNAME[0]}: loop_max reached!"
     fi
-    case $1 in
+    case "${1-}" in
       --output)
         output_file="$2"
         shift 2

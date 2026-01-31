@@ -125,6 +125,7 @@ set_backup_page_item() {
 
   check_is_not_empty_and_only_one_line backup_page_item
   if ! validate_safe_filename backup_page_item; then
+    log error "${FUNCNAME[0]}: validate_safe_filename backup_page_item failed. Checking $backup_page_item for unicode using unicode-show for debugging purposes."
     printf '%s\n' "$backup_page_item" | unicode-show
     return 1
   fi

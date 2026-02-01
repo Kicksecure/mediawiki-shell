@@ -42,12 +42,14 @@ check_vars_exist page output
 
 output_dir="$(dirname -- "${output}")"
 
-temp_output_file_temp="$TMPFOLDER/$page"
-temp_output_file_normalized="$(set_backup_filename_item "$temp_output_file_temp")"
+temp_page_normalized="$(set_backup_filename_item "$page")"
+temp_output_file="$TMPFOLDER/$temp_page_normalized"
 
-log info "output_dir                 : $output_dir"
-log info "temp_output_file_temp      : $temp_output_file_temp"
-log info "temp_output_file_normalized: $temp_output_file_normalized"
+log info "wiki_url        : $wiki_url"
+log info "page            : $page"
+log info "output_dir      : $output_dir"
+log info "output          : $output"
+log info "temp_output_file: $temp_output_file"
 
 mkdir -p -- "$output_dir"
 if ! test -d "$output_dir"; then
@@ -59,7 +61,7 @@ if ! test -w "$output_dir"; then
 fi
 
 for retry_counter in {1..5}; do
-  if ! mw-fetch "$wiki_url" "$page" "$temp_output_file_normalized"; then
+  if ! mw-fetch "$wiki_url" "$page" "$temp_output_file"; then
     sleep 5
   fi
 
@@ -73,7 +75,7 @@ for retry_counter in {1..5}; do
     exit 0
   fi
 
-  mv --verbose -- "$temp_output_file_normalized" "$output"
+  mv --verbose -- "$temp_output_file" "$output"
   log info "SUCCESS: page '$page' | output: '$output'"
 
   exit 0

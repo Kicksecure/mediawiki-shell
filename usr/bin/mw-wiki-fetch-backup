@@ -26,7 +26,7 @@ trap exit_handler EXIT
 usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE OUTPUT
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' Some_Article /tmp/a" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' About /tmp/a" >&2
   exit 1
 }
 

@@ -14,7 +14,7 @@ source /usr/share/mediawiki-shell/common
 usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE_FILE
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Search-engine-clipart.jpg" >&2
   exit 1
 }
 

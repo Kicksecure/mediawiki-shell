@@ -16,8 +16,8 @@ usage() {
 Defaults:
   EDIT_MSG=${default_edit_msg}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png
-  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Ubuntu_software_icon.png 'custom message'" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Search-engine-clipart.jpg
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a File:Search-engine-clipart.jpg 'custom message'" >&2
   exit 1
 }
 

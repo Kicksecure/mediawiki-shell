@@ -81,26 +81,13 @@ log info "Downloading file...: mw-file-download '$WIKI_URL' '$page_file' '$outpu
 mw-file-download "$WIKI_URL" "$page_file" "$output_file"
 log info "Download file success."
 
-log info "Checking for pending changes for file..."
-
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json=$(
-  curl_run \
-    "${curl_opts[@]}" \
-    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_file"
-)
+mw-page-pending-check "$WIKI_URL" "$page_file"
 
-log debug "$page_pending_status_json: '$page_pending_status_json'"
-
-if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
-  die 10 "'$WIKI_URL' '$page_file' has PENDING EDITS!"
-fi
-
-log info "No pending edits for file, ok."
 log info "Uploading file...: mw-file-upload '$wiki_url_target' '$output_file' '$wiki_remote_file_title'"
 
 if [ -n "$edit_msg" ]; then

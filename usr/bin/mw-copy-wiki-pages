@@ -78,27 +78,13 @@ log info "Fetching page '$WIKI_URL' '$page_title' '$output_file'..."
 mw-fetch "$WIKI_URL" "$page_title" "$output_file"
 log info "Fetch page success."
 
-log info "Checking for pending changes for page..."
-
-api_full_link="${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
-log info "api_full_link: $api_full_link"
-
 ## time-of-check to time-of-use TOCTOU
 ## Check for pending edits only after page was fetched.
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json="$(
-  curl_run \
-    "${curl_opts[@]}" \
-    "$api_full_link"
-)"
+mw-page-pending-check "$WIKI_URL" "$page_title"
 
-if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
-  die 10 "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
-fi
-
-log info "No pending edits for page, ok."
 log info "Editing page... '$wiki_url_target' '$output_file' '$page_title'"
 
 if [ -n "$edit_msg" ]; then

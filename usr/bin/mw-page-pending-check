@@ -1,0 +1,46 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software
+  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software" >&2
+  exit 1
+}
+
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+WIKI_URL="$1"
+page_title="$2"
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "Checking for pending changes for file..."
+
+page_pending_status_json="$(
+  curl_run \
+    "${curl_opts[@]}" \
+    "${WIKI_API}?format=json&action=query&prop=info|flagged&titles=$page_title"
+)"
+
+log debug "$page_pending_status_json: '$page_pending_status_json'"
+
+if jq . <<<"$page_pending_status_json" | grep -- pending_since >/dev/null 2>&1; then
+  die 10 "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
+fi
+
+log info "No pending edits for file, ok."

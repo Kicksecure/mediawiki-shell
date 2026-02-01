@@ -44,15 +44,7 @@ log_run info mw-fetch "$WIKI_URL" "$page_title" "$new_file"
 ## Checking for pending edits before fetching page would leave room for
 ## making a pending edit after the page has been fetched.
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
-page_pending_status_json="$(
-  curl_run \
-    "${curl_opts[@]}" \
-    "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=$page_title"
-)"
-
-if printf '%s\n' "$page_pending_status_json" | jq | grep pending_since >/dev/null 2>&1; then
-  die 10 "'$WIKI_URL' '$page_title' page has PENDING EDITS!"
-fi
+mw-page-pending-check "$WIKI_URL" "$page_title"
 
 filename="$TMPFOLDER/fetched-wiki-page"
 tempfile="$TMPFOLDER/temp-edit-file"

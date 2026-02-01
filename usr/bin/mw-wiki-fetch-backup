@@ -66,7 +66,7 @@ for retry_counter in {1..5}; do
   ## Checking for pending edits before fetching page would leave room for
   ## making a pending edit after the page has been fetched.
   ## This ensures that the fetched edit was not pending, i.e. confirmed.
-  if ! mw-page-pending-check "$WIKI_URL" "$page_title"; then
+  if ! mw-page-pending-check "$wiki_url" "$page_title"; then
     log warn "SKIP: page_title '$page_title' has PENDING edits."
     exit 0
   fi

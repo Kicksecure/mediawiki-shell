@@ -41,7 +41,11 @@ output="$3"
 check_vars_exist page output
 
 output_dir="$(dirname -- "${output}")"
+
+temp_output_file="$TMPFOLDER/$page"
+
 log info "output_dir: $output_dir"
+log info "temp_output_file: $temp_output_file"
 
 mkdir -p -- "$output_dir"
 if ! test -d "$output_dir"; then
@@ -53,10 +57,24 @@ if ! test -w "$output_dir"; then
 fi
 
 for retry_counter in {1..5}; do
-  if mw-fetch "$wiki_url" "$page" "$output"; then
+  if ! mw-fetch "$wiki_url" "$page" "$temp_output_file"; then
+    sleep 5
+  fi
+
+  ## time-of-check to time-of-use TOCTOU
+  ## Check for pending edits only after page was fetched.
+  ## Checking for pending edits before fetching page would leave room for
+  ## making a pending edit after the page has been fetched.
+  ## This ensures that the fetched edit was not pending, i.e. confirmed.
+  if ! mw-page-pending-check "$WIKI_URL" "$page_title"; then
+    log warn "SKIP: page_title '$page_title' has PENDING edits."
     exit 0
   fi
-  sleep 5
+
+  mv --verbose -- "$temp_output_file" "$output"
+  log info "SUCCESS: page_title '$page_title' | output: '$output'"
+
+  exit 0
 done
 
 ## Failed even after retry attempts. Therefore exit non-zero.

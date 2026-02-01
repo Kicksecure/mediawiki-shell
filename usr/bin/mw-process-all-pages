@@ -50,6 +50,19 @@ output_dir="$3"
 
 check_vars_exist wiki_script output_dir
 
+case "$wiki_script" in
+  "mw-wiki-fetch-backup")
+    break
+    ;;
+  "mw-patch-modify-wiki-page")
+    break
+    ;;
+  *)
+    log error "Unknown fetcher '$wiki_script'!"
+    exit 1
+    ;;
+esac
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 

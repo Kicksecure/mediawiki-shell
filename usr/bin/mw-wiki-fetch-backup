@@ -40,7 +40,7 @@ output="$3"
 
 check_vars_exist page output
 
-output_dir="$(dirname "${output}")"
+output_dir="$(dirname -- "${output}")"
 log info "output_dir: $output_dir"
 
 mkdir -p -- "$output_dir"

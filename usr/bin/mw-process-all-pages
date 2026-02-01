@@ -52,10 +52,10 @@ check_vars_exist wiki_script output_dir
 
 case "$wiki_script" in
   "mw-wiki-fetch-backup")
-    break
+    true
     ;;
   "mw-patch-modify-wiki-page")
-    break
+    true
     ;;
   *)
     log error "Unknown fetcher '$wiki_script'!"

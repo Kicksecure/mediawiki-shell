@@ -101,6 +101,8 @@ while IFS=$'\n' read -r item_from_all_pages; do
     if [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
       start_from_here=true
     fi
+  else
+    start_from_here=true
   fi
 
   if [ ! "$start_from_here" = "true" ]; then

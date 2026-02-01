@@ -109,7 +109,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
     log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
     continue
   fi
-  log notice "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
+  log info "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
 
   if [ "$item_from_all_pages" = "Changelog" ]; then
     continue

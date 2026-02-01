@@ -18,9 +18,8 @@ source /usr/libexec/helper-scripts/log_run_die.sh
 
 # Function to execute the command and capture the exit status
 execute_command() {
-  local exit_code
-  "$@"
-  exit_code=$?
+  exit_code=0
+  "$@" || { exit_code=$?; true; };
   if (( exit_code == 0 )); then
     log info "Command exited with status: $exit_code"
   else
@@ -38,9 +37,7 @@ attempt_command() {
 
   for retry_counter in $(seq 1 "$max_retries"); do
     log info "Attempt $retry_counter of $max_retries..."
-    execute_command "$@"
-    exit_code="$?"
-    if (( exit_code == 0 )); then
+    if execute_command "$@"; then
       log info "Command succeeded on attempt $retry_counter."
       return 0
     fi
@@ -52,7 +49,4 @@ attempt_command() {
   return "$exit_code"
 }
 
-# Call the main function with all script arguments
 attempt_command "$@"
-exit_code=$?
-exit "$exit_code"

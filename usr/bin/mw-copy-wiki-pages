@@ -20,8 +20,8 @@ Options:
 Defaults:
   OUTPUT=todo
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' Ubuntu_software $TMPFOLDER/Ubuntu_software" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' About
+  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w' About $TMPFOLDER/About" >&2
   exit 1
 }
 

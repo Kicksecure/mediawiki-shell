@@ -14,8 +14,8 @@ source /usr/share/mediawiki-shell/common
 usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software
-  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' About
+  ${0##*/} 'https://www.kicksecure.com/w' About" >&2
   exit 1
 }
 

@@ -16,8 +16,8 @@ usage() {
 Defaults:
   OUTPUT=${default_new_file}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software
-  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software ${default_new_file}" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' About
+  ${0##*/} 'https://www.kicksecure.com/w' About ${default_new_file}" >&2
   exit 1
 }
 

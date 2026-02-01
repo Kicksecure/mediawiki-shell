@@ -16,7 +16,7 @@ usage() {
 Defaults:
   EDIT_MSG=${default_edit_msg}
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a Ubuntu_software" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' /tmp/a About" >&2
   exit 1
 }
 

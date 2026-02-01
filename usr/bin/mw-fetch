@@ -14,7 +14,7 @@ source /usr/share/mediawiki-shell/common
 usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI PAGE OUTPUT
 Example:
-  ${0##*/} 'https://www.kicksecure.com/w' Ubuntu_software /tmp/a" >&2
+  ${0##*/} 'https://www.kicksecure.com/w' About /tmp/a" >&2
   exit 1
 }
 

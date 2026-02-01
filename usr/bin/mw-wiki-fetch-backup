@@ -47,9 +47,8 @@ temp_output_file="$TMPFOLDER/$temp_page_normalized"
 
 log info "wiki_url        : $wiki_url"
 log info "page            : $page"
-log info "output_dir      : $output_dir"
-log info "output          : $output"
 log info "temp_output_file: $temp_output_file"
+log info "output          : $output"
 
 mkdir -p -- "$output_dir"
 if ! test -d "$output_dir"; then

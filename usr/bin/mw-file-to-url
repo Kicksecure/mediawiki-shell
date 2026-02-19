@@ -70,7 +70,7 @@ url="$(stecho "$query_result" | jq -r ".query.pages[].imageinfo[].url")"
 ## url example:
 ## https://www.kicksecure.com/w/images/7/74/MediaWiki-2020-logo-%28black%29.svg
 
-overwrite "$output_file" "$url"
+overwrite "$output_file" "$url" >/dev/null
 
 test -r "$output_file"
 

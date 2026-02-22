@@ -125,7 +125,7 @@ jq -- "${TMPFOLDER}/review-result.json"
 
 review_error_code=$(jq --raw-output '.error.code' -- "${TMPFOLDER}/review-result.json")
 if [ "$review_error_code" = "notreviewable" ]; then
-  log notice "notreviewable"
+  log info "notreviewable"
   exit 0
 fi
 

@@ -17,7 +17,7 @@ log info "START"
 exit_handler() {
   [[ -v retry_counter ]] || retry_counter=0
   if (( retry_counter > 1 )); then
-    log notice "success after attempt $retry_counter"
+    log info "success after attempt $retry_counter"
   fi
 }
 

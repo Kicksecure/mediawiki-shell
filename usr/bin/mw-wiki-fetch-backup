@@ -74,7 +74,7 @@ for retry_counter in {1..5}; do
     exit 0
   fi
 
-  mv --verbose -- "$temp_output_file" "$output"
+  mv -- "$temp_output_file" "$output"
   log info "SUCCESS: page '$page' | output: '$output'"
 
   exit 0

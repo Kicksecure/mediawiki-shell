@@ -83,6 +83,7 @@ fi
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
 
+## edit_msg is a trusted value: either the hardcoded default or operator-supplied via CLI.
 curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \

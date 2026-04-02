@@ -97,6 +97,7 @@ fi
 
 mw-login-test "$default_wiki_url_target"
 
+## multiwiki_category is a trusted value: either the hardcoded default or operator-supplied via CLI.
 all_pages="$(
   curl_run \
     "${curl_opts[@]}" \

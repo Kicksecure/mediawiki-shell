@@ -15,6 +15,9 @@ usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT OUTPUT_DIR
 Options:
   --continue-from-page=N     Continue from page index.
+  --article-sanity-test=X    Guarantee that string is present on the fetched pages
+  --namespace-default-list=N Page collection per namespace
+  --namespace-extra-list=N   Extra page collection per namespace
 Note:
   ARGS are passed to the SCRIPT.
 Example:
@@ -28,12 +31,19 @@ source /usr/libexec/helper-scripts/parse_opt.sh
 ## Allow overwriting using environment variable.
 #continue_from_page=""
 
+article_sanity_test=""
+namespace_default_list=""
+namespace_extra_list=""
+
 while true; do
   [[ "${1-}" =~ ^- ]] || break
   begin_optparse "${1:-}" "${2:-}" || break
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
     continue-from-page) get_arg; continue_from_page="${arg}";;
+    article-sanity-test) get_arg; article_sanity_test="${arg}";;
+    namespace-default-list) get_arg; namespace_default_list="${arg}";;
+    namespace-extra-list) get_arg; namespace_extra_list="${arg}";;
     h|help) usage;;
     --|"") break;;
     *) die 2 "Invalid option: '${opt_orig}'"
@@ -75,7 +85,19 @@ log info "WIKI_URL  : $WIKI_URL"
 allpages_file="${TMPFOLDER}/allpages.txt"
 
 safe-rm -f -- "$allpages_file"
-mw-all-pages "$WIKI_URL" allpages "$allpages_file"
+
+mw_all_pages_opts=()
+if [ -n "$article_sanity_test" ]; then
+  mw_all_pages_opts+=("--article-sanity-test=${article_sanity_test}")
+fi
+if [ -n "$namespace_default_list" ]; then
+  mw_all_pages_opts+=("--namespace-default-list=${namespace_default_list}")
+fi
+if [ -n "$namespace_extra_list" ]; then
+  mw_all_pages_opts+=("--namespace-extra-list=${namespace_extra_list}")
+fi
+
+mw-all-pages "${mw_all_pages_opts[@]+"${mw_all_pages_opts[@]}"}" "$WIKI_URL" allpages "$allpages_file"
 
 test -r "$allpages_file"
 unicode-show "$allpages_file"

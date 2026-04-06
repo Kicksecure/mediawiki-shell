@@ -31,7 +31,7 @@ article_sanity_test=""
 ## https://www.mediawiki.org/wiki/Manual:Namespace
 ## https://www.kicksecure.com/w/api.php?action=query&meta=siteinfo&siprop=namespaces
 ## https://www.whonix.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces
-default_namespace_default_list="0 4 6 8 10 12 14 274"
+default_namespace_default_list="0 4 6 8 10 12 14"
 ## NOTE to self by Patrick: also set by other script:
 ## wiki-backup-with-mediawiki-shell
 ## 500: site-specific namespace Moved

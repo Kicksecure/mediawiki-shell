@@ -97,7 +97,7 @@ if [ -n "$namespace_extra_list" ]; then
   mw_all_pages_opts+=("--namespace-extra-list=${namespace_extra_list}")
 fi
 
-mw-all-pages "${mw_all_pages_opts[@]+"${mw_all_pages_opts[@]}"}" "$WIKI_URL" allpages "$allpages_file"
+mw-all-pages "${mw_all_pages_opts[@]}" "$WIKI_URL" allpages "$allpages_file"
 
 test -r "$allpages_file"
 unicode-show "$allpages_file"

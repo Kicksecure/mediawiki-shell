@@ -1,3 +1,77 @@
+commit e782c3af897c3dca60b38bc5dedff41a13ad735c
+Merge: 1f18964 b6c13bb
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon Apr 6 05:25:10 2026 -0400
+
+    Merge remote-tracking branch 'github-kicksecure/master'
+
+commit b6c13bb8cb3b57ebec8dc116abdfe49266672f45
+Merge: 1f18964 ab32019
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon Apr 6 05:23:34 2026 -0400
+
+    Merge pull request #3 from assisted-by-ai/claude/fix-widget-namespace-backup-KDFCq
+    
+    Add namespace and sanity test options to mw-process-all-pages
+
+commit ab32019fc0a395d7663b32c55678b726f6c26d19
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Apr 6 08:29:06 2026 +0000
+
+    simplify: remove unnecessary bash compatibility workaround for empty array
+    
+    Debian Trixie ships Bash 5.2+ which handles empty array expansion
+    correctly with set -o nounset.
+    
+    https://claude.ai/code/session_011pjrpk19yJsa2Wyiq88Lp6
+
+commit d9dd358dd07af06dc79e49377bb9b29e7c6aa9cb
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Apr 6 08:21:12 2026 +0000
+
+    fix: add article sanity test for Widget:CodeSelect in backup scripts
+    
+    Ensures backups verify that Widget:CodeSelect is present in the fetched
+    page list, catching cases where Widget namespace pages are missing.
+    
+    https://claude.ai/code/session_011pjrpk19yJsa2Wyiq88Lp6
+
+commit 6b992b87762f19870f0108ce31ec7c2b65ab8857
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Apr 6 08:17:31 2026 +0000
+
+    fix: pass Widget (274) and Moved (500) namespaces through backup pipeline
+    
+    The site-specific backup scripts now pass --namespace-extra-list="274 500"
+    to mw-process-all-pages, which in turn forwards article-sanity-test,
+    namespace-default-list, and namespace-extra-list options through to
+    mw-all-pages. This ensures Widget namespace pages (e.g. Widget:Icon_Bullet_List)
+    are included in backups.
+    
+    Reverts 274 from default_namespace_default_list in mw-all-pages since these
+    are site-specific namespaces that belong in the specific backup scripts.
+    
+    https://claude.ai/code/session_011pjrpk19yJsa2Wyiq88Lp6
+
+commit 37507512354a8d7e1c420ad41871d7353cc41eef
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Apr 6 08:00:12 2026 +0000
+
+    fix: add Widget namespace (274) to default backup namespace list
+    
+    Widget namespace pages (e.g. Widget:Icon_Bullet_List) were missing from
+    backups because namespace 274 was not included in
+    default_namespace_default_list. The namespace was acknowledged in a
+    comment but never actually added to the list.
+    
+    https://claude.ai/code/session_011pjrpk19yJsa2Wyiq88Lp6
+
+commit 1f1896487a15b4842f078db5aabb99220ae21906
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon Feb 23 13:33:33 2026 +0000
+
+    bumped changelog version
+
 commit 314360794af990fd11820feafe511e6f8f2b96ef
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sun Feb 22 11:09:26 2026 -0500

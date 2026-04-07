@@ -1,0 +1,138 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI BACKUP_DIR
+Pushes git-modified .mw files from BACKUP_DIR to the wiki using mw-edit.
+Uses 'git diff' to detect which files have changed.
+
+Options:
+  --edit-msg=MSG           Edit summary for wiki edits (default: ${default_edit_msg})
+  --git-diff-arg=ARG       Argument passed to 'git diff' to select commits
+                           (default: HEAD~1, i.e. changes in the last commit)
+  --dry-run                Show what would be pushed without actually pushing.
+Example:
+  ${0##*/} 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
+  ${0##*/} --git-diff-arg=HEAD~3 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
+  ${0##*/} --dry-run 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup" >&2
+  exit 1
+}
+
+default_edit_msg="mediawiki-shell-bot-default-edit-message"
+git_diff_arg="HEAD~1"
+edit_msg="${default_edit_msg}"
+dry_run=false
+
+while true; do
+  case "${1-}" in
+    --edit-msg=*)
+      edit_msg="${1#--edit-msg=}"
+      shift
+      ;;
+    --git-diff-arg=*)
+      git_diff_arg="${1#--git-diff-arg=}"
+      shift
+      ;;
+    --dry-run)
+      dry_run=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die 2 "Invalid option: '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "${2-}" ]; then
+  usage
+fi
+
+wiki_url="$1"
+backup_dir="$2"
+
+check_vars_exist wiki_url backup_dir
+
+if [ ! -d "$backup_dir" ]; then
+  die 1 "backup_dir '$backup_dir' does not exist!"
+fi
+
+## backup_dir must be inside a git repository.
+if ! git -C "$backup_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  die 1 "backup_dir '$backup_dir' is not inside a git repository!"
+fi
+
+log info "wiki_url     : $wiki_url"
+log info "backup_dir   : $backup_dir"
+log info "git_diff_arg : $git_diff_arg"
+log info "edit_msg     : $edit_msg"
+log info "dry_run      : $dry_run"
+
+mw-login-test "$wiki_url"
+
+## Get list of modified/added .mw files from git diff.
+## --diff-filter=AM: only Added or Modified files (not Deleted).
+## --name-only: output file names only.
+## --relative: paths relative to backup_dir.
+modified_files="$(git -C "$backup_dir" diff --diff-filter=AM --name-only --relative "$git_diff_arg" -- '*.mw')" || true
+
+if [ -z "$modified_files" ]; then
+  log info "No modified .mw files found. Nothing to push."
+  exit 0
+fi
+
+counter_total="$(printf '%s\n' "$modified_files" | wc -l)"
+counter_currently=0
+
+log info "Found $counter_total modified .mw file(s) to push."
+
+while IFS= read -r mw_file; do
+  (( counter_currently++ )) || true
+
+  ## Convert filename back to page title.
+  ## Reverse of set_backup_filename_item():
+  ##   1. Remove .mw extension.
+  ##   2. Replace %2F with /.
+  page_title="${mw_file%.mw}"
+  page_title="${page_title//%2F//}"
+
+  file_path="${backup_dir}/${mw_file}"
+
+  if [ ! -r "$file_path" ]; then
+    log warn "SKIP $counter_currently / $counter_total | file not readable: $file_path"
+    continue
+  fi
+
+  if [ "$dry_run" = "true" ]; then
+    log info "dry-run $counter_currently / $counter_total | $page_title | $file_path"
+    continue
+  fi
+
+  log info "push $counter_currently / $counter_total | $page_title | $file_path"
+
+  mw-edit "$wiki_url" "$file_path" "$page_title" "$edit_msg"
+
+done <<< "$modified_files"
+
+log info "Done. Pushed $counter_currently / $counter_total page(s)."

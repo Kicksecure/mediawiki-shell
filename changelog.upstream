@@ -1,3 +1,22 @@
+commit 9350fa2f082a12c5fee86b81ebc0a0a7bdf6f063
+Merge: 00a5713 82c0d45
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Apr 8 09:57:01 2026 -0400
+
+    Merge remote-tracking branch 'ArrayBolt3/arraybolt3/trixie'
+
+commit 00a571370db4c7f3819e341657bd46ec6bc1a850
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Apr 8 12:36:01 2026 +0000
+
+    bumped changelog version
+
+commit 82c0d45a613dd87cc3ceb6027db8830c271dbf18
+Author: Aaron Rainbolt <arraybolt3@gmail.com>
+Date:   Wed Apr 8 00:15:43 2026 -0400
+
+    Protect the wiki password better, fix a typo (mostly from Claude Code)
+
 commit 7843ac32943416d775257c36e2b0f5caa004f796
 Merge: d806d91 f39c4cb
 Author: Patrick Schleizer <adrelanos@whonix.org>

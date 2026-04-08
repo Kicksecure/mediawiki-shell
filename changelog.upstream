@@ -1,3 +1,39 @@
+commit 7843ac32943416d775257c36e2b0f5caa004f796
+Merge: d806d91 f39c4cb
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Tue Apr 7 01:50:44 2026 -0400
+
+    Merge remote-tracking branch 'github-kicksecure/master'
+
+commit f39c4cb1ed7f8ded11cc7e77d27ccf32cee16b76
+Merge: d806d91 64e95b0
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Tue Apr 7 01:45:29 2026 -0400
+
+    Merge pull request #4 from assisted-by-ai/claude/wiki-backup-push-script-P1rkO
+    
+    Add mw-wiki-push-backup script for pushing wiki edits
+
+commit 64e95b0cb69004d49a4353b7dd7dcf5ba2ba218f
+Author: Claude <noreply@anthropic.com>
+Date:   Tue Apr 7 05:37:52 2026 +0000
+
+    Add mw-wiki-push-backup script to push git-modified wiki pages
+    
+    Provides a way to push locally modified wiki backup files back to the
+    wiki using mw-edit. Uses git diff to detect which .mw files changed,
+    converts filenames back to page titles, and pushes each one.
+    
+    Supports --dry-run, --edit-msg, and --git-diff-arg options.
+    
+    https://claude.ai/code/session_01SDVqu7FG7gUS4zScL4ZCKX
+
+commit d806d91a56d2924b500086146fbff4f012e215e0
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon Apr 6 09:25:37 2026 +0000
+
+    bumped changelog version
+
 commit e782c3af897c3dca60b38bc5dedff41a13ad735c
 Merge: 1f18964 b6c13bb
 Author: Patrick Schleizer <adrelanos@whonix.org>

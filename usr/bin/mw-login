@@ -42,18 +42,26 @@ curl_run \
 log info "Login Token received."
 login_token="$(jq --raw-output '.query.tokens.logintoken' -- "${TMPFOLDER}/login-token.json")"
 
+## Write password to a temp file so it does not appear in /proc/PID/cmdline.
+## The umask (set in 'common') ensures the file is created with mode 0600.
+pass_file="$(mktemp -t mw-login-pass.XXXXXXXX)" || die 1 "Failed to create temporary password file!"
+trap 'safe-rm -f -- "$pass_file"' ERR
+
 curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \
   --cookie-jar "$cookie_jar" \
   --header "Accept-Language: en-GB" \
   --data-urlencode "lgname=${WIKI_API_USER_NAME}" \
-  --data-urlencode "lgpassword=${WIKI_API_USER_PASS}" \
+  --data-urlencode "lgpassword@${pass_file}" \
   --data-urlencode "lgdomain=${USERDOMAIN}" \
   --data-urlencode "lgtoken=${login_token}" \
   --output "${TMPFOLDER}/login-result.json" \
   --request "POST" \
   "${WIKI_API}?action=login&format=json"
+
+safe-rm -f -- "$pass_file"
+trap - ERR
 
 ## XXX:
 ## If already logged in:

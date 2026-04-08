@@ -289,5 +289,6 @@ trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
   "--user-agent" "mediawiki-shell"
 )
 
+umask 077
 mkdir --parents -- "$TMPFOLDER"
 chmod og-rw -- "$TMPFOLDER"

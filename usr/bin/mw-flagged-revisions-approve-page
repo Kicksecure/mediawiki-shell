@@ -40,7 +40,7 @@ log info "page_file: $page_file"
 
 log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 
-cur_run \
+curl_run \
   "${curl_opts[@]}" \
   --output "${TMPFOLDER}/revid.json" \
   "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=${page_file}"

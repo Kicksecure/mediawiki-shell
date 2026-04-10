@@ -111,11 +111,9 @@ while IFS= read -r mw_file; do
   (( counter_currently++ )) || true
 
   ## Convert filename back to page title.
-  ## Reverse of set_backup_filename_item():
-  ##   1. Remove .mw extension.
-  ##   2. Replace %2F with /.
-  page_title="${mw_file%.mw}"
-  page_title="${page_title//%2F//}"
+  ## Uses decode_backup_filename_item() which strips .mw and runs full
+  ## percent-decoding (urllib.parse.unquote), reversing set_backup_page_item().
+  page_title="$(decode_backup_filename_item "$mw_file")"
 
   file_path="${backup_dir}/${mw_file}"
 

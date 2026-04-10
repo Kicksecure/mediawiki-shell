@@ -12,6 +12,11 @@ import urllib.parse
 ## Letters and digits are always safe (handled by urllib.parse.quote).
 ## Additionally safe: _ . - ~ :
 ## Notably encoded: / % & # ? * " < > | (and space, after conversion to _)
+##
+## ':' is intentionally safe: this is a Linux-only tool (Debian package),
+## and colon is valid on Linux filesystems. MediaWiki uses ':' extensively
+## for namespaces (Template:Foo, Category:Bar, File:Image.png), so encoding
+## it would produce needlessly ugly filenames.
 _FILENAME_SAFE = "_.-~:"
 
 
@@ -45,7 +50,10 @@ def encode_page_to_filename(page_name):
     All other filesystem-unsafe characters are percent-encoded using
     Python's urllib.parse.quote (standard RFC 3986 encoding).
 
-    Round-trips with decode_filename_to_page().
+    Round-trips with decode_filename_to_page() in the MediaWiki sense:
+    MediaWiki treats spaces and underscores as identical in page titles,
+    so 'Page name' -> 'Page_name' -> 'Page_name' is a correct round-trip
+    (both refer to the same wiki page).
 
     Examples:
       'Dev/compiler_hardening' -> 'Dev%2Fcompiler_hardening'
@@ -60,6 +68,8 @@ def decode_filename_to_page(filename):
     """Decode a filename component back to a MediaWiki page name.
 
     Reverses encode_page_to_filename() using standard percent-decoding.
+    Underscores are left as-is (not converted back to spaces) because
+    MediaWiki treats them identically in page titles.
 
     WARNING: The result restores '/' for subpages. It must only be used
     as a MediaWiki API page title parameter, NEVER for constructing

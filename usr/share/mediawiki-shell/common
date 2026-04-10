@@ -167,6 +167,13 @@ decode_backup_filename_item() {
 ## Verify that a target file path is contained within the expected
 ## base directory. Catches path traversal via '..', symlinks, or any
 ## encoding bypass.
+##
+## Uses the conventional canonicalize-then-check-prefix approach:
+## realpath resolves '..', symlinks, and redundant slashes into an
+## absolute path, then a prefix match ensures containment.
+## '-m' (--canonicalize-missing) is required because the target file
+## typically does not exist yet at the time of the check.
+##
 ## Usage: assert_path_within_dir BASE_DIR TARGET_PATH
 assert_path_within_dir() {
   local base_dir target_path resolved_base resolved_target
@@ -174,12 +181,15 @@ assert_path_within_dir() {
   base_dir="$1"
   target_path="$2"
 
-  if [ -z "$base_dir" ] || [ -z "$target_path" ]; then
-    die 1 "${FUNCNAME[0]}: base_dir or target_path is empty!"
+  if [ -z "$base_dir" ]; then
+    die 1 "${FUNCNAME[0]}: base_dir is empty!"
+  fi
+
+  if [ -z "$target_path" ]; then
+    die 1 "${FUNCNAME[0]}: target_path is empty!"
   fi
 
   resolved_base="$(realpath -- "$base_dir")"
-  ## -m: resolve even if the target does not exist yet.
   resolved_target="$(realpath -m -- "$target_path")"
 
   case "$resolved_target" in

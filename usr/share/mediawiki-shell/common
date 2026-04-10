@@ -28,7 +28,7 @@ collect_reqs() {
     die 1 "${FUNCNAME[0]}: command(s) unavailable: '$collect'" >&2
   fi
 }
-collect_reqs retry curl jq safe-rm str_replace stprint
+collect_reqs retry curl jq safe-rm str_replace stprint realpath
 
 check_vars_exist() {
   local var_name

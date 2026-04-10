@@ -28,7 +28,7 @@ collect_reqs() {
     die 1 "${FUNCNAME[0]}: command(s) unavailable: '$collect'" >&2
   fi
 }
-collect_reqs retry curl jq safe-rm str_replace stprint
+collect_reqs retry curl jq safe-rm str_replace stprint realpath
 
 check_vars_exist() {
   local var_name
@@ -86,42 +86,21 @@ set_curl_binary_default() {
 }
 
 set_backup_page_item() {
-  local backup_page_item search replace
+  local backup_page_item
 
   backup_page_item="$(stecho "$1")"
   if [ -z "$backup_page_item" ]; then
     die 1 "${FUNCNAME[0]}: 1 is empty!"
   fi
 
-  ## Not longer needed since no longer using 'jq' with '@sh'.
-  ## remove last letter ("'")
-  #backup_page_item="${backup_page_item::-1}"
-  ## remove first letter ("'")
-  #backup_page_item="${backup_page_item:1}"
-
-  search="&"
-  replace="#ampersand#"
-  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
-
-  ## Same format as git-mediawiki: replace ' ' with '_'.
-  ## Replace spaces with underscore.
-  search=" "
-  replace="_"
-  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
-
-  search="/"
-  replace="_"
-  backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
-
-  ## Colon is safe in file names.
-#   search=":"
-#   replace="#colon#"
-#   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
-
-  ## A single dot is safe in file names. Double dot is not
-#   search="."
-#   replace="_dot_"
-#   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
+  ## Encode page name into a filesystem-safe filename component using
+  ## standard percent-encoding via Python's urllib.parse.quote.
+  ## - Spaces become underscores (MediaWiki convention, same as git-mediawiki).
+  ## - '/' becomes '%2F' (preserves subpage structure for round-trip).
+  ## - '%', '&', '#', '?' etc. are percent-encoded.
+  ## - '_', '.', '-', '~', ':' are left as-is (safe in filenames).
+  ## Round-trips with decode_backup_page_item / mw-urlencode --decode-filename-to-page.
+  backup_page_item="$(mw-urlencode --encode-page-to-filename "$backup_page_item")"
 
   check_is_not_empty_and_only_one_line backup_page_item
   if ! validate_safe_filename backup_page_item; then
@@ -129,9 +108,6 @@ set_backup_page_item() {
     printf '%s\n' "$backup_page_item" | unicode-show
     return 1
   fi
-
-  ## Superfluous due to 'stecho'.
-  #printf '%s\n' "$backup_page_item" | unicode-show
 
   stecho "$backup_page_item"
 }
@@ -154,7 +130,83 @@ set_backup_filename_item() {
   ## Same format as git-mediawiki: add '.mw' file extension.
   backup_filename_item="${backup_filename_item}.mw"
 
+  check_is_not_empty_and_only_one_line backup_filename_item
+  if ! validate_safe_filename backup_filename_item; then
+    log error "${FUNCNAME[0]}: validate_safe_filename backup_filename_item failed."
+    printf '%s\n' "$backup_filename_item" | unicode-show
+    return 1
+  fi
+
   stecho "$backup_filename_item"
+}
+
+## WARNING: decoded output restores '/' characters. The result must
+## only be used as a MediaWiki API page title parameter, NEVER to
+## construct local file paths (directory traversal risk).
+decode_backup_page_item() {
+  local decoded
+
+  decoded="$(stecho "$1")"
+  if [ -z "$decoded" ]; then
+    die 1 "${FUNCNAME[0]}: 1 is empty!"
+  fi
+
+  ## Standard percent-decoding via Python's urllib.parse.unquote.
+  ## Reverses set_backup_page_item / mw-urlencode --encode-page-to-filename.
+  mw-urlencode --decode-filename-to-page "$decoded"
+}
+
+decode_backup_filename_item() {
+  local filename decoded
+
+  filename="$(stecho "$1")"
+  if [ -z "$filename" ]; then
+    die 1 "${FUNCNAME[0]}: 1 is empty!"
+  fi
+
+  ## Remove .mw extension.
+  decoded="${filename%.mw}"
+
+  decode_backup_page_item "$decoded"
+}
+
+## Defense-in-depth against directory traversal.
+## Verify that a target file path is contained within the expected
+## base directory. Catches path traversal via '..', symlinks, or any
+## encoding bypass.
+##
+## Uses the conventional canonicalize-then-check-prefix approach:
+## realpath resolves '..', symlinks, and redundant slashes into an
+## absolute path, then a prefix match ensures containment.
+## '-m' (--canonicalize-missing) is required because the target file
+## typically does not exist yet at the time of the check.
+##
+## Usage: assert_path_within_dir BASE_DIR TARGET_PATH
+assert_path_within_dir() {
+  local base_dir target_path resolved_base resolved_target
+
+  base_dir="$1"
+  target_path="$2"
+
+  if [ -z "$base_dir" ]; then
+    die 1 "${FUNCNAME[0]}: base_dir is empty!"
+  fi
+
+  if [ -z "$target_path" ]; then
+    die 1 "${FUNCNAME[0]}: target_path is empty!"
+  fi
+
+  resolved_base="$(realpath -- "$base_dir")"
+  resolved_target="$(realpath -m -- "$target_path")"
+
+  case "$resolved_target" in
+    "$resolved_base"/*)
+      return 0
+      ;;
+    *)
+      die 1 "${FUNCNAME[0]}: path traversal blocked! target: '$resolved_target' is outside base: '$resolved_base'"
+      ;;
+  esac
 }
 
 curl_get_output_parameter() {

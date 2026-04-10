@@ -8,38 +8,136 @@
 import sys
 import urllib.parse
 
+## Characters safe in filenames and unambiguous for round-trip encoding.
+## Letters and digits are always safe (handled by urllib.parse.quote).
+## Additionally safe: _ . - ~ :
+## Notably encoded: / % & # ? * " < > | (and space, after conversion to _)
+##
+## ':' is intentionally safe: this is a Linux-only tool (Debian package),
+## and colon is valid on Linux filesystems. MediaWiki uses ':' extensively
+## for namespaces (Template:Foo, Category:Bar, File:Image.png), so encoding
+## it would produce needlessly ugly filenames.
+_FILENAME_SAFE = "_.-~:"
 
-def urlencode(url):  # pylint: disable=missing-function-docstring
-    ## Parse the URL into its components
+
+def urlencode_url(url):
+    """Encode URL path, params, and query, preserving scheme and domain."""
     parsed_url = urllib.parse.urlparse(url)
 
-    ## Only encode the path and query, leaving the scheme and netloc (domain) intact
     encoded_path = urllib.parse.quote(parsed_url.path)
+    encoded_params = urllib.parse.quote(parsed_url.params, safe="")
     encoded_query = urllib.parse.quote(parsed_url.query, safe="=&")
 
-    ## Rebuild the full URL with the encoded path and query
-    encoded_url = urllib.parse.urlunparse(
+    return urllib.parse.urlunparse(
         (
             parsed_url.scheme,
             parsed_url.netloc,
             encoded_path,
-            "",  ## params part (not used often in URLs)
+            encoded_params,
             encoded_query,
             parsed_url.fragment,
         )
     )
 
-    return encoded_url
+
+def encode_page_to_filename(page_name):
+    """Encode a MediaWiki page name into a safe filename component.
+
+    Spaces become underscores (MediaWiki convention, same as git-mediawiki).
+    All other filesystem-unsafe characters are percent-encoded using
+    Python's urllib.parse.quote (standard RFC 3986 encoding).
+
+    The result is guaranteed to be a safe filename component: '.' and '..'
+    are encoded to avoid path traversal, and empty input is rejected.
+
+    Round-trips with decode_filename_to_page() in the MediaWiki sense:
+    MediaWiki treats spaces and underscores as identical in page titles,
+    so 'Page name' -> 'Page_name' -> 'Page_name' is a correct round-trip
+    (both refer to the same wiki page).
+
+    Examples:
+      'Dev/compiler_hardening' -> 'Dev%2Fcompiler_hardening'
+      'Page & stuff'           -> 'Page_%26_stuff'
+      '100% Done'              -> '100%25_Done'
+    """
+    if page_name == "":
+        raise ValueError("page_name must not be empty")
+
+    page_name = page_name.replace(" ", "_")
+    encoded = urllib.parse.quote(page_name, safe=_FILENAME_SAFE)
+
+    ## '.' and '..' are not safe filename components (path traversal).
+    if encoded == ".":
+        return "%2E"
+    if encoded == "..":
+        return "%2E%2E"
+
+    return encoded
+
+
+def decode_filename_to_page(filename):
+    """Decode a filename component back to a MediaWiki page name.
+
+    Reverses encode_page_to_filename() using standard percent-decoding.
+    Underscores are left as-is (not converted back to spaces) because
+    MediaWiki treats them identically in page titles.
+
+    WARNING: The result restores '/' for subpages. It must only be used
+    as a MediaWiki API page title parameter, NEVER for constructing
+    local file paths (directory traversal risk).
+
+    Examples:
+      'Dev%2Fcompiler_hardening' -> 'Dev/compiler_hardening'
+      'Page_%26_stuff'           -> 'Page_&_stuff'
+      '100%25_Done'              -> '100%_Done'
+    """
+    return urllib.parse.unquote(filename)
+
+
+def usage(exit_code=1):
+    """Print usage and exit."""
+    print(
+        """Usage:
+  mw-urlencode <URL>
+      Encode URL path, params, and query (preserving scheme and domain).
+
+  mw-urlencode --encode-page-to-filename <PAGE_NAME>
+      Encode a MediaWiki page name into a filesystem-safe filename.
+      Spaces become underscores; unsafe characters are percent-encoded.
+
+  mw-urlencode --decode-filename-to-page <FILENAME>
+      Decode a filename back to a MediaWiki page name.
+      Reverses --encode-page-to-filename (spaces stay as underscores;
+      MediaWiki treats them identically).""",
+        file=sys.stderr,
+    )
+    sys.exit(exit_code)
 
 
 def main():  # pylint: disable=missing-function-docstring
-    url = sys.argv[1]
-    encoded_url = urlencode(url)
-    print(encoded_url)
+    try:
+        if len(sys.argv) == 2:
+            arg = sys.argv[1]
+            if arg in ("-h", "--help"):
+                usage(0)
+            if arg in ("--encode-page-to-filename", "--decode-filename-to-page"):
+                usage(1)
+            print(urlencode_url(arg))
+        elif len(sys.argv) == 3:
+            mode = sys.argv[1]
+            value = sys.argv[2]
+            if mode == "--encode-page-to-filename":
+                print(encode_page_to_filename(value))
+            elif mode == "--decode-filename-to-page":
+                print(decode_filename_to_page(value))
+            else:
+                usage()
+        else:
+            usage()
+    except ValueError as exc:
+        print(f"mw-urlencode: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: mw-urlencode <URL>")
-        sys.exit(1)
     main()

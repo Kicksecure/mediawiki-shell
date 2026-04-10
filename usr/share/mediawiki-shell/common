@@ -99,6 +99,12 @@ set_backup_page_item() {
   ## remove first letter ("'")
   #backup_page_item="${backup_page_item:1}"
 
+  ## Escape '%' first to avoid ambiguity with percent-encoded sequences
+  ## such as '%2F'. Must be done before any other percent-encoding.
+  search="%"
+  replace="%25"
+  backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
+
   search="&"
   replace="#ampersand#"
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
@@ -109,8 +115,12 @@ set_backup_page_item() {
   replace="_"
   backup_page_item=$(stecho "$backup_page_item" | str_replace "$search" "$replace")
 
+  ## Percent-encode '/' as '%2F' so it can be distinguished from '_' (space)
+  ## during restore. Previously '/' was replaced with '_', which was lossy
+  ## and made backup/restore round-trip impossible for subpages such as
+  ## 'Dev/compiler_hardening'.
   search="/"
-  replace="_"
+  replace="%2F"
   backup_page_item="$(stecho "$backup_page_item" | str_replace "$search" "$replace")"
 
   ## Colon is safe in file names.
@@ -155,6 +165,46 @@ set_backup_filename_item() {
   backup_filename_item="${backup_filename_item}.mw"
 
   stecho "$backup_filename_item"
+}
+
+decode_backup_page_item() {
+  local decoded search replace
+
+  decoded="$(stecho "$1")"
+  if [ -z "$decoded" ]; then
+    die 1 "${FUNCNAME[0]}: 1 is empty!"
+  fi
+
+  ## Decode in reverse order of encoding.
+  ## Decode '%2F' before '%25' to avoid premature unescaping.
+  search="%2F"
+  replace="/"
+  decoded=$(stecho "$decoded" | str_replace "$search" "$replace")
+
+  search="#ampersand#"
+  replace="&"
+  decoded=$(stecho "$decoded" | str_replace "$search" "$replace")
+
+  ## Decode '%25' last to avoid premature unescaping.
+  search="%25"
+  replace="%"
+  decoded=$(stecho "$decoded" | str_replace "$search" "$replace")
+
+  stecho "$decoded"
+}
+
+decode_backup_filename_item() {
+  local filename decoded
+
+  filename="$(stecho "$1")"
+  if [ -z "$filename" ]; then
+    die 1 "${FUNCNAME[0]}: 1 is empty!"
+  fi
+
+  ## Remove .mw extension.
+  decoded="${filename%.mw}"
+
+  decode_backup_page_item "$decoded"
 }
 
 curl_get_output_parameter() {

@@ -24,23 +24,19 @@ def urlencode_url(url):
     """Encode URL path and query, preserving scheme and domain."""
     parsed_url = urllib.parse.urlparse(url)
 
-    ## Only encode the path and query, leaving the scheme and netloc (domain) intact
     encoded_path = urllib.parse.quote(parsed_url.path)
     encoded_query = urllib.parse.quote(parsed_url.query, safe="=&")
 
-    ## Rebuild the full URL with the encoded path and query
-    encoded_url = urllib.parse.urlunparse(
+    return urllib.parse.urlunparse(
         (
             parsed_url.scheme,
             parsed_url.netloc,
             encoded_path,
-            "",  ## params part (not used often in URLs)
+            parsed_url.params,
             encoded_query,
             parsed_url.fragment,
         )
     )
-
-    return encoded_url
 
 
 def encode_page_to_filename(page_name):
@@ -49,6 +45,9 @@ def encode_page_to_filename(page_name):
     Spaces become underscores (MediaWiki convention, same as git-mediawiki).
     All other filesystem-unsafe characters are percent-encoded using
     Python's urllib.parse.quote (standard RFC 3986 encoding).
+
+    The result is guaranteed to be a safe filename component: '.' and '..'
+    are encoded to avoid path traversal, and empty input is rejected.
 
     Round-trips with decode_filename_to_page() in the MediaWiki sense:
     MediaWiki treats spaces and underscores as identical in page titles,
@@ -60,8 +59,19 @@ def encode_page_to_filename(page_name):
       'Page & stuff'           -> 'Page_%26_stuff'
       '100% Done'              -> '100%25_Done'
     """
+    if page_name == "":
+        raise ValueError("page_name must not be empty")
+
     page_name = page_name.replace(" ", "_")
-    return urllib.parse.quote(page_name, safe=_FILENAME_SAFE)
+    encoded = urllib.parse.quote(page_name, safe=_FILENAME_SAFE)
+
+    ## '.' and '..' are not safe filename components (path traversal).
+    if encoded == ".":
+        return "%2E"
+    if encoded == "..":
+        return "%2E%2E"
+
+    return encoded
 
 
 def decode_filename_to_page(filename):
@@ -83,7 +93,7 @@ def decode_filename_to_page(filename):
     return urllib.parse.unquote(filename)
 
 
-def usage():
+def usage(exit_code=1):
     """Print usage and exit."""
     print(
         """Usage:
@@ -100,13 +110,17 @@ def usage():
       MediaWiki treats them identically).""",
         file=sys.stderr,
     )
-    sys.exit(1)
+    sys.exit(exit_code)
 
 
 def main():  # pylint: disable=missing-function-docstring
     if len(sys.argv) == 2:
-        ## Legacy / default mode: URL encoding.
-        print(urlencode_url(sys.argv[1]))
+        arg = sys.argv[1]
+        if arg in ("-h", "--help"):
+            usage(0)
+        if arg in ("--encode-page-to-filename", "--decode-filename-to-page"):
+            usage(1)
+        print(urlencode_url(arg))
     elif len(sys.argv) == 3:
         mode = sys.argv[1]
         value = sys.argv[2]

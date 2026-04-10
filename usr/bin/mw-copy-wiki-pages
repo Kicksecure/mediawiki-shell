@@ -55,6 +55,7 @@ if [ -z "$page_title_local" ]; then
   log info "default output_file: yes"
   page_title_local="$(set_backup_page_item "$page_title")"
   output_file="$TMPFOLDER/$page_title_local"
+  assert_path_within_dir "$TMPFOLDER" "$output_file"
 else
   log info "default output_file: no"
   output_file="$page_title_local"

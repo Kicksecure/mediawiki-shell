@@ -111,6 +111,8 @@ while IFS=$'\n' read -r item_from_all_pages; do
   fi
   log info "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
 
+  assert_path_within_dir "$output_dir" "$output_dir/$backup_filename_item"
+
   if [ "$item_from_all_pages" = "Changelog" ]; then
     continue
   fi

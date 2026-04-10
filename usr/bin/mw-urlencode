@@ -21,11 +21,11 @@ _FILENAME_SAFE = "_.-~:"
 
 
 def urlencode_url(url):
-    """Encode URL path and query, preserving scheme and domain."""
+    """Encode URL path, params, and query, preserving scheme and domain."""
     parsed_url = urllib.parse.urlparse(url)
 
     encoded_path = urllib.parse.quote(parsed_url.path)
-    encoded_params = urllib.parse.quote(parsed_url.params)
+    encoded_params = urllib.parse.quote(parsed_url.params, safe="")
     encoded_query = urllib.parse.quote(parsed_url.query, safe="=&")
 
     return urllib.parse.urlunparse(
@@ -99,7 +99,7 @@ def usage(exit_code=1):
     print(
         """Usage:
   mw-urlencode <URL>
-      Encode URL path and query (preserving scheme and domain).
+      Encode URL path, params, and query (preserving scheme and domain).
 
   mw-urlencode --encode-page-to-filename <PAGE_NAME>
       Encode a MediaWiki page name into a filesystem-safe filename.

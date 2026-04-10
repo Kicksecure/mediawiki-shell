@@ -25,6 +25,7 @@ def urlencode_url(url):
     parsed_url = urllib.parse.urlparse(url)
 
     encoded_path = urllib.parse.quote(parsed_url.path)
+    encoded_params = urllib.parse.quote(parsed_url.params)
     encoded_query = urllib.parse.quote(parsed_url.query, safe="=&")
 
     return urllib.parse.urlunparse(
@@ -32,7 +33,7 @@ def urlencode_url(url):
             parsed_url.scheme,
             parsed_url.netloc,
             encoded_path,
-            parsed_url.params,
+            encoded_params,
             encoded_query,
             parsed_url.fragment,
         )
@@ -114,24 +115,28 @@ def usage(exit_code=1):
 
 
 def main():  # pylint: disable=missing-function-docstring
-    if len(sys.argv) == 2:
-        arg = sys.argv[1]
-        if arg in ("-h", "--help"):
-            usage(0)
-        if arg in ("--encode-page-to-filename", "--decode-filename-to-page"):
-            usage(1)
-        print(urlencode_url(arg))
-    elif len(sys.argv) == 3:
-        mode = sys.argv[1]
-        value = sys.argv[2]
-        if mode == "--encode-page-to-filename":
-            print(encode_page_to_filename(value))
-        elif mode == "--decode-filename-to-page":
-            print(decode_filename_to_page(value))
+    try:
+        if len(sys.argv) == 2:
+            arg = sys.argv[1]
+            if arg in ("-h", "--help"):
+                usage(0)
+            if arg in ("--encode-page-to-filename", "--decode-filename-to-page"):
+                usage(1)
+            print(urlencode_url(arg))
+        elif len(sys.argv) == 3:
+            mode = sys.argv[1]
+            value = sys.argv[2]
+            if mode == "--encode-page-to-filename":
+                print(encode_page_to_filename(value))
+            elif mode == "--decode-filename-to-page":
+                print(decode_filename_to_page(value))
+            else:
+                usage()
         else:
             usage()
-    else:
-        usage()
+    except ValueError as exc:
+        print(f"mw-urlencode: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

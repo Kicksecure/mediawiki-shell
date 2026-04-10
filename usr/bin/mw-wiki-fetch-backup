@@ -42,7 +42,7 @@ check_vars_exist page output
 
 output_dir="$(dirname -- "${output}")"
 
-temp_page_normalized="$(set_backup_filename_item "$page")"
+temp_page_normalized="$(set_backup_filename_item "$(set_backup_page_item "$page")")"
 temp_output_file="$TMPFOLDER/$temp_page_normalized"
 assert_path_within_dir "$TMPFOLDER" "$temp_output_file"
 

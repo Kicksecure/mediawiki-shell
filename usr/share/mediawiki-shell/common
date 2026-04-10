@@ -167,6 +167,9 @@ set_backup_filename_item() {
   stecho "$backup_filename_item"
 }
 
+## WARNING: decoded output restores '/' characters. The result must
+## only be used as a MediaWiki API page title parameter, NEVER to
+## construct local file paths (directory traversal risk).
 decode_backup_page_item() {
   local decoded search replace
 

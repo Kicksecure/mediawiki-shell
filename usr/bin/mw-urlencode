@@ -96,7 +96,8 @@ def usage():
 
   mw-urlencode --decode-filename-to-page <FILENAME>
       Decode a filename back to a MediaWiki page name.
-      Reverses --encode-page-to-filename.""",
+      Reverses --encode-page-to-filename (spaces stay as underscores;
+      MediaWiki treats them identically).""",
         file=sys.stderr,
     )
     sys.exit(1)

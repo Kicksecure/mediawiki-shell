@@ -130,6 +130,13 @@ set_backup_filename_item() {
   ## Same format as git-mediawiki: add '.mw' file extension.
   backup_filename_item="${backup_filename_item}.mw"
 
+  check_is_not_empty_and_only_one_line backup_filename_item
+  if ! validate_safe_filename backup_filename_item; then
+    log error "${FUNCNAME[0]}: validate_safe_filename backup_filename_item failed."
+    printf '%s\n' "$backup_filename_item" | unicode-show
+    return 1
+  fi
+
   stecho "$backup_filename_item"
 }
 

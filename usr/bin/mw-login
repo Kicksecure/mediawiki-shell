@@ -46,6 +46,7 @@ login_token="$(jq --raw-output '.query.tokens.logintoken' -- "${TMPFOLDER}/login
 ## The umask (set in 'common') ensures the file is created with mode 0600.
 pass_file="$(mktemp -t mw-login-pass.XXXXXXXX)" || die 1 "Failed to create temporary password file!"
 trap 'safe-rm -f -- "$pass_file"' ERR
+printf '%s' "$WIKI_API_USER_PASS" > "$pass_file"
 
 curl_run \
   "${curl_opts[@]}" \

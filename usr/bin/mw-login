@@ -21,7 +21,7 @@ exit_handler_login() {
   exit_handler "$exit_code"
 }
 
-trap 'exit_handler_login $?' INT HUP ABRT QUIT EXIT
+trap 'exit_handler_login $?' EXIT
 
 usage() {
   printf '%s\n' "Usage: ${0##*/} WIKI
@@ -57,7 +57,7 @@ login_token="$(jq --raw-output '.query.tokens.logintoken' -- "${TMPFOLDER}/login
 ## Write password to a temp file so it does not appear in /proc/PID/cmdline.
 ## The umask (set in 'common') ensures the file is created with mode 0600.
 pass_file="$(mktemp -t mw-login-pass.XXXXXXXX)" || die 1 "Failed to create temporary password file!"
-printf '%s' "$WIKI_API_USER_PASS" > "$pass_file"
+printf '%s' "$WIKI_API_USER_PASS" | sponge -- "$pass_file"
 
 curl_run \
   "${curl_opts[@]}" \

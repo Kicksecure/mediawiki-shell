@@ -33,6 +33,10 @@ not_as_root
 
 files_list=("$input_dir"/*.mw)
 
+## Defense-in-depth: check .mw filenames from disk for malicious unicode
+## (bidi overrides, homoglyphs, etc.) before processing them.
+printf '%s\n' "${files_list[@]}" | unicode-show
+
 total=0
 for file_name in "${files_list[@]}"; do
   (( total++ )) || true

@@ -33,6 +33,10 @@ edit_msg="${4-"${default_edit_msg}"}"
 
 check_vars_exist new_file page_file
 
+## Defense-in-depth: check page_file for malicious unicode before
+## sending it to the wiki API as the upload filename.
+printf '%s\n' "$page_file" | unicode-show
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 

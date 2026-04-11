@@ -64,6 +64,10 @@ fi
 
 check_vars_exist wiki_url_target page_file
 
+## Defense-in-depth: check page_file for malicious unicode before using
+## it to derive the remote upload filename.
+printf '%s\n' "$page_file" | unicode-show
+
 wiki_remote_file_title="$(stecho "$page_file" | str_replace "File:" "")"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config

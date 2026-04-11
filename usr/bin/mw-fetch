@@ -28,6 +28,10 @@ new_file="$3"
 
 check_vars_exist page_title new_file
 
+## Defense-in-depth: check page_title for malicious unicode before
+## interpolating it into API URLs.
+printf '%s\n' "$page_title" | unicode-show
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 

@@ -28,6 +28,10 @@ origin="$3"
 
 check_vars_exist output_file origin
 
+## Defense-in-depth: check origin (page file title) for malicious unicode
+## before interpolating it into API URLs.
+printf '%s\n' "$origin" | unicode-show
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 

@@ -102,6 +102,10 @@ if [ -z "$modified_files" ]; then
   exit 0
 fi
 
+## Defense-in-depth: check filenames from git for malicious unicode
+## (bidi overrides, homoglyphs, etc.) before decoding them to page titles.
+printf '%s\n' "$modified_files" | unicode-show
+
 counter_total="$(printf '%s\n' "$modified_files" | wc -l)"
 counter_currently=0
 

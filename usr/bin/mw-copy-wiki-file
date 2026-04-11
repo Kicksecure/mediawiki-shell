@@ -59,7 +59,7 @@ if [ -z "$page_file_local" ]; then
   assert_path_within_dir "$TMPFOLDER" "$output_file"
 else
   log info "default output_file: no"
-  output_file="$page_title_local"
+  output_file="$page_file_local"
 fi
 
 check_vars_exist wiki_url_target page_file

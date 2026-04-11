@@ -113,7 +113,7 @@ set_backup_page_item() {
 }
 
 set_backup_filename_item() {
-  local backup_filename_item search replace
+  local backup_filename_item
 
   backup_filename_item="$1"
 
@@ -121,13 +121,9 @@ set_backup_filename_item() {
     die 1 "${FUNCNAME[0]}: 1 is empty!"
   fi
 
-  ## Same format as git-mediawiki: replace '/' with '%2F'.
-  ## Also the file system does not accept files containing '/'.
-  search="/"
-  replace="%2F"
-  backup_filename_item=$(stecho "$backup_filename_item" | str_replace "$search" "$replace")
-
   ## Same format as git-mediawiki: add '.mw' file extension.
+  ## '/' is already encoded as '%2F' by set_backup_page_item /
+  ## mw-urlencode --encode-page-to-filename, so no extra replacement needed.
   backup_filename_item="${backup_filename_item}.mw"
 
   check_is_not_empty_and_only_one_line backup_filename_item

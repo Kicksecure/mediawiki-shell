@@ -38,7 +38,9 @@ log info "Checking for pending changes for file..."
 page_pending_status_json="$(
   curl_run \
     "${curl_opts[@]}" \
-    "${WIKI_API}?format=json&action=query&prop=info|flagged&titles=$page_title"
+    --get \
+    --data-urlencode "titles=$page_title" \
+    "${WIKI_API}?format=json&action=query&prop=info|flagged"
 )"
 
 log debug "$page_pending_status_json: '$page_pending_status_json'"

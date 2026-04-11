@@ -59,7 +59,10 @@ curl_run \
   --header "Accept-Language: en-GB" \
   --header "Expect:" \
   --output "$new_file" \
-  "${WIKI_INDEX}?title=$page_title&action=raw"
+  --get \
+  --data-urlencode "title=$page_title" \
+  --data-urlencode "action=raw" \
+  "${WIKI_INDEX}"
 
 test -r "$new_file"
 

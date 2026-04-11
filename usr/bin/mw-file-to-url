@@ -46,8 +46,6 @@ touch -- "$output_file"
 test -w "$output_file"
 
 ## https://en.wikipedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&titles=File:Limbo%20Royal%20Blood.jpg
-api_link="${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url&titles=$origin"
-
 ## MediaWiki API return json, which contains an already encoded URL.
 curl_run \
   "${curl_opts[@]}" \
@@ -57,8 +55,9 @@ curl_run \
   --header "Connection: keep-alive" \
   --compressed \
   --output "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json" \
-  --request "GET" \
-  "$api_link"
+  --get \
+  --data-urlencode "titles=$origin" \
+  "${WIKI_API}?action=query&format=json&prop=imageinfo&iiprop=url"
 
 log info "Network for imageinfo ok."
 

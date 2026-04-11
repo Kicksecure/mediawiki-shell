@@ -47,7 +47,9 @@ log info "Requesting revid...         ${TMPFOLDER}/revid.json"
 curl_run \
   "${curl_opts[@]}" \
   --output "${TMPFOLDER}/revid.json" \
-  "${WIKI_API}?format=json&action=query&prop=info%7Cflagged&titles=${page_file}"
+  --get \
+  --data-urlencode "titles=$page_file" \
+  "${WIKI_API}?format=json&action=query&prop=info|flagged"
 
 lastrevid=$(jq -r ".query.pages[].lastrevid" -- "${TMPFOLDER}/revid.json")
 
@@ -89,7 +91,8 @@ curl_run \
   --output "${TMPFOLDER}/review-result.json" \
   --silent \
   --data-urlencode "token=${csrf_token}" \
-  "${WIKI_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1&comment=${comment}"
+  --data-urlencode "comment=${comment}" \
+  "${WIKI_API}?format=json&action=review&revid=${lastrevid}&flag_accuracy=1"
 
 ## XXX: Sometimes API login timeout.
 # {
@@ -115,7 +118,9 @@ curl_run \
 #    --output "${TMPFOLDER}/review-result.json" \
 #    --silent \
 #    --data-urlencode "token=${csrf_token}" \
-#    "${WIKI_API}?format=json&action=stabilize&title=${page_file}&default=stable&reason=${comment}"
+#    --data-urlencode "title=${page_file}" \
+#    --data-urlencode "reason=${comment}" \
+#    "${WIKI_API}?format=json&action=stabilize&default=stable"
 
 review_result=$(jq --raw-output '.review.result' -- "${TMPFOLDER}/review-result.json")
 

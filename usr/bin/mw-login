@@ -45,7 +45,9 @@ login_token="$(jq --raw-output '.query.tokens.logintoken' -- "${TMPFOLDER}/login
 ## Write password to a temp file so it does not appear in /proc/PID/cmdline.
 ## The umask (set in 'common') ensures the file is created with mode 0600.
 pass_file="$(mktemp -t mw-login-pass.XXXXXXXX)" || die 1 "Failed to create temporary password file!"
-trap 'safe-rm -f -- "$pass_file"' ERR
+## Clean up pass_file on any exit (ERR trap alone misses die/exit paths).
+## Chain with the existing exit_handler so normal exit logging is preserved.
+trap 'safe-rm -f -- "${pass_file-}"; exit_handler $?' INT HUP ABRT QUIT EXIT
 printf '%s' "$WIKI_API_USER_PASS" > "$pass_file"
 
 curl_run \
@@ -62,7 +64,9 @@ curl_run \
   "${WIKI_API}?action=login&format=json"
 
 safe-rm -f -- "$pass_file"
-trap - ERR
+## Restore the original exit/error traps from 'common'.
+trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
+trap error_handler ERR
 
 ## XXX:
 ## If already logged in:

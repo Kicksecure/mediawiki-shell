@@ -32,6 +32,10 @@ edit_msg="${4-"${default_edit_msg}"}"
 
 check_vars_exist new_file page_title
 
+## Defense-in-depth: check page_title for malicious unicode before
+## sending it to the wiki API.
+printf '%s\n' "$page_title" | unicode-show
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 

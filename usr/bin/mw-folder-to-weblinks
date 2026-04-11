@@ -33,6 +33,13 @@ not_as_root
 
 files_list=("$input_dir"/*.mw)
 
+## Defense-in-depth: check .mw filenames from disk for malicious unicode
+## (bidi overrides, homoglyphs, etc.) before processing them.
+filenames_tmp="$(mktemp -t mw-folder-filenames.XXXXXXXX)"
+printf '%s\n' "${files_list[@]}" > "$filenames_tmp"
+unicode-show "$filenames_tmp"
+safe-rm -f -- "$filenames_tmp"
+
 total=0
 for file_name in "${files_list[@]}"; do
   (( total++ )) || true

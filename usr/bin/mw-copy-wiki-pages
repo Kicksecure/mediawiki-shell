@@ -63,6 +63,10 @@ fi
 
 check_vars_exist wiki_url_target page_title
 
+## Defense-in-depth: check page_title for malicious unicode before
+## using it for fetch and edit operations.
+printf '%s\n' "$page_title" | unicode-show
+
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 

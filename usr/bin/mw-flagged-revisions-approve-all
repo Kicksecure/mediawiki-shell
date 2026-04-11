@@ -64,7 +64,7 @@ counter_currently=0
 error_counter=0
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
-  ## Raw page name — no filesystem encoding. The API handles spaces/underscores
+  ## Raw page name - no filesystem encoding. The API handles spaces/underscores
   ## and curl_run handles URL encoding.
   page_to_approve="$item_from_all_pages"
   log info "$counter_currently / $counter_total"

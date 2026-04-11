@@ -93,9 +93,10 @@ curl_run \
   --data-urlencode "title=$page_title" \
   --data-urlencode "text@$new_file" \
   --data-urlencode "token=$csrf_token" \
+  --data-urlencode "summary=$edit_msg" \
   --output "${TMPFOLDER}/edit-result.json" \
   --request "POST" \
-  "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&summary=${edit_msg}&bot"
+  "${WIKI_API}?action=edit&format=json&tags=mediawiki-shell&bot"
 
 log info "Network for edit page ok."
 

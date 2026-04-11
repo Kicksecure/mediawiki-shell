@@ -117,10 +117,16 @@ for wiki_namespace_item in $namespace_extra_list $namespace_default_list; do
   api_continue_or_not=""
 
   while true; do
-    api_full_link="${WIKI_API}?&format=json&action=query&list=${list}&${namespace_keyword}=${wiki_namespace_item}&${api_limit_keyword_and_content}&${api_continue_keyword}=${api_continue_or_not}${api_extra_args}"
-    log info "api_full_link: $api_full_link"
+    api_base_link="${WIKI_API}?format=json&action=query&list=${list}&${api_limit_keyword_and_content}${api_extra_args}"
+    log info "api_base_link: $api_base_link ${namespace_keyword}=${wiki_namespace_item} ${api_continue_keyword}=${api_continue_or_not}"
 
-    query_result=$(curl_run "${curl_opts[@]}" "$api_full_link")
+    query_result=$(curl_run \
+      "${curl_opts[@]}" \
+      --get \
+      --data-urlencode "${namespace_keyword}=${wiki_namespace_item}" \
+      --data-urlencode "${api_continue_keyword}=${api_continue_or_not}" \
+      "$api_base_link"
+    )
 
     case "$query_type" in
       allpages)

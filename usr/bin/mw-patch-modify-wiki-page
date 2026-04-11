@@ -46,7 +46,7 @@ log_run info mw-fetch "$WIKI_URL" "$page_title" "$new_file"
 ## This ensures that the fetched edit was not pending, i.e. confirmed.
 mw-page-pending-check "$WIKI_URL" "$page_title"
 
-filename="$TMPFOLDER/fetched-wiki-page"
+filename="$new_file"
 tempfile="$TMPFOLDER/temp-edit-file"
 
 replace_all_except_first() {

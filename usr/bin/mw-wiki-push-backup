@@ -120,6 +120,7 @@ while IFS= read -r mw_file; do
   page_title="$(decode_backup_filename_item "$mw_file")"
 
   file_path="${backup_dir}/${mw_file}"
+  assert_path_within_dir "$backup_dir" "$file_path"
 
   if [ ! -r "$file_path" ]; then
     log warn "SKIP $counter_currently / $counter_total | file not readable: $file_path"

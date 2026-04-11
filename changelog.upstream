@@ -1,3 +1,473 @@
+commit 0989a4d4f10c71c6cb96ffd39974b7b8dccd9361
+Merge: 1c43cab 7cd81f6
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Apr 11 02:53:06 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/fix-filename-encoding-Ar3N3'
+
+commit 1c43cabe71c9e04c5cca356490ae3601ccf9f450
+Merge: 08b965a 89651ba
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Apr 11 02:46:50 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/add-traversal-protection-3DkTX'
+
+commit 7cd81f6d00eb7156f91fd435f36baa2ec93b39e0
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 06:43:37 2026 +0000
+
+    fix: use --data-urlencode for user-provided values in all API URLs
+    
+    Same class of bug as the mw-fetch fix: user-provided values (page
+    titles, edit summaries, continuation tokens, comments) were
+    string-interpolated into URL query strings. An '&' in any value would
+    split the query parameter, causing the server to receive a truncated
+    value.
+    
+    Fix: use curl --data-urlencode for all parameters with user/API-provided
+    values, keeping only static parameters in the URL string.
+    
+    Scripts fixed:
+    - mw-page-pending-check: titles parameter
+    - mw-edit: summary parameter (moved to POST body)
+    - mw-file-to-url: titles parameter
+    - mw-flagged-revisions-approve-page: titles, comment parameters;
+      also fixed %7C double-encoding (use literal | instead)
+    - mw-multi-wiki: cmtitle parameter
+    - mw-all-pages: namespace and continuation token parameters
+    
+    https://claude.ai/code/session_016m6QUwiea8K33sG8uyALM5
+
+commit 0cf0f108d54ff1b07287a26a3bb0d389e9a5613d
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 06:24:34 2026 +0000
+
+    remove redundant str_replace '/' '%2F' from set_backup_filename_item
+    
+    set_backup_page_item already encodes '/' as '%2F' via
+    mw-urlencode --encode-page-to-filename (Python urllib.parse.quote),
+    so the str_replace was always a no-op. Now that a proper encoding tool
+    exists, drop the leftover shell string replacement.
+    
+    https://claude.ai/code/session_016m6QUwiea8K33sG8uyALM5
+
+commit 295ef9cd21f0087644d8bee4d918b9bece68a325
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 06:19:29 2026 +0000
+
+    fix: use --data-urlencode for page title in mw-fetch to prevent query injection
+    
+    Page titles containing '&' were string-interpolated into the URL query,
+    causing the '&' to act as a parameter separator. For example, a page
+    named "Page & stuff" produced ?title=Page%20&%20stuff&action=raw, which
+    the server parsed as title="Page " instead of the full title.
+    
+    Switch to curl --get --data-urlencode so each query parameter value is
+    properly percent-encoded by curl itself, matching the approach already
+    used (but commented out) for the POST variant on line 48-55.
+    
+    https://claude.ai/code/session_016m6QUwiea8K33sG8uyALM5
+
+commit 89651ba4e35a6a479cc67183758d4bf049d23242
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 06:09:01 2026 +0000
+
+    fix: add assert_path_within_dir guard in mw-wiki-push-backup
+    
+    The file_path constructed from git diff --name-only output was not
+    validated against directory traversal. A malicious .mw filename in
+    the git repo (e.g. ../../../etc/shadow.mw) could escape backup_dir.
+    
+    https://claude.ai/code/session_01TxoWHU6zPbn2d5CRpZgU4g
+
+commit 08b965a80b80a27d9357e916ac254c737e8e8b70
+Merge: 418e5b0 924c17a
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Apr 11 02:01:17 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/add-traversal-protection-NjFkh'
+
+commit 924c17a68c7ba76af071375f6965c64b0309ef49
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:43:42 2026 +0000
+
+    simplify mw-login: EXIT-only trap, use sponge for password write
+    
+    - Trap only EXIT (sufficient in bash for all exit paths).
+    - Use sponge for atomic write of password to temp file.
+    - Add sponge to collect_reqs in common.
+    
+    https://claude.ai/code/session_01VoqvCb26kwVhDmz9QiHRDz
+
+commit 453ec5c63b511c8e89448b6d920d474dfa422002
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:30:32 2026 +0000
+
+    refactor: simplify pass_file cleanup with a single exit handler
+    
+    Define exit_handler_login at the top of the script that cleans up
+    pass_file (if set) and chains into exit_handler. Set the trap once
+    instead of swapping traps around the curl_run call.
+    
+    https://claude.ai/code/session_01VoqvCb26kwVhDmz9QiHRDz
+
+commit 8f200e917e71645450dad7500164177f71d311ca
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:22:34 2026 +0000
+
+    fix: ensure pass_file cleanup on all exit paths in mw-login
+    
+    The previous ERR trap did not fire when curl_run failed (curl_run calls
+    die which triggers EXIT, not ERR), leaving the password temp file on
+    disk. Switch to an EXIT trap that chains with exit_handler, and restore
+    both EXIT and ERR traps after cleanup.
+    
+    https://claude.ai/code/session_01VoqvCb26kwVhDmz9QiHRDz
+
+commit 92c01bb466f41c6b6cb4546fbf1879533dffb72d
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:12:47 2026 +0000
+
+    fix: wrong page name in approve-all and missing password write in login
+    
+    mw-flagged-revisions-approve-all: passed filesystem-encoded
+    $backup_page_item (e.g. Dev%2Fcompiler_hardening) to the MediaWiki API
+    instead of the raw $item_from_all_pages. This broke approval for any
+    page whose title contains /, &, #, ?, or %.
+    
+    mw-login: the comment said "Write password to a temp file" but the
+    actual write was missing. mktemp created an empty file, so
+    --data-urlencode "lgpassword@${pass_file}" always sent an empty
+    password.
+    
+    https://claude.ai/code/session_01VoqvCb26kwVhDmz9QiHRDz
+
+commit a818031e64d5b15c437b8a84e06fd17bfc2dc07e
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 04:32:13 2026 +0000
+
+    fix: use $new_file instead of hardcoded path in mw-patch-modify-wiki-page
+    
+    Line 49 hardcoded filename="$TMPFOLDER/fetched-wiki-page" instead of
+    using $new_file (the actual output path from arg 3). When called from
+    mw-process-all-pages, TMPFOLDER is overridden to a per-page subdirectory,
+    so the hardcoded path pointed to a nonexistent file while the fetched
+    content was at $new_file. This caused replace_all_except_first and
+    mw-edit to operate on nothing.
+    
+    https://claude.ai/code/session_01VoqvCb26kwVhDmz9QiHRDz
+
+commit 6953c551643edbe6cf6c65de8e7d3d824a87884f
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 04:24:55 2026 +0000
+
+    fix: use correct variable name in mw-copy-wiki-file
+    
+    $page_title_local was referenced but never defined in this script;
+    the intended variable is $page_file_local (set on line 53). With
+    set -o nounset this caused a runtime error when a 4th argument was
+    provided.
+    
+    https://claude.ai/code/session_01VoqvCb26kwVhDmz9QiHRDz
+
+commit 418e5b01035f14f10887b7c69c81f7eb412b7458
+Merge: 1a28f46 a619f08
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Apr 11 01:26:31 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/fix-filename-encoding-qFqW0'
+
+commit a619f08c2067b36eaa709285dc4392a658c1cc1a
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:24:48 2026 +0000
+
+    replace unicode em dash with ASCII hyphen in comment
+    
+    https://claude.ai/code/session_019HZFzBFAgxnsS5ZBaz9irT
+
+commit 1a28f4643ec5a314c0711e7142e9cb7c280d39a5
+Merge: 34f9e3b 7d9392f
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sat Apr 11 01:24:05 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/add-unicode-show-protection-sMYEN'
+
+commit 500456565a39a3ef7861a8005a0ee46d3452df13
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:22:57 2026 +0000
+
+    add comment explaining why raw page name is used in approve-all
+    
+    https://claude.ai/code/session_019HZFzBFAgxnsS5ZBaz9irT
+
+commit 7d9392f2a17e1af41f034f911797ca63c9372666
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 05:17:17 2026 +0000
+
+    use pipe instead of temp file for unicode-show checks
+    
+    Consistent with all other unicode-show calls in this changeset.
+    
+    https://claude.ai/code/session_01FdZ5dQNYAaXRWXpCMFR59p
+
+commit 64a650aea28b7f4a54ac9c0ceebda24f6659853b
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 04:31:10 2026 +0000
+
+    add unicode-show defense-in-depth checks to all scripts handling page titles
+    
+    Add unicode-show validation to every script that receives or processes
+    page titles, filenames, or file references before they are interpolated
+    into API URLs, sent as POST data, or used to construct file paths.
+    
+    Previously unicode-show was only called on the bulk allpages files
+    and in error paths of set_backup_page_item / set_backup_filename_item.
+    This left gaps in leaf scripts (mw-fetch, mw-edit, mw-page-pending-check,
+    mw-flagged-revisions-approve-page, mw-file-upload, mw-file-to-url,
+    mw-copy-wiki-pages, mw-copy-wiki-file) and in mw-wiki-push-backup
+    (write path decoding git filenames to page titles) and mw-folder-to-weblinks
+    (disk glob filenames).
+    
+    https://claude.ai/code/session_01FdZ5dQNYAaXRWXpCMFR59p
+
+commit b93878bcef7bdc7396bd30ad49ce5840e0b4ccf0
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Apr 11 04:30:37 2026 +0000
+
+    fix: don't filesystem-encode page names for API calls in approve-all
+    
+    mw-flagged-revisions-approve-all was passing page names through
+    set_backup_page_item() (filesystem encoding) before handing them to
+    mw-flagged-revisions-approve-page, which uses them as raw page titles
+    in MediaWiki API query strings.
+    
+    For pages with special characters (& % # ? etc.), the filesystem
+    percent-encoding caused wrong page titles in the API requests.
+    For example, 'Page & stuff' was encoded to 'Page_%26_stuff' then
+    used in &titles=Page_%26_stuff where the server decodes %26 to &,
+    splitting the query parameter.
+    
+    Pass the raw page name directly since no filesystem path is involved.
+    
+    https://claude.ai/code/session_019HZFzBFAgxnsS5ZBaz9irT
+
+commit 8737983d4a009e5cac732142e034d18f63790f87
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 19:26:56 2026 +0000
+
+    fix incomplete filename decoding in mw-wiki-push-backup
+    
+    The push script only decoded %2F back to /, silently leaving all other
+    percent-encoded characters (%26, %25, %23, %3F, etc.) in the page title.
+    Pages containing &, %, #, ? or other encoded characters would be pushed
+    to the wrong wiki page.
+    
+    Replace the manual partial decode with decode_backup_filename_item(),
+    which already exists in common and performs full urllib.parse.unquote.
+    
+    https://claude.ai/code/session_019HZFzBFAgxnsS5ZBaz9irT
+
+commit 34f9e3bceb7eb325bc880f0733ce68eff73c12c5
+Merge: 16e3b43 4c41a7b
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Fri Apr 10 15:21:26 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/fix-filename-encoding-5u9Ae'
+
+commit 4c41a7b59af616227d48ab6b83e17cbde77045c6
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 18:23:38 2026 +0000
+
+    add validate_safe_filename to set_backup_filename_item
+    
+    Defense-in-depth: validate the final filename in set_backup_filename_item
+    too, not just in set_backup_page_item. Both functions now validate their
+    output.
+    
+    NOTE: validate_safe_filename in helper-scripts/strings.bsh does not
+    currently allow '%' in its character whitelist. This must be fixed in
+    the helper-scripts package by adding '%' to the allowed regex:
+      re='^[][:alnum:]_.:@+=,(){}%\[ -]+$'
+    Without that fix, percent-encoded filenames like 'Dev%2Fcompiler_hardening'
+    will fail validation with "Invalid character!".
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit 989c6770ee0be68528a1ffca34360be92f3d45db
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 18:18:31 2026 +0000
+
+    add realpath to collect_reqs
+    
+    assert_path_within_dir uses realpath but it was not declared in
+    collect_reqs. realpath is from coreutils (Essential: yes in Debian,
+    always installed), but adding the check is defensive best practice.
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit 1790a1301eb2c145d7e27868c296e15f2ae5984f
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 18:10:38 2026 +0000
+
+    fix params encoding: use safe="" and update docstring/usage text
+    
+    - urlencode_url: use quote(safe="") for params component so slashes
+      inside params are properly encoded as component boundaries.
+    - Update docstring and usage text: "path and query" -> "path, params,
+      and query" to match what the implementation actually encodes.
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit a5f0ada82603891124331bbd8d717da2900972d1
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 17:57:46 2026 +0000
+
+    encode URL params component, catch ValueError for clean CLI errors
+    
+    - urlencode_url: encode parsed_url.params with urllib.parse.quote,
+      fixing regression where params like ';b c' passed through unencoded.
+    - main: wrap in try/except ValueError so empty page name input
+      produces a clean error message instead of a Python traceback.
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit fa53506739c463dcdcc088ffba5dbd866882ad87
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 17:51:33 2026 +0000
+
+    fix option parsing, dot/dotdot safety, and URL params preservation
+    
+    - Option parsing: --encode-page-to-filename and --decode-filename-to-page
+      without an argument now show usage instead of being treated as a URL.
+      Add -h/--help support (exit 0).
+    - Filename safety: encode '.' as '%2E' and '..' as '%2E%2E' to prevent
+      path traversal. Reject empty page names with ValueError.
+    - URL params: preserve parsed_url.params in urlencode_url() instead of
+      dropping it (fixes URLs containing ';param' components).
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit a85826528f7f8d67a26cc3b44c01815c47837972
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 17:47:03 2026 +0000
+
+    clarify usage text: decode keeps underscores as-is
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit 3e30c4383e8de6ea746ddc7398bb6f51648c5570
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 17:40:06 2026 +0000
+
+    clarify colon safety and space/underscore round-trip in docstrings
+    
+    - Document why ':' is intentionally in _FILENAME_SAFE: Linux-only tool,
+      colon is valid on Linux filesystems, and MediaWiki namespaces
+      (Template:, Category:, File:) use it extensively.
+    - Clarify that encode/decode round-trip is in the MediaWiki sense:
+      spaces and underscores are identical in MediaWiki page titles, so
+      'Page name' -> 'Page_name' -> 'Page_name' is a correct round-trip.
+    - Note in decode docstring that underscores are left as-is intentionally.
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit e8c5f3a02b23ff31413576e7c9ad60e04d2c57cc
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 17:32:20 2026 +0000
+
+    split assert_path_within_dir empty checks, document realpath convention
+    
+    - Split combined base_dir/target_path emptiness test into two separate
+      checks with distinct error messages.
+    - Expand the function's header comment to explain the
+      canonicalize-then-check-prefix convention and why -m is needed.
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit a10e110069cc97b83ed96a97a24d0d01b51b074a
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 17:19:46 2026 +0000
+
+    refactor: use Python urllib.parse for filename encoding/decoding
+    
+    Replace the hand-rolled bash str_replace chain in set_backup_page_item
+    and decode_backup_page_item with Python's urllib.parse.quote/unquote
+    (standard RFC 3986 percent-encoding).
+    
+    mw-urlencode gains two new modes:
+      --encode-page-to-filename  encode page name to safe filename
+      --decode-filename-to-page  decode filename back to page name
+    
+    The legacy mode (mw-urlencode <URL>) is unchanged.
+    
+    Benefits:
+    - Standard percent-encoding instead of ad-hoc replacements
+    - Handles all unsafe characters (not just /, &, space, %)
+    - Properly handles unicode, double-encoding edge cases
+    - Single source of truth in Python, no bash reimplementation
+    - '&' now uses standard '%26' instead of '#ampersand#'
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit a2a3b4617d4cfd0c88688c9aa63918ae67ad88d4
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 14:59:25 2026 +0000
+
+    harden mw-wiki-fetch-backup and add decode safety warning
+    
+    - mw-wiki-fetch-backup: pipe raw page name through set_backup_page_item
+      before set_backup_filename_item, so '%' and '&' are also encoded for
+      the temp file path (previously only '/' was encoded)
+    - Add warning comment on decode_backup_page_item: decoded output
+      restores '/' and must only be used as API parameters, never for
+      file path construction
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit a3083e7e89f77e2bddfeb61164d3c229f747cf39
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 14:58:23 2026 +0000
+
+    add defense-in-depth against directory traversal in file path construction
+    
+    Wiki page names from the API are used to construct local file paths.
+    Although the encoding now replaces '/' with '%2F' and MediaWiki itself
+    forbids '..' in page titles, add an explicit path containment check
+    as defense-in-depth.
+    
+    - Add assert_path_within_dir() to common: uses realpath to verify
+      the resolved target path is inside the expected base directory.
+      Catches traversal via '..', symlinks, or any encoding bypass.
+    - Add assertions in mw-process-all-pages, mw-wiki-fetch-backup,
+      mw-copy-wiki-pages, and mw-copy-wiki-file at all points where
+      wiki-derived names are joined into file paths.
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit 69f2a680fbd3042c46618dc67d249d829fb5652e
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Apr 10 13:57:37 2026 +0000
+
+    fix lossy filename encoding for subpages with '/' in page names
+    
+    set_backup_page_item replaced both ' ' and '/' with '_', making
+    backup/restore round-trip impossible for subpages like
+    'Dev/compiler_hardening' (became 'Dev_compiler_hardening.mw',
+    indistinguishable from a page named 'Dev compiler_hardening').
+    
+    - Change '/' encoding from '_' to '%2F' (percent-encoding)
+    - Add '%' -> '%25' escaping first to handle literal '%' in page names
+    - Add decode_backup_page_item and decode_backup_filename_item functions
+      for reversing the encoding during restore
+    
+    https://claude.ai/code/session_01W8Ge7qTXTEQjAYHqYaZ9bg
+
+commit 16e3b437277f09fc06b2f43622702eb90a147092
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Apr 8 17:48:50 2026 +0000
+
+    bumped changelog version
+
 commit 9350fa2f082a12c5fee86b81ebc0a0a7bdf6f063
 Merge: 00a5713 82c0d45
 Author: Patrick Schleizer <adrelanos@whonix.org>

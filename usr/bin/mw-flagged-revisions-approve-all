@@ -46,7 +46,7 @@ login_function() {
 
 approve_page() {
   approve_page_exit_code=0
-  mw-flagged-revisions-approve-page "$WIKI_URL" "$backup_page_item" || approve_page_exit_code="$?"
+  mw-flagged-revisions-approve-page "$WIKI_URL" "$page_to_approve" || approve_page_exit_code="$?"
 }
 
 login_function
@@ -64,9 +64,11 @@ counter_currently=0
 error_counter=0
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
-  backup_page_item="$(set_backup_page_item "$item_from_all_pages")"
+  ## Raw page name - no filesystem encoding. The API handles spaces/underscores
+  ## and curl_run handles URL encoding.
+  page_to_approve="$item_from_all_pages"
   log info "$counter_currently / $counter_total"
-  printf '%s\n' "mw-flagged-revisions-approve-page '$WIKI_URL' '$backup_page_item'"
+  printf '%s\n' "mw-flagged-revisions-approve-page '$WIKI_URL' '$page_to_approve'"
   approve_page
   if [ "$approve_page_exit_code" = "0" ]; then
     log info "Success at first attempt, ok."

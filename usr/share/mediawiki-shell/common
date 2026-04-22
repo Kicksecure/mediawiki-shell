@@ -33,6 +33,7 @@ collect_reqs retry curl jq safe-rm str_replace stprint realpath sponge
 check_vars_exist() {
   local var_name
   for var_name in "$@"; do
+    check_variable_name "${var_name}" || exit 1
     if [ -z "${!var_name+x}" ]; then
       die 1 "Variable '$var_name' is not set or is empty."
       exit 1

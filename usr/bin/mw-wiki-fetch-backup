@@ -10,12 +10,16 @@ set -o pipefail
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
+# shellcheck source=../../../helper-scripts/usr/libexec/helper-scripts/strings.bsh
+source /usr/libexec/helper-scripts/strings.bsh
 
 log info "START"
 
 # shellcheck disable=SC2317
 exit_handler() {
-  [[ -v retry_counter ]] || retry_counter=0
+  if ! [[ -v retry_counter ]] || ! is_whole_number "${retry_counter}"; then
+    retry_counter=0
+  fi
   if (( retry_counter > 1 )); then
     log info "success after attempt $retry_counter"
   fi

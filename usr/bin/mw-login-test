@@ -14,19 +14,27 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI [WIKI...]
+  printf '%s\n' "Usage: ${0##*/} [WIKI [WIKI...]]
+WIKI may be omitted when DEFAULT_WIKI_URL is set in the credentials file
+or the WIKI_URL environment variable is set.
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'
-  ${0##*/} 'https://www.kicksecure.com/w' 'https://www.whonix.org/w'" >&2
+  ${0##*/} kicksecure whonix
+  ${0##*/}" >&2
   exit 1
 }
 
-if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+if [[ "${1-}" =~ ^(-h|--help)$ ]]; then
   usage
 fi
 not_as_root
 
-for wiki_url in "${@}"; do
-  mw-logout "$wiki_url"
-  mw-login "$wiki_url"
-done
+if [ "$#" -eq 0 ]; then
+  mw-logout
+  mw-login
+else
+  for wiki_url in "${@}"; do
+    mw-logout "$wiki_url"
+    mw-login "$wiki_url"
+  done
+fi

@@ -8,17 +8,30 @@ set -o nounset
 set -o errtrace
 set -o pipefail
 
+## Per-wiki credentials. Populated from the credentials file.
+## Keys are wiki aliases (e.g. 'kicksecure', 'whonix') or full WIKI URLs.
+declare -A WIKI_USER_NAMES
+declare -A WIKI_USER_PASSES
+
+## Alias-to-URL map. Built-in aliases below; users may add more or override
+## these in the credentials file.
+declare -A WIKI_URLS
+WIKI_URLS[kicksecure]='https://www.kicksecure.com/w'
+WIKI_URLS[whonix]='https://www.whonix.org/w'
+
 error_message_if_missing_wiki_url_variable() {
-  die 1 "environment variable WIKI_URL missing! Run for example:
+  die 1 "WIKI_URL not set and no DEFAULT_WIKI_URL configured!
+Pass a wiki URL or alias on the command line, set the WIKI_URL environment
+variable, or set DEFAULT_WIKI_URL in the credentials file. Example:
   WIKI_URL=https://www.whonix.org/w ${0##*/}"
 }
 
 require_auth_data() {
   if [ -z "${WIKI_API_USER_NAME-}" ]; then
-    die 1 "User name not supplied!"
+    die 1 "User name not supplied for wiki '${WIKI_URL_ALIAS:-$WIKI_URL}'!"
   fi
   if [ -z "${WIKI_API_USER_PASS-}" ]; then
-    die 1 "Password not supplied!"
+    die 1 "Password not supplied for wiki '${WIKI_URL_ALIAS:-$WIKI_URL}'!"
   fi
 }
 
@@ -53,13 +66,37 @@ source_credentials() {
   done
 }
 
-[[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable
-case "${WIKI_URL}" in
-  kicksecure) WIKI_URL="https://www.kicksecure.com/w";;
-  whonix) WIKI_URL="https://www.whonix.org/w";;
-esac
-
 source_credentials
+
+if [ -z "${WIKI_URL-}" ]; then
+  if [ -n "${DEFAULT_WIKI_URL-}" ]; then
+    WIKI_URL="$DEFAULT_WIKI_URL"
+  else
+    error_message_if_missing_wiki_url_variable
+  fi
+fi
+
+## Resolve alias to full URL. Track which alias was used so credentials
+## can be looked up by the alias key.
+WIKI_URL_ALIAS=""
+if [ -n "${WIKI_URLS[$WIKI_URL]-}" ]; then
+  WIKI_URL_ALIAS="$WIKI_URL"
+  WIKI_URL="${WIKI_URLS[$WIKI_URL]}"
+else
+  ## Reverse-lookup: if a defined alias maps to this URL, use the alias
+  ## as the credential lookup key.
+  for wiki_url_alias_key in "${!WIKI_URLS[@]}"; do
+    if [ "${WIKI_URLS[$wiki_url_alias_key]}" = "$WIKI_URL" ]; then
+      WIKI_URL_ALIAS="$wiki_url_alias_key"
+      break
+    fi
+  done
+fi
+
+## Pick credentials by alias if one matched, else by full URL key.
+wiki_cred_key="${WIKI_URL_ALIAS:-$WIKI_URL}"
+[[ -v WIKI_API_USER_NAME ]] || WIKI_API_USER_NAME="${WIKI_USER_NAMES[$wiki_cred_key]-}"
+[[ -v WIKI_API_USER_PASS ]] || WIKI_API_USER_PASS="${WIKI_USER_PASSES[$wiki_cred_key]-}"
 
 [[ -v WIKI_API ]] || WIKI_API="$WIKI_URL/api.php"
 [[ -v WIKI_INDEX ]] || WIKI_INDEX="$WIKI_URL/index.php"

@@ -9,37 +9,35 @@ management of the Kicksecure and Whonix wikis.
 ## Setup
 
 Create a credentials file in `/usr/share/mediawiki-shell/credentials` or
-`~/.mediawikishell_credentials`. Credentials are stored in associative
-arrays keyed by wiki alias, so a single file can hold auth for multiple
-wikis:
+`~/.mediawikishell_credentials` with the following contents:
 
 ```sh
-## Optional: default wiki used when no WIKI is given on the command line
-## and the WIKI_URL environment variable is not set. May be an alias or a
-## full URL.
-DEFAULT_WIKI_URL='kicksecure'
-
-## Per-wiki credentials, keyed by alias (or full URL).
-WIKI_USER_NAMES[kicksecure]='username1'
-WIKI_USER_PASSES[kicksecure]='password1'
-
-WIKI_USER_NAMES[whonix]='username2'
-WIKI_USER_PASSES[whonix]='password2'
-
-## Optional: define additional aliases (or override the built-in
-## 'kicksecure' / 'whonix' aliases).
-#WIKI_URLS[my-wiki]='https://example.org/w'
-#WIKI_USER_NAMES[my-wiki]='username3'
-#WIKI_USER_PASSES[my-wiki]='password3'
+case "${WIKI_URL-}" in
+  *".whonix."*)
+    WIKI_API_USER_NAME='username'
+    WIKI_API_USER_PASS='password'
+    ;;
+  *".kicksecure."*)
+    WIKI_API_USER_NAME='username'
+    WIKI_API_USER_PASS='password'
+    ;;
+esac
+WIKI_API="$WIKI_URL/api.php"
+WIKI_INDEX="$WIKI_URL/index.php"
 ```
 
-With `DEFAULT_WIKI_URL` set, commands whose only argument is the wiki
-(`mw-login`, `mw-logout`, `mw-login-test`) can be invoked with no
-arguments. Commands that take additional positional arguments (e.g.
-`mw-edit`) still require WIKI as the first positional.
+If using a different wiki, add an entry to the `case` block.
 
-Resolution order for the active wiki: positional argument > `WIKI_URL`
-environment variable > `DEFAULT_WIKI_URL` from the credentials file.
+Alternatively, credentials for multiple wikis may be defined in
+associative arrays keyed by full WIKI URL:
+
+```sh
+WIKI_USER_NAMES['https://www.whonix.org/w']='username1'
+WIKI_USER_PASSES['https://www.whonix.org/w']='password1'
+
+WIKI_USER_NAMES['https://www.kicksecure.com/w']='username2'
+WIKI_USER_PASSES['https://www.kicksecure.com/w']='password2'
+```
 
 ## How to Build deb Package from Source Code
 

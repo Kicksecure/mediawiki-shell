@@ -19,6 +19,10 @@ usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI
 Options:
   --continue-from=N|TITLE    Continue from page index (N) or title (case-insensitive)
+  --keep-going               Continue past per-item failures (record them, exit non-zero)
+  --retry                    Skip items already recorded done; retry the rest
+  --reset                    Clear any prior state before starting
+  --state-file=PATH          Override the state-file location (default: under TMPFOLDER)
 Example:
   ${0##*/} https://www.kicksecure.com/w
   ${0##*/} --continue-from=500 https://www.kicksecure.com/w
@@ -30,6 +34,10 @@ Example:
 source /usr/libexec/helper-scripts/parse_opt.sh
 
 continue_from=""
+keep_going_arg=""
+retry_arg=""
+reset_arg=""
+state_file_arg=""
 
 while true; do
   [[ "${1-}" =~ ^- ]] || break
@@ -39,6 +47,19 @@ while true; do
     continue-from)
       get_arg
       continue_from="${arg}"
+      ;;
+    keep-going)
+      keep_going_arg="--keep-going"
+      ;;
+    retry)
+      retry_arg="--retry"
+      ;;
+    reset)
+      reset_arg="--reset"
+      ;;
+    state-file)
+      get_arg
+      state_file_arg="--state-file=${arg}"
       ;;
     h|help)
       usage
@@ -71,5 +92,10 @@ mw_process_args=()
 if [ -n "$continue_from" ]; then
   mw_process_args+=("--continue-from=$continue_from")
 fi
+for forwarded_arg in "$keep_going_arg" "$retry_arg" "$reset_arg" "$state_file_arg"; do
+  if [ -n "$forwarded_arg" ]; then
+    mw_process_args+=("$forwarded_arg")
+  fi
+done
 
 mw-process-all-pages "${mw_process_args[@]}" "${WIKI_URL}" 'mw-patch-modify-wiki-page' "$TMPFOLDER"

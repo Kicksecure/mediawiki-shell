@@ -19,6 +19,10 @@ usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI
 Options:
   --continue-from=N|TITLE    Continue from page index (N) or title (case-insensitive)
+  --keep-going               Continue past per-item failures (record them, exit non-zero)
+  --retry                    Skip items already recorded done; retry the rest
+  --reset                    Clear any prior state before starting
+  --state-file=PATH          Override the state-file location (default: under TMPFOLDER)
 Example:
   ${0##*/} 'https://www.kicksecure.com/w'
   ${0##*/} --continue-from=100 'https://www.kicksecure.com/w'
@@ -31,6 +35,7 @@ source /usr/libexec/helper-scripts/parse_opt.sh
 
 continue_from=""
 
+# shellcheck disable=SC2034  # KEEP_GOING/RETRY/STATE_RESET/STATE_FILE set here, read by common's state_* helpers
 while true; do
   [[ "${1-}" =~ ^- ]] || break
   begin_optparse "${1:-}" "${2:-}" || break
@@ -39,6 +44,19 @@ while true; do
     continue-from)
       get_arg
       continue_from="${arg}"
+      ;;
+    keep-going)
+      KEEP_GOING="true"
+      ;;
+    retry)
+      RETRY="true"
+      ;;
+    reset)
+      STATE_RESET="true"
+      ;;
+    state-file)
+      get_arg
+      STATE_FILE="${arg}"
       ;;
     h|help)
       usage
@@ -72,6 +90,8 @@ log info "WIKI_URL     : $WIKI_URL"
 log info "WIKI_API     : $WIKI_API"
 log info "continue_from: ${continue_from-}"
 
+state_setup "$WIKI_URL"
+
 login_function() {
   log info "Logging in..."
   mw-login-test "$WIKI_URL"
@@ -97,7 +117,6 @@ counter_total="$(awk 'END {print NR}' "$allpages_file")"
 # shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 counter_currently=0
-error_counter=0
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
   ## Raw page name - no filesystem encoding. The API handles spaces/underscores
@@ -109,11 +128,17 @@ while IFS=$'\n' read -r item_from_all_pages; do
     continue
   fi
 
+  if state_should_skip "$item_from_all_pages"; then
+    log info "retry-skip | $counter_currently / $counter_total | already done | $item_from_all_pages"
+    continue
+  fi
+
   log info "$counter_currently / $counter_total | $item_from_all_pages"
   printf '%s\n' "mw-flagged-revisions-approve-page '$WIKI_URL' '$page_to_approve'"
   approve_page
   if [ "$approve_page_exit_code" = "0" ]; then
     log info "Success at first attempt, ok."
+    state_record_done "$page_to_approve"
     continue
   elif [ "$approve_page_exit_code" = "254" ]; then
     log info "Got exit code 254. Login probably expired."
@@ -124,14 +149,18 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   if [ "$approve_page_exit_code" = "0" ]; then
     log info "Success after second attempt, ok."
+    state_record_done "$page_to_approve"
   else
-    (( error_counter++ )) || true
-    log error "Failed!"
+    state_record_fail "$page_to_approve" "approve rc=$approve_page_exit_code"
   fi
 done <"$allpages_file"
 
-if [ "$error_counter" = "0" ]; then
+state_finish
+if [ "$state_fail_count" = "0" ]; then
   log info "Success."
 else
-  log warn "$error_counter error(s) detected."
+  log warn "$state_fail_count error(s) detected."
+  if state_enabled; then
+    exit 2
+  fi
 fi

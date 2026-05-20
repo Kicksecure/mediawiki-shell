@@ -34,12 +34,29 @@ default_protect_reason="mediawiki-shell-bot-protect"
 ## Fixed: admin-only edit and move protection.
 protect_level="edit=sysop|move=sysop"
 
-while [ "${1-}" = "--dry-run" ]; do
-  export DRY_RUN="true"
-  shift
+while true; do
+  case "${1-}" in
+    --dry-run)
+      export DRY_RUN="true"
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die 2 "Invalid option: '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
 done
 
-if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+if [ -z "${2-}" ]; then
   usage
 fi
 

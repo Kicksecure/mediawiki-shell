@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 ## Per-wiki credentials, keyed by full WIKI URL. Populated from the
 ## credentials file. Provides a structured alternative to setting
@@ -29,7 +31,7 @@ require_auth_data() {
 }
 
 source_credentials() {
-  local f mode
+  local mode
 
   # The file '~/.credentials' is for backwards compatibility and should be
   # removed on future releases.
@@ -61,8 +63,12 @@ source_credentials() {
 
 [[ -v WIKI_URL ]] || error_message_if_missing_wiki_url_variable
 case "${WIKI_URL}" in
-  kicksecure) WIKI_URL="https://www.kicksecure.com/w";;
-  whonix) WIKI_URL="https://www.whonix.org/w";;
+  kicksecure)
+    WIKI_URL="https://www.kicksecure.com/w"
+    ;;
+  whonix)
+    WIKI_URL="https://www.whonix.org/w"
+    ;;
 esac
 
 source_credentials

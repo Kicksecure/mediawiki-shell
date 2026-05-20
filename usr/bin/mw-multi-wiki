@@ -321,6 +321,7 @@ fi
 unicode-show "$allpages_file"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
+# shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages; do

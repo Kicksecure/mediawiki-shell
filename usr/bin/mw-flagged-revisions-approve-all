@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -24,7 +26,7 @@ Example:
   exit 1
 }
 
-# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+# shellcheck source=../../../helper-scripts/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
 continue_from=""
@@ -34,10 +36,19 @@ while true; do
   begin_optparse "${1:-}" "${2:-}" || break
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
-    continue-from) get_arg; continue_from="${arg}";;
-    h|help) usage;;
-    --|"") break;;
-    *) die 2 "Invalid option: '${opt_orig}'"
+    continue-from)
+      get_arg
+      continue_from="${arg}"
+      ;;
+    h|help)
+      usage
+      ;;
+    --|"")
+      break
+      ;;
+    *)
+      die 2 "Invalid option: '${opt_orig}'"
+      ;;
   esac
   shift "${shift_n:-1}"
 done
@@ -83,6 +94,7 @@ test -r "$allpages_file"
 unicode-show "$allpages_file"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
+# shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 counter_currently=0
 error_counter=0

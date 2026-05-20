@@ -118,6 +118,7 @@ counter_currently=0
 
 log info "Found $counter_total modified .mw file(s) to push."
 
+# shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 while IFS= read -r mw_file; do
   (( counter_currently++ )) || true

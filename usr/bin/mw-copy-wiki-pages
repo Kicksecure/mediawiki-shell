@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -17,6 +19,7 @@ usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI WIKI_TARGET PAGE [OUTPUT]
 Options:
   --edit-msg=X     Summary to specify for edit
+  --dry-run        Preview only; skip the actual write on the server.
 Defaults:
   OUTPUT=todo
 Example:
@@ -36,6 +39,7 @@ while true; do
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
     edit-msg) get_arg; edit_msg="${arg}";;
+    dry-run) export DRY_RUN="true";;
     h|help) usage;;
     --|"") break;;
     *) die 2 "Invalid option: '${opt_orig}'"

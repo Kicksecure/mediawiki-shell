@@ -16,9 +16,11 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI LIST_FILE [EXPIRY] [REASON]
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI LIST_FILE [EXPIRY] [REASON]
 Reads LIST_FILE (one page title per line, blank lines ignored) and sets
 edit and move protection to sysop (admin) only on each page.
+Options:
+  --dry-run        Preview only; skip the actual protect on the server.
 Defaults:
   EXPIRY=${default_protect_expiry}
   REASON=${default_protect_reason}
@@ -30,6 +32,12 @@ Example:
 
 default_protect_expiry="infinite"
 default_protect_reason="mediawiki-shell-bot-protect"
+
+while [ "${1-}" = "--dry-run" ]; do
+  export DRY_RUN="true"
+  shift
+done
+
 if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi

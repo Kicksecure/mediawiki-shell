@@ -16,7 +16,9 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI PAGE [REASON]
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI PAGE [REASON]
+Options:
+  --dry-run        Preview only; skip the actual delete on the server.
 Defaults:
   REASON=${default_delete_reason}
 Example:
@@ -26,6 +28,12 @@ Example:
 }
 
 default_delete_reason="mediawiki-shell-bot-delete"
+
+while [ "${1-}" = "--dry-run" ]; do
+  export DRY_RUN="true"
+  shift
+done
+
 if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi

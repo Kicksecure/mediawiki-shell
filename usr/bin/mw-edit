@@ -7,12 +7,16 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE [EDIT_MSG]
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI INPUT PAGE [EDIT_MSG]
+Options:
+  --dry-run        Preview only; skip the actual edit on the server.
 Defaults:
   EDIT_MSG=${default_edit_msg}
 Example:
@@ -21,6 +25,12 @@ Example:
 }
 
 default_edit_msg="mediawiki-shell-bot-default-edit-message"
+
+while [ "${1-}" = "--dry-run" ]; do
+  export DRY_RUN="true"
+  shift
+done
+
 if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi

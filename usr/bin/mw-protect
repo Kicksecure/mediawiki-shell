@@ -16,8 +16,10 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI PAGE [EXPIRY] [REASON]
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI PAGE [EXPIRY] [REASON]
 Sets edit and move protection to sysop (admin) only on PAGE.
+Options:
+  --dry-run        Preview only; skip the actual protect on the server.
 Defaults:
   EXPIRY=${default_protect_expiry}
   REASON=${default_protect_reason}
@@ -31,6 +33,12 @@ default_protect_expiry="infinite"
 default_protect_reason="mediawiki-shell-bot-protect"
 ## Fixed: admin-only edit and move protection.
 protect_level="edit=sysop|move=sysop"
+
+while [ "${1-}" = "--dry-run" ]; do
+  export DRY_RUN="true"
+  shift
+done
+
 if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
   usage
 fi

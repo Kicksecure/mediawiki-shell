@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck disable=SC1091
 {
@@ -82,8 +84,8 @@ failed with exit code '$last_exit_code'." >&2
 trap error_handler ERR
 
 exit_handler() {
+  local exit_code="$?"
   trap - INT HUP ABRT QUIT EXIT
-  local exit_code="${1:-}"
   if [ "$exit_code" = "0" ]; then
     log info "END: with OK exit code: '$exit_code'"
   else
@@ -337,7 +339,7 @@ curl_run() {
   fi
 }
 
-trap 'exit_handler $?' INT HUP ABRT QUIT EXIT
+trap exit_handler INT HUP ABRT QUIT EXIT
 
 [[ -v TMPFOLDER ]] || TMPFOLDER="$HOME/mediawiki-shell-temp"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""

@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -35,7 +37,7 @@ Example:
   exit 1
 }
 
-# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+# shellcheck source=../../../helper-scripts/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
 default_wiki_url="https://www.kicksecure.com/w"
@@ -54,14 +56,34 @@ while true; do
   begin_optparse "${1:-}" "${2:-}" || break
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
-    continue-from-page) get_arg; continue_from_page="${arg}";;
-    multiwiki-category) get_arg; multiwiki_category="${arg}";;
-    multiwiki-extra-pages) get_arg; multiwiki_extra_pages="${arg}";;
-    delete) delete_mode="true";;
-    delete-max) get_arg; delete_max="${arg}";;
-    h|help) usage;;
-    --|"") break;;
-    *) die 2 "Invalid option: '${opt_orig}'"
+    continue-from-page)
+      get_arg
+      continue_from_page="${arg}"
+      ;;
+    multiwiki-category)
+      get_arg
+      multiwiki_category="${arg}"
+      ;;
+    multiwiki-extra-pages)
+      get_arg
+      multiwiki_extra_pages="${arg}"
+      ;;
+    delete)
+      delete_mode="true"
+      ;;
+    delete-max)
+      get_arg
+      delete_max="${arg}"
+      ;;
+    h|help)
+      usage
+      ;;
+    --|"")
+      break
+      ;;
+    *)
+      die 2 "Invalid option: '${opt_orig}'"
+      ;;
   esac
   shift "${shift_n:-1}"
 done

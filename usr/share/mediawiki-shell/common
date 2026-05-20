@@ -43,13 +43,7 @@ check_vars_exist() {
   done
 }
 
-## Honored by the write primitives (mw-edit, mw-delete, mw-protect,
-## mw-file-upload): when the environment variable DRY_RUN is "true", log the
-## mutating action that would have been performed and exit 0 *before* the API
-## request is sent, so nothing reaches the server. DRY_RUN is inherited by
-## child processes, so a top-level '--dry-run' that runs 'export DRY_RUN=true'
-## turns every nested write (e.g. mw-multi-wiki -> mw-copy-wiki-pages ->
-## mw-edit) into a no-op with no further plumbing.
+## When DRY_RUN=true, log the would-be write and exit 0 before the API call.
 dry_run_skip() {
   if [ "${DRY_RUN:-false}" = "true" ]; then
     log info "[dry-run] would $1 -- skipping server write."

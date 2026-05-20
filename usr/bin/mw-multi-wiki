@@ -45,7 +45,7 @@ default_wiki_url_target="https://www.whonix.org/w"
 default_output_dir="$HOME/mediawiki-shell/mirror-multi-wiki"
 
 default_multiwiki_category="MultiWiki"
-default_delete_max="50"
+default_delete_max="10"
 continue_from_page=""
 multiwiki_extra_pages=""
 delete_mode="false"

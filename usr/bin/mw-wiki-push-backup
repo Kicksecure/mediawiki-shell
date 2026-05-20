@@ -21,10 +21,11 @@ Pushes git-modified .mw files from BACKUP_DIR to the wiki using mw-edit.
 Uses 'git diff' to detect which files have changed.
 
 Options:
-  --edit-msg=MSG           Edit summary for wiki edits (default: ${default_edit_msg})
-  --git-diff-arg=ARG       Argument passed to 'git diff' to select commits
-                           (default: HEAD~1, i.e. changes in the last commit)
-  --dry-run                Preview only; skip the actual write on the server.
+  --edit-msg=MSG             Edit summary for wiki edits (default: ${default_edit_msg})
+  --git-diff-arg=ARG         Argument passed to 'git diff' to select commits
+                             (default: HEAD~1, i.e. changes in the last commit)
+  --continue-from=N|TITLE    Continue from file index (N) or page title (case-insensitive)
+  --dry-run                  Preview only; skip the actual write on the server.
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
   ${0##*/} --git-diff-arg=HEAD~1 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
@@ -35,6 +36,7 @@ Example:
 default_edit_msg="mediawiki-shell-bot-default-edit-message"
 git_diff_arg="HEAD~1"
 edit_msg="${default_edit_msg}"
+continue_from=""
 
 while true; do
   case "${1-}" in
@@ -44,6 +46,10 @@ while true; do
       ;;
     --git-diff-arg=*)
       git_diff_arg="${1#--git-diff-arg=}"
+      shift
+      ;;
+    --continue-from=*)
+      continue_from="${1#--continue-from=}"
       shift
       ;;
     --dry-run)
@@ -84,10 +90,11 @@ if ! git -C "$backup_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   die 1 "backup_dir '$backup_dir' is not inside a git repository!"
 fi
 
-log info "wiki_url     : $wiki_url"
-log info "backup_dir   : $backup_dir"
-log info "git_diff_arg : $git_diff_arg"
-log info "edit_msg     : $edit_msg"
+log info "wiki_url      : $wiki_url"
+log info "backup_dir    : $backup_dir"
+log info "git_diff_arg  : $git_diff_arg"
+log info "edit_msg      : $edit_msg"
+log info "continue_from : ${continue_from-}"
 
 mw-login-test "$wiki_url"
 
@@ -111,6 +118,7 @@ counter_currently=0
 
 log info "Found $counter_total modified .mw file(s) to push."
 
+continue_state="no"
 while IFS= read -r mw_file; do
   (( counter_currently++ )) || true
 
@@ -118,6 +126,11 @@ while IFS= read -r mw_file; do
   ## Uses decode_backup_filename_item() which strips .mw and runs full
   ## percent-decoding (urllib.parse.unquote), reversing set_backup_page_item().
   page_title="$(decode_backup_filename_item "$mw_file")"
+
+  if ! should_start_processing "$counter_currently" "$page_title" "$continue_from" continue_state; then
+    log info "skip $counter_currently / $counter_total | $page_title"
+    continue
+  fi
 
   file_path="${backup_dir}/${mw_file}"
   assert_path_within_dir "$backup_dir" "$file_path"

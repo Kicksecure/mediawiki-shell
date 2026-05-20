@@ -14,13 +14,35 @@ source /usr/share/mediawiki-shell/common
 log info "START"
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI
+  printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI
+Options:
+  --continue-from=N|TITLE    Continue from page index (N) or title (case-insensitive)
 Example:
-  ${0##*/} https://www.kicksecure.com/w" >&2
+  ${0##*/} https://www.kicksecure.com/w
+  ${0##*/} --continue-from=500 https://www.kicksecure.com/w
+  ${0##*/} --continue-from='My_Page' https://www.kicksecure.com/w" >&2
   exit 1
 }
 
-if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+source /usr/libexec/helper-scripts/parse_opt.sh
+
+continue_from=""
+
+while true; do
+  [[ "${1-}" =~ ^- ]] || break
+  begin_optparse "${1:-}" "${2:-}" || break
+  true "${opt-}" "${arg-}" "${opt_orig-}"
+  case "${opt}" in
+    continue-from) get_arg; continue_from="${arg}";;
+    h|help) usage;;
+    --|"") break;;
+    *) die 2 "Invalid option: '${opt_orig}'"
+  esac
+  shift "${shift_n:-1}"
+done
+
+if [[ -z "${1-}" ]]; then
   usage
 fi
 
@@ -29,8 +51,14 @@ WIKI_URL="$1"
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-log info "TMPFOLDER: $TMPFOLDER"
-log info "WIKI_URL : $WIKI_URL"
-log info "WIKI_API : $WIKI_API"
+log info "TMPFOLDER    : $TMPFOLDER"
+log info "WIKI_URL     : $WIKI_URL"
+log info "WIKI_API     : $WIKI_API"
+log info "continue_from: ${continue_from-}"
 
-mw-process-all-pages "${WIKI_URL}" 'mw-patch-modify-wiki-page' "$TMPFOLDER"
+mw_process_args=()
+if [ -n "$continue_from" ]; then
+  mw_process_args+=("--continue-from=$continue_from")
+fi
+
+mw-process-all-pages "${mw_process_args[@]}" "${WIKI_URL}" 'mw-patch-modify-wiki-page' "$TMPFOLDER"

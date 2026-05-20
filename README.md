@@ -28,6 +28,17 @@ WIKI_INDEX="$WIKI_URL/index.php"
 
 If using a different wiki, add an entry to the `case` block.
 
+Alternatively, credentials for multiple wikis may be defined in
+associative arrays keyed by full WIKI URL:
+
+```sh
+WIKI_USER_NAMES['https://www.whonix.org/w']='username1'
+WIKI_USER_PASSES['https://www.whonix.org/w']='password1'
+
+WIKI_USER_NAMES['https://www.kicksecure.com/w']='username2'
+WIKI_USER_PASSES['https://www.kicksecure.com/w']='password2'
+```
+
 ## How to Build deb Package from Source Code
 
 Can be built using standard Debian package build tools such as:

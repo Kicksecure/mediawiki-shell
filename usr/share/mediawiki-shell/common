@@ -58,11 +58,21 @@ missing_variable() {
 
 error_output() {
   stecho "error_msg: '${1:-none}'
+WIKI_URL: '${WIKI_URL-unset}'
 WIKI_INDEX: '${WIKI_INDEX-unset}'
-TITLE: '${TITLE-unset}'
 TMPFOLDER: '${TMPFOLDER-unset}'
-counter_chunk: '${counter_chunk-unset}'
 counter_currently: '${counter_currently-unset}'
+counter_total: '${counter_total-unset}'
+counter_chunk: '${counter_chunk-unset}'
+TITLE: '${TITLE-unset}'
+page_title: '${page_title-unset}'
+page: '${page-unset}'
+page_to_approve: '${page_to_approve-unset}'
+item_from_all_pages: '${item_from_all_pages-unset}'
+mw_file: '${mw_file-unset}'
+file_path: '${file_path-unset}'
+new_file: '${new_file-unset}'
+output_file: '${output_file-unset}'
 ###" >&2
 }
 
@@ -76,6 +86,47 @@ failed with exit code '$last_exit_code'." >&2
 }
 
 trap error_handler ERR
+
+## Decide whether the current iteration item should be processed,
+## based on a --continue-from value. Manages a caller-supplied state
+## variable that flips to "yes" once the target is reached and stays
+## "yes" for all subsequent iterations.
+##
+## Modes:
+##   empty CONTINUE_FROM  -> always process (returns 0 immediately).
+##   integer N            -> skip until index >= N (1-based, inclusive).
+##   other string         -> skip until title matches case-insensitively.
+##
+## Usage:
+##   should_start_processing INDEX TITLE CONTINUE_FROM STATE_VAR_NAME
+##   Caller must initialise STATE_VAR_NAME to "no" before the loop.
+##   Returns 0 to process the item, 1 to skip it.
+should_start_processing() {
+  local index="$1" title="$2" continue_from="$3"
+  local -n _ssp_state="$4"
+
+  if [ -z "$continue_from" ]; then
+    return 0
+  fi
+
+  if [ "$_ssp_state" = "yes" ]; then
+    return 0
+  fi
+
+  if [[ "$continue_from" =~ ^[0-9]+$ ]]; then
+    if (( index >= continue_from )); then
+      _ssp_state="yes"
+      return 0
+    fi
+    return 1
+  fi
+
+  if [ "${title,,}" = "${continue_from,,}" ]; then
+    _ssp_state="yes"
+    return 0
+  fi
+  return 1
+}
 
 exit_handler() {
   local exit_code="$?"

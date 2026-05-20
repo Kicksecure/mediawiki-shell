@@ -20,7 +20,7 @@ log info "START"
 usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] [WIKI] [WIKI_TARGET] [OUTPUT_DIR]
 Options:
-  --continue-from-page=N      Continue from page index
+  --continue-from=N|TITLE     Continue from page index (N) or title (case-insensitive)
   --multiwiki-category=X      Category of multiwiki (default: ${default_multiwiki_category})
   --multiwiki-extra-pages=X   Extra multiwiki pages to append
   --delete                    Act on stale target pages (default: report-only)
@@ -47,7 +47,7 @@ default_output_dir="$HOME/mediawiki-shell/mirror-multi-wiki"
 
 default_multiwiki_category="MultiWiki"
 default_delete_max="10"
-continue_from_page=""
+continue_from=""
 multiwiki_extra_pages=""
 delete_mode="false"
 dry_run="${DRY_RUN:-false}"
@@ -58,9 +58,9 @@ while true; do
   begin_optparse "${1:-}" "${2:-}" || break
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
-    continue-from-page)
+    continue-from)
       get_arg
-      continue_from_page="${arg}"
+      continue_from="${arg}"
       ;;
     multiwiki-category)
       get_arg
@@ -287,7 +287,7 @@ log info "WIKI_API             : $WIKI_API"
 log info "allpages_file        : $allpages_file"
 log info "multiwiki_category   : $multiwiki_category"
 log info "multiwiki_extra_pages: $multiwiki_extra_pages"
-log info "continue_from_page   : ${continue_from_page-}"
+log info "continue_from        : ${continue_from-}"
 log info "delete_mode          : $delete_mode"
 log info "delete_max           : $delete_max"
 log info "dry_run              : $dry_run"
@@ -321,24 +321,17 @@ fi
 unicode-show "$allpages_file"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
-## mw-multi-wiki --continue-from-page="Template:VM"
-continue_next=no
-if [ -z "$continue_from_page" ]; then
-  continue_next=yes
-fi
-
+continue_state="no"
 counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
 
-  log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages"
-
-  if [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
-    continue_next=yes
-  fi
-  if [ "$continue_next" = "no" ]; then
+  if ! should_start_processing "$counter_currently" "$item_from_all_pages" "$continue_from" continue_state; then
+    log info "skip | $counter_currently / $counter_total | $item_from_all_pages"
     continue
   fi
+
+  log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages"
 
   copy_wiki_pages_exit_code=0
 

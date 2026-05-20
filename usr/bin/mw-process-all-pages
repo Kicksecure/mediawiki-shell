@@ -14,7 +14,7 @@ source /usr/share/mediawiki-shell/common
 usage() {
   printf '%s\n' "Usage: ${0##*/} [OPTIONS] WIKI SCRIPT OUTPUT_DIR
 Options:
-  --continue-from-page=N     Continue from page index.
+  --continue-from=N|TITLE    Continue from page index (N) or title (case-insensitive)
   --article-sanity-test=X    Guarantee that string is present on the fetched pages
   --namespace-default-list=N Page collection per namespace
   --namespace-extra-list=N   Extra page collection per namespace
@@ -28,9 +28,7 @@ Example:
 # shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
-## Allow overwriting using environment variable.
-#continue_from_page=""
-
+continue_from=""
 article_sanity_test=""
 namespace_default_list=""
 namespace_extra_list=""
@@ -40,7 +38,7 @@ while true; do
   begin_optparse "${1:-}" "${2:-}" || break
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
-    continue-from-page) get_arg; continue_from_page="${arg}";;
+    continue-from) get_arg; continue_from="${arg}";;
     article-sanity-test) get_arg; article_sanity_test="${arg}";;
     namespace-default-list) get_arg; namespace_default_list="${arg}";;
     namespace-extra-list) get_arg; namespace_extra_list="${arg}";;
@@ -76,8 +74,9 @@ esac
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
 
-log info "TMPFOLDER : $TMPFOLDER"
-log info "WIKI_URL  : $WIKI_URL"
+log info "TMPFOLDER    : $TMPFOLDER"
+log info "WIKI_URL     : $WIKI_URL"
+log info "continue_from: ${continue_from-}"
 
 ## Not required for public wiki.
 #mw-login-test "$WIKI_URL"
@@ -104,10 +103,10 @@ unicode-show "$allpages_file"
 
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
+continue_state="no"
 counter_currently=0
 counter_chunk=0
 chunk_max_size=10
-start_from_here="not-yet"
 
 while IFS=$'\n' read -r item_from_all_pages; do
   (( counter_currently++ )) || true
@@ -116,18 +115,7 @@ while IFS=$'\n' read -r item_from_all_pages; do
 
   (( counter_chunk++ )) || true
 
-  ## TODO: continue from specific page?
-  #continue_from_page="Network_Time_Synchronization"
-
-  if [ -n "${continue_from_page-}" ]; then
-    if [ "${item_from_all_pages,,}" = "${continue_from_page,,}" ]; then
-      start_from_here=true
-    fi
-  else
-    start_from_here=true
-  fi
-
-  if [ ! "$start_from_here" = "true" ]; then
+  if ! should_start_processing "$counter_currently" "$item_from_all_pages" "$continue_from" continue_state; then
     log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
     continue
   fi

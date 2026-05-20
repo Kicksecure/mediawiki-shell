@@ -1,0 +1,7 @@
+## Project-wide ShellCheck configuration.
+##   SC2154 - variables (curl_opts, cookie_jar, WIKI_API, ...) are defined in
+##            sourced files under usr/share/mediawiki-shell/ and helper-scripts.
+##   SC1091 - sourced files are resolved at install time, outside this checkout.
+
+disable=SC2154
+disable=SC1091

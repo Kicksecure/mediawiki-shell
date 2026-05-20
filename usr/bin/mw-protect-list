@@ -1,0 +1,140 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI LIST_FILE [EXPIRY] [REASON]
+Reads LIST_FILE (one page title per line, blank lines ignored) and sets
+edit and move protection to sysop (admin) only on each page.
+Options:
+  --dry-run        Preview only; skip the actual protect on the server.
+Defaults:
+  EXPIRY=${default_protect_expiry}
+  REASON=${default_protect_reason}
+Example:
+  ${0##*/} 'https://www.whonix.org/w' /tmp/pages.txt
+  ${0##*/} 'https://www.whonix.org/w' /tmp/pages.txt 'infinite' 'lock down'" >&2
+  exit 1
+}
+
+default_protect_expiry="infinite"
+default_protect_reason="mediawiki-shell-bot-protect"
+
+while true; do
+  case "${1-}" in
+    --dry-run)
+      export DRY_RUN="true"
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die 2 "Invalid option: '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "${2-}" ]; then
+  usage
+fi
+
+WIKI_URL="$1"
+list_file="$2"
+protect_expiry="${3-"${default_protect_expiry}"}"
+protect_reason="${4-"${default_protect_reason}"}"
+
+check_vars_exist list_file
+
+if [ -d "$list_file" ]; then
+  die 1 "list_file '$list_file' is a folder!"
+fi
+
+if [ ! -r "$list_file" ]; then
+  die 2 "List file '$list_file' does not exist or is not readable!"
+fi
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "WIKI_URL  : $WIKI_URL"
+log info "WIKI_API  : $WIKI_API"
+log info "list_file : $list_file"
+
+## Defense-in-depth: check the whole list for malicious unicode up front.
+unicode-show "$list_file"
+
+login_function() {
+  log info "Logging in..."
+  mw-login-test "$WIKI_URL"
+  log info "Login ok."
+}
+
+protect_page() {
+  protect_page_exit_code=0
+  mw-protect "$WIKI_URL" "$page_to_protect" "$protect_expiry" "$protect_reason" \
+    || protect_page_exit_code="$?"
+}
+
+login_function
+
+## Count non-blank lines so the progress display matches the pages processed.
+counter_total="$(awk 'NF{counter++} END {print counter+0}' "$list_file")"
+
+counter_currently=0
+error_counter=0
+while IFS=$'\n' read -r item_from_list; do
+  ## Skip blank or whitespace-only lines.
+  if [[ "$item_from_list" =~ ^[[:space:]]*$ ]]; then
+    continue
+  fi
+  (( counter_currently++ )) || true
+  ## Raw page name - no filesystem encoding. The API handles spaces/underscores
+  ## and curl_run handles URL encoding.
+  page_to_protect="$item_from_list"
+  log info "$counter_currently / $counter_total"
+  printf '%s\n' "mw-protect '$WIKI_URL' '$page_to_protect'"
+  protect_page
+  if [ "$protect_page_exit_code" = "0" ]; then
+    log info "Success at first attempt, ok."
+    continue
+  elif [ "$protect_page_exit_code" = "254" ]; then
+    log info "Got exit code 254. Login probably expired."
+    login_function
+    log info "Try again..."
+    protect_page
+  fi
+
+  if [ "$protect_page_exit_code" = "0" ]; then
+    log info "Success after second attempt, ok."
+  else
+    (( error_counter++ )) || true
+    log error "Failed to protect '$page_to_protect'!"
+  fi
+done <"$list_file"
+
+if [ "$error_counter" = "0" ]; then
+  log info "Success."
+else
+  die 1 "$error_counter error(s) detected."
+fi

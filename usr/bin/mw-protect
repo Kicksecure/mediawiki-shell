@@ -1,0 +1,116 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} WIKI PAGE [EXPIRY] [REASON]
+Sets edit and move protection to sysop (admin) only on PAGE.
+Defaults:
+  EXPIRY=${default_protect_expiry}
+  REASON=${default_protect_reason}
+Example:
+  ${0##*/} 'https://www.whonix.org/w' 'Important_Page'
+  ${0##*/} 'https://www.whonix.org/w' 'Important_Page' 'infinite' 'lock down'" >&2
+  exit 1
+}
+
+default_protect_expiry="infinite"
+default_protect_reason="mediawiki-shell-bot-protect"
+## Fixed: admin-only edit and move protection.
+protect_level="edit=sysop|move=sysop"
+if [[ -z "${2-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+WIKI_URL="$1"
+page_title="$2"
+protect_expiry="${3-"${default_protect_expiry}"}"
+protect_reason="${4-"${default_protect_reason}"}"
+
+check_vars_exist page_title
+
+## Defense-in-depth: check page_title for malicious unicode before
+## sending it to the wiki API.
+printf '%s\n' "$page_title" | unicode-show
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "Protecting page '${WIKI_URL}' | '${WIKI_API}' | '$page_title' (${protect_level}, expiry=${protect_expiry})..."
+
+mw-login-test "$WIKI_URL"
+
+curl_run \
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/fetch-protect-token.json" \
+  --request "GET" \
+  "${WIKI_API}?action=query&meta=tokens&format=json"
+
+csrf_token="$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/fetch-protect-token.json")"
+
+if [ "${#csrf_token}" = 42 ]; then
+  log info "Protect token for page OK."
+else
+  die 1 "Protect token for page not set."
+fi
+
+curl_run \
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --header "Expect:" \
+  --data-urlencode "title=$page_title" \
+  --data-urlencode "token=$csrf_token" \
+  --data-urlencode "protections=$protect_level" \
+  --data-urlencode "expiry=$protect_expiry" \
+  --data-urlencode "reason=$protect_reason" \
+  --output "${TMPFOLDER}/protect-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=protect&format=json&tags=mediawiki-shell"
+
+log info "Network for protect page ok."
+
+test -r "${TMPFOLDER}/protect-result.json"
+
+protect_result_output="$(stcat "${TMPFOLDER}/protect-result.json")"
+
+## Success: the response carries a '.protect' object (title, reason,
+## protections). Re-applying the same protection is idempotent and also
+## returns '.protect', so callers need not special-case already-protected
+## pages.
+if jq -e '.protect' <<<"$protect_result_output" >/dev/null 2>&1; then
+  log info "Protect page success."
+  exit 0
+fi
+
+error_code="$(jq -r '.error.code // empty' <<<"$protect_result_output")"
+
+## Login expired or the account lacks the 'protect' right: exit 254 so that
+## batch callers (mw-protect-list) can re-login and retry, matching the
+## convention used by mw-flagged-revisions-approve-page.
+if [ "$error_code" = "permissiondenied" ]; then
+  die 254 "permissiondenied"
+fi
+
+jq . <<<"$protect_result_output" | stcat >&2
+die 1 "Protect page error. error_code: '${error_code:-unknown}'"

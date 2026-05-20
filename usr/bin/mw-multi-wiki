@@ -25,6 +25,7 @@ Options:
   --multiwiki-extra-pages=X   Extra multiwiki pages to append
   --delete                    Act on stale target pages (default: report-only)
   --delete-max=N              Safety cap on pages acted on per run (default: ${default_delete_max})
+  --dry-run                   Preview actions; make no changes to the target wiki.
 Defaults:
   WIKI=${default_wiki_url}
   WIKI_TARGET=${default_wiki_url_target}
@@ -49,6 +50,7 @@ default_delete_max="10"
 continue_from_page=""
 multiwiki_extra_pages=""
 delete_mode="false"
+dry_run="false"
 delete_max="${default_delete_max}"
 
 while true; do
@@ -74,6 +76,9 @@ while true; do
     delete-max)
       get_arg
       delete_max="${arg}"
+      ;;
+    dry-run)
+      dry_run="true"
       ;;
     h|help)
       usage
@@ -178,7 +183,7 @@ strip_category_tag() {
 ## See the rationale block at the call site. Report-only unless delete_mode.
 cleanup_stale_target_pages() {
   local target_api target_pages_file source_sorted target_sorted stale_file
-  local stale_count page pending_exit_code detag_file detag_out
+  local stale_count page pending_exit_code detag_file detag_out act_on_stale
 
   target_api="${wiki_url_target}/api.php"
   target_pages_file="${TMPFOLDER}/target-allpages.txt"
@@ -189,6 +194,13 @@ cleanup_stale_target_pages() {
   detag_out="${TMPFOLDER}/detag-out"
   safe-rm -f -- "$target_pages_file" "$source_sorted" "$target_sorted" "$stale_file"
   touch -- "$target_pages_file"
+
+  ## Only mutate the target when --delete is set and this is not a --dry-run;
+  ## otherwise the pass is report-only.
+  act_on_stale="false"
+  if [ "$delete_mode" = "true" ] && [ "$dry_run" != "true" ]; then
+    act_on_stale="true"
+  fi
 
   log info "CLEANUP | Enumerating Category:${multiwiki_category} on target '${target_api}'..."
   fetch_category_members "$target_api" "$multiwiki_category" "$target_pages_file"
@@ -214,7 +226,7 @@ cleanup_stale_target_pages() {
 
   log info "CLEANUP | Stale page candidates on target: ${stale_count}"
 
-  if [ "$delete_mode" = "true" ] && [ "$stale_count" -gt "$delete_max" ]; then
+  if [ "$act_on_stale" = "true" ] && [ "$stale_count" -gt "$delete_max" ]; then
     die 1 "CLEANUP | Refusing to act on ${stale_count} stale pages (exceeds --delete-max=${delete_max}). Re-run with a higher --delete-max if this is intentional."
   fi
 
@@ -226,7 +238,7 @@ cleanup_stale_target_pages() {
 
     if page_exists_on_source "$page"; then
       ## Source page still exists; only its category tag was removed.
-      if [ "$delete_mode" != "true" ]; then
+      if [ "$act_on_stale" != "true" ]; then
         log info "CLEANUP | [REPORT] would DE-TAG (source page still exists): '$page'"
         continue
       fi
@@ -252,7 +264,7 @@ cleanup_stale_target_pages() {
     fi
 
     ## Source page is gone; delete the stale target copy.
-    if [ "$delete_mode" != "true" ]; then
+    if [ "$act_on_stale" != "true" ]; then
       log info "CLEANUP | [REPORT] would DELETE (source page missing): '$page'"
       continue
     fi
@@ -284,6 +296,7 @@ log info "multiwiki_extra_pages: $multiwiki_extra_pages"
 log info "continue_from_page   : ${continue_from_page-}"
 log info "delete_mode          : $delete_mode"
 log info "delete_max           : $delete_max"
+log info "dry_run              : $dry_run"
 
 mkdir --parents -- "$output_dir"
 
@@ -330,6 +343,11 @@ while IFS=$'\n' read -r item_from_all_pages; do
     continue_next=yes
   fi
   if [ "$continue_next" = "no" ]; then
+    continue
+  fi
+
+  if [ "$dry_run" = "true" ]; then
+    log info "PAGE | dry-run $counter_currently / $counter_total | would mirror '$item_from_all_pages' to target"
     continue
   fi
 

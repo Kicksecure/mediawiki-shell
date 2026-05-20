@@ -1,3 +1,273 @@
+commit 6264be14bc9db19ff89dfe17c76940644d7905ad
+Merge: 0524914 9e3b209
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed May 20 15:42:23 2026 -0400
+
+    Merge remote-tracking branch 'refs/remotes/org-ai-assisted/master'
+
+commit 9e3b20913059904c9b6b192fe1d4076425fd8d65
+Merge: 5ce49c7 7d13652
+Author: assisted-by-ai (Bot Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Wed May 20 14:20:06 2026 -0400
+
+    Merge pull request #3 from org-ai-assisted/claude/fix-tb-updater-bug-Txpdm
+
+    mw-multi-wiki: clean up stale target pages (delete deleted/de-categorized pages)
+
+commit 7d13652692ce77066a0bb666748878e9c359a895
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 18:16:31 2026 +0000
+
+    common: trim dry_run_skip comment to a single line
+
+    The function name and body are self-explanatory; drop the seven-line
+    docstring in favour of one line noting the non-obvious bit (it exits
+    before the API call).
+
+commit 7c611ce947e1dd8b60c814e8544bfdaebeeeb16d
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 18:07:44 2026 +0000
+
+    primitives: parse --dry-run with the standard while/case loop
+
+    Replace the ad-hoc 'while [ "${1-}" = "--dry-run" ]' consumer in mw-edit,
+    mw-delete, mw-protect, mw-file-upload and mw-protect-list with the
+    idiomatic while/case option parser already used by mw-wiki-push-backup. It
+    consumes --dry-run, handles -h/--help, honours a '--' terminator and
+    rejects unknown options (die 2). The trailing arg-count check no longer
+    needs the (-h|--help) special-case since help is handled in the loop.
+
+commit 80cb476a5e05dab925003e22fe2e4fc56730d8f5
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 17:49:57 2026 +0000
+
+    mw-copy-wiki-pages, mw-copy-wiki-file: bash-style-guide compliance
+
+    These scripts entered the static gate's changed-file scope via the
+    --dry-run flag addition, exposing two long-standing deviations:
+    - R-070: expand the parse_opt case arms so ';;' sits on its own line
+      instead of trailing the arm body.
+    - R-080: point the 'shellcheck source=' directive at the relative
+      source-tree path (matching mw-multi-wiki) instead of the absolute
+      install path.
+
+commit 232a94a00e561afba8b71bb921626c78b0aeed31
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 17:48:02 2026 +0000
+
+    dry-run: expose a --dry-run flag on every write-capable script
+
+    Make --dry-run the single, consistent interface for previews instead of
+    asking callers to set the DRY_RUN environment variable by hand. Each flag
+    handler just runs 'export DRY_RUN=true', so the internal env-var bus
+    (honored by dry_run_skip in the write primitives) still propagates through
+    nested calls with no per-call plumbing -- a forgotten pass-through can
+    never cause an accidental real write.
+
+    - mw-edit, mw-delete, mw-protect, mw-file-upload, mw-protect-list: consume
+      a leading --dry-run.
+    - mw-copy-wiki-pages, mw-copy-wiki-file: add a --dry-run parse_opt case.
+    - mw-wiki-push-backup: drop its bespoke dry_run local and per-loop skip;
+      --dry-run now exports the shared bus and the write is skipped inside
+      mw-edit, so login/token/reads still run and only the write is skipped.
+
+    Bring the touched files into bash-style-guide compliance, since these
+    edits pull them into the static gate's changed-file scope:
+    - R-010: add the two missing 'shopt -s inherit_errexit / shift_verbose'
+      lines to common, mw-edit, mw-file-upload, mw-copy-wiki-pages,
+      mw-copy-wiki-file and mw-wiki-push-backup (the sibling scripts already
+      had them).
+    - R-051: convert common's inline trap to the named-function form;
+      exit_handler now captures the exit code at entry, matching error_handler.
+
+commit 0524914dec2665603941c190a761d7510ab8fcee
+Merge: b8b4fa2 5ce49c7
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed May 20 12:57:45 2026 -0400
+
+    Merge remote-tracking branch 'refs/remotes/org-ai-assisted/master'
+
+commit decd61dfa23f2e184f1574919d52a2b2e4fd3e01
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 16:54:57 2026 +0000
+
+    dry-run: centralize via DRY_RUN env var honored by the write primitives
+
+    Add a dry_run_skip helper to common and call it in the four primitives
+    that issue a mutating API request (mw-edit, mw-delete, mw-protect,
+    mw-file-upload), immediately before the POST. When DRY_RUN=true the
+    primitive logs the action it would perform and exits 0, so login, CSRF
+    token fetch and all reads still run -- only the destructive server write
+    is skipped.
+
+    Because DRY_RUN is an exported environment variable it is inherited by
+    child processes, so it propagates through nested calls
+    (mw-multi-wiki -> mw-copy-wiki-pages -> mw-edit;
+    mw-copy-wiki-file -> mw-file-upload) with no per-script plumbing. Every
+    script that funnels writes through these primitives now supports a
+    DRY_RUN=true preview for free.
+
+    Simplify mw-multi-wiki accordingly: its --dry-run now just exports
+    DRY_RUN instead of carrying a bespoke per-loop guard and the act_on_stale
+    gate. The --delete-max cap is skipped under dry-run so a preview never
+    aborts on a large stale set.
+
+commit bff138f626f6a879ad4bf1d8d27551ee2f1dfbd6
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 16:37:54 2026 +0000
+
+    mw-multi-wiki: add --dry-run to preview without writing to the target
+
+    Matches the dry_run convention already used in mw-wiki-push-backup. When
+    set, every target-wiki write is skipped: the mirror loop logs what it
+    would copy instead of calling mw-copy-wiki-pages / mw-copy-wiki-file, and
+    the cleanup pass is forced report-only via a new act_on_stale gate so it
+    only logs "would DELETE / DE-TAG" even when --delete is also given (the
+    --delete-max cap is likewise not enforced for a pure preview). Read-only
+    steps (login test, category enumeration) still run so the preview is
+    accurate.
+
+commit 11cb9fc1d2c8ba27ed24142421407d8c4839adfd
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 16:33:50 2026 +0000
+
+    add mw-list-vulnerable-templates (detect injection-bearing templates)
+
+    mw-list-vulnerable-templates BACKUP_DIR [OUTFILE]
+      Scans a mediawiki-shell page backup directory and emits the page-title
+      list of Template: pages whose source carries a code-injection or active
+      content construct - {{#css:}}, {{#widget:}}, {{#invoke:}}, {{#tag:}},
+      <html>, <script>, javascript:, <templatestyles>, or inline on*=
+      handlers. Plain content templates are skipped. Filenames are mapped back
+      to page titles via mw-urlencode --decode-filename-to-page.
+
+      Output is newline-separated titles (stdout when OUTFILE is omitted; logs
+      go to stderr), ready to feed into mw-protect-list to apply per-page
+      protection to just the high-risk templates rather than the whole
+      namespace.
+
+commit bf21dab292ee4a7afe0b3ea29b2aecd62651d117
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 16:32:58 2026 +0000
+
+    mw-multi-wiki: lower default --delete-max from 50 to 10
+
+    Tighten the stale-page safety cap so a larger-than-expected stale set
+    (e.g. from a diff bug or truncated category listing) is more likely to
+    trip the refusal and require an explicit, higher --delete-max to proceed.
+
+commit 5ce49c7570bbb37c342a264f5d8c3672f5c91b54
+Author: assisted-by-ai (Bot Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Wed May 20 12:20:51 2026 -0400
+
+    Add local offline backup/restore tooling (plain-text pages + media)
+
+    Local/offline counterpart of the API-based backup/restore commands, so a
+    wiki can be rebuilt from the transparent, git-tracked plain-text backup
+    plus a separate media backup -- no opaque binary database dump.
+
+    - mw-wiki-restore-backup-local: import page text via importDump.php. The XML
+      is built by the external helper usr/libexec/mediawiki-shell/mw-build-import-xml
+      (no inline Python -- independently lintable/testable) and fed to
+      importDump.php on stdin so the web user needs no access to the private
+      TMPFOLDER.
+    - mw-build-import-xml: builds the importDump XML from the *.mw files; reuses
+      mw-urlencode's decoder; path-traversal hardened.
+    - mw-wiki-fetch-images-backup: download current media via the action API
+      (list=allimages); reuses strings.bsh validate_safe_filename via common.
+    - mw-wiki-restore-images-local: import media via importImages.php.
+    - mw-specific-backup-{kicksecure,whonix}-media: per-wiki media backup drivers.
+
+    Bash style guide (R-001/R-002/R-010/R-012/R-020/R-084) + shellcheck
+    --external-sources clean (source-path=SCRIPTDIR). Validated on a live
+    MediaWiki 1.45.3 reproduction: 2069 pages import, media round-trips, 27
+    widgets render error-free.
+
+commit 79e840fe24f19478bd208c8f0400fd663036c88d
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 15:04:15 2026 +0000
+
+    add mw-protect and mw-protect-list (admin-only edit+move protection)
+
+    mw-protect WIKI PAGE [EXPIRY] [REASON]
+      Single-page primitive. Sets 'edit=sysop|move=sysop' protection via the
+      MediaWiki 'action=protect' API, structured exactly like mw-delete
+      (mw-login-test -> fetch CSRF token -> POST). EXPIRY defaults to
+      'infinite'. Re-applying the same protection is idempotent. On
+      'permissiondenied' it exits 254 so batch callers can re-login and retry,
+      matching the mw-flagged-revisions-approve-page convention.
+
+    mw-protect-list WIKI LIST_FILE [EXPIRY] [REASON]
+      Batch wrapper. Reads LIST_FILE (one page title per line, blank lines
+      ignored), runs the whole-file unicode-show guard, then calls mw-protect
+      per page with the login-expiry retry loop and error tally from
+      mw-flagged-revisions-approve-all. Exits non-zero if any page failed.
+
+    Both ship via the existing usr/* install glob; no man pages exist for any
+    script in this package, so none are added here.
+
+commit a50c6432f5116f69885471ad9073eeefd2116a6f
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 14:48:26 2026 +0000
+
+    mw-multi-wiki, mw-delete: conform to bash-style-guide static gate
+
+    Bring the two touched scripts up to the developer-meta-files
+    agents/pre-push-static.sh gate:
+
+      R-010  add the missing 'shopt -s inherit_errexit' and
+             'shopt -s shift_verbose' to the strict-mode block.
+      R-070  split the option-parsing case arms onto their own lines
+             (matching the multi-line case style already used elsewhere
+             in mw-multi-wiki).
+      R-080  make the parse_opt.sh 'shellcheck source=' directive a
+             relative source-tree path instead of an absolute one.
+
+    Add a project .shellcheckrc disabling SC2154 and SC1091 (variables
+    and sources that live in usr/share/mediawiki-shell/ and helper-scripts,
+    outside this checkout), mirroring the developer-meta-files config.
+
+    Restore the executable bit on mw-multi-wiki: it carries a shebang and
+    is invoked directly, but was committed 100644 (dh_fixperms papered over
+    this for packaged installs, but not for direct-from-checkout use).
+
+    Note: mw-page-pending-check has the same 100644 latent issue but is
+    left untouched here as it is outside this change.
+
+    The gate now passes clean (shellcheck, R-010/R-070/R-080, R-001 ASCII,
+    and the pre-commit-hooks set).
+
+commit 4dea0d5f56d78cb3081ff43f45ed167b2fdece87
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 14:05:27 2026 +0000
+
+    mw-multi-wiki: clean up stale target pages; add mw-delete primitive
+
+    The mirror loop only enumerates the source wiki's category, so a page
+    deleted or de-categorized on the source silently vanished from the list and
+    its mirrored copy on the target was never removed.
+
+    Add a cleanup pass that uses the target wiki's own category membership as the
+    record of what was mirrored, and diffs it against the source keep-set
+    (source category members plus any --multiwiki-extra-pages). For each target
+    page no longer in that set:
+      - source page missing -> delete the target copy (mw-delete)
+      - source page exists   -> only the tag was removed; strip it on the target
+
+    The pass is report-only by default; --delete performs the actions, bounded by
+    --delete-max (default 50). An empty source list still aborts before the pass,
+    target pending edits are skipped, and titles are unicode-checked, so the diff
+    cannot degrade into a mass deletion.
+
+    Add mw-delete as the single-page action=delete primitive, mirroring mw-edit's
+    login + CSRF token flow; an already-missing page is treated as success.
+
+commit b8b4fa24377d831fa84153bb2a128807472576d2
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Mon May 18 10:04:22 2026 +0000
+
+    bumped changelog version
+
 commit e00007577dd2332bd8f26f36e832575545d211fa
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Sat May 16 05:22:08 2026 -0400

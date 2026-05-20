@@ -1,0 +1,139 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+## AI-Assisted
+
+## Restore media files from a local media backup directory into a LOCAL
+## MediaWiki database via maintenance/importImages.php. Offline counterpart for
+## images; sibling of mw-wiki-restore-backup-local (which imports page text).
+## importImages.php uploads each file under a title derived from its basename.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+default_mediawiki_dir="/var/www/public/wiki/w"
+default_web_user="www-data"
+default_comment="Restored from media backup by mediawiki-shell"
+
+usage() {
+   printf '%s\n' "Usage: ${0##*/} BACKUP_DIR [MEDIAWIKI_DIR]
+Imports every media file in BACKUP_DIR into the local MediaWiki database
+at MEDIAWIKI_DIR via maintenance/importImages.php.
+
+  BACKUP_DIR     checkout of a per-wiki *media* backup repo
+  MEDIAWIKI_DIR  MediaWiki install dir (default: ${default_mediawiki_dir})
+
+Options:
+  --web-user=USER  OS user that owns the wiki / runs PHP (default: ${default_web_user})
+  --comment=MSG    Upload log comment (default: '${default_comment}')
+  --overwrite      Replace existing files that have the same name.
+  --dry-run        Pass importImages.php --dry (import nothing).
+
+Note: importImages.php runs as the (unprivileged) web user and opens the
+files itself, so BACKUP_DIR must be readable by that user (unlike the text
+importer, it cannot take the data on stdin). Place the media backup
+somewhere the web user can traverse, e.g. under /tmp or /var/cache.
+
+Example:
+  ${0##*/} ~/derivative-backup/kicksecure-wiki-backup-media /var/www/public/wiki/w" >&2
+   exit 1
+}
+
+web_user="${default_web_user}"
+comment="${default_comment}"
+overwrite="false"
+dry_run="false"
+
+while true; do
+   case "${1-}" in
+      --web-user=*)
+         web_user="${1#--web-user=}"
+         shift
+         ;;
+      --comment=*)
+         comment="${1#--comment=}"
+         shift
+         ;;
+      --overwrite)
+         overwrite="true"
+         shift
+         ;;
+      --dry-run)
+         dry_run="true"
+         shift
+         ;;
+      -h|--help)
+         usage
+         ;;
+      --)
+         shift
+         break
+         ;;
+      -*)
+         die 2 "Invalid option: '${1}'"
+         ;;
+      *)
+         break
+         ;;
+   esac
+done
+
+if [ -z "${1-}" ]; then
+   usage
+fi
+
+backup_dir="${1}"
+mediawiki_dir="${2:-${default_mediawiki_dir}}"
+check_vars_exist backup_dir mediawiki_dir web_user comment
+
+if [ ! -d "${backup_dir}" ]; then
+   die 1 "backup_dir '${backup_dir}' does not exist!"
+fi
+mw_run="${mediawiki_dir}/maintenance/run.php"
+if [ ! -f "${mw_run}" ]; then
+   die 1 "no MediaWiki maintenance runner at '${mw_run}' (wrong MEDIAWIKI_DIR?)"
+fi
+
+## Top-level files only; we do not pass --search-recursively.
+file_count="$(find "${backup_dir}" -maxdepth 1 -type f -printf '.' | wc --chars)"
+
+## importImages.php reads files as web_user; fail early with a clear hint if it
+## cannot read into backup_dir (e.g. under a 0700 $HOME).
+sample="$(find "${backup_dir}" -maxdepth 1 -type f -print -quit)"
+if [ -n "${sample}" ] && ! sudo --non-interactive -u "${web_user}" test -r "${sample}"; then
+   die 1 "web_user '${web_user}' cannot read media under '${backup_dir}' (traversal/permission). \
+Place the media backup somewhere '${web_user}' can read (e.g. /tmp or /var/cache)."
+fi
+
+log info "backup_dir    : ${backup_dir}"
+log info "mediawiki_dir : ${mediawiki_dir}"
+log info "web_user      : ${web_user}"
+log info "comment       : ${comment}"
+log info "overwrite     : ${overwrite}"
+log info "dry_run       : ${dry_run}"
+log info "media file(s) : ${file_count}"
+
+import_opts=( "--comment=${comment}" )
+if [ "${overwrite}" = "true" ]; then
+   import_opts+=( "--overwrite" )
+fi
+if [ "${dry_run}" = "true" ]; then
+   import_opts+=( "--dry" )
+fi
+
+## importImages.php scans BACKUP_DIR and uploads each file by basename.
+sudo --non-interactive -u "${web_user}" php "${mw_run}" importImages.php "${import_opts[@]}" "${backup_dir}"
+
+log info "Done. Imported up to ${file_count} media file(s)."

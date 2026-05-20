@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+## AI-Assisted
+
+## Media counterpart of mw-specific-backup-whonix: backs up media binaries
+## into a separate per-wiki media repo, keeping blobs out of the text backup.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+default_wiki_url="https://www.whonix.org/w"
+default_output_dir="${HOME}/derivative-backup/whonix-wiki-backup-media"
+
+usage() {
+   printf '%s\n' "Usage: ${0##*/} [WIKI] [OUTPUT_DIR]
+Defaults:
+  WIKI=${default_wiki_url}
+  OUTPUT_DIR=${default_output_dir}
+Example:
+  ${0##*/}
+  ${0##*/} ${default_wiki_url}
+  ${0##*/} ${default_wiki_url} ${default_output_dir}" >&2
+   exit 1
+}
+
+if [[ "${1-}" =~ (-h|--help) ]]; then
+   usage
+fi
+
+wiki_url="${1-"${default_wiki_url}"}"
+output_dir="${2-"${default_output_dir}"}"
+
+mw-wiki-fetch-images-backup "${wiki_url}" "${output_dir}"

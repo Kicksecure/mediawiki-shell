@@ -1,0 +1,82 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} BACKUP_DIR [OUTFILE]
+Scans a mediawiki-shell page backup directory and lists the 'vulnerable'
+Template: pages - those whose source carries a code-injection or active
+content construct. Plain content templates are skipped. The output is a
+newline-separated page-title list, ready for mw-protect-list.
+
+Detected as vulnerable (case-insensitive):
+  {{#css:}} {{#widget:}} {{#invoke:}} {{#tag:}}
+  <html> <script> javascript: <templatestyles> inline on*= handlers
+
+If OUTFILE is omitted the list is written to stdout (logs go to stderr).
+Example:
+  ${0##*/} ~/kicksecure-wiki-backup /tmp/vuln-templates.txt
+  mw-protect-list 'https://www.kicksecure.com/w' /tmp/vuln-templates.txt" >&2
+  exit 1
+}
+
+if [[ -z "${1-}" || "${1-}" =~ (-h|--help) ]]; then
+  usage
+fi
+
+backup_dir="$1"
+outfile="${2-}"
+
+check_vars_exist backup_dir
+
+if [ ! -d "$backup_dir" ]; then
+  die 2 "BACKUP_DIR '$backup_dir' is not a directory or does not exist!"
+fi
+
+## Active-content / injection constructs that make a template a high-value
+## protection target (site-wide CSS/JS injection, raw HTML, dynamically
+## constructed extension tags). Extend this list as new vectors appear.
+vulnerable_pattern='\{\{#css:|\{\{#widget:|\{\{#invoke:|\{\{#tag:|<html|<script|javascript:|<templatestyles|on(click|error|load|mouseover|focus|submit)[[:space:]]*='
+
+shopt -s nullglob
+template_file_list=( "$backup_dir"/Template:*.mw )
+shopt -u nullglob
+
+if [ "${#template_file_list[@]}" -eq 0 ]; then
+  die 1 "No 'Template:*.mw' pages found in '$backup_dir'."
+fi
+
+emit_vulnerable_titles() {
+  local template_file file_base page_title
+  for template_file in "${template_file_list[@]}"; do
+    if ! grep -qiE -- "$vulnerable_pattern" "$template_file"; then
+      continue
+    fi
+    file_base="${template_file##*/}"
+    file_base="${file_base%.mw}"
+    ## Percent-decode the filename back to a MediaWiki page title (restores
+    ## '/' for subpages). Used only as an API title, never as a file path.
+    page_title="$(mw-urlencode --decode-filename-to-page "$file_base")"
+    printf '%s\n' "$page_title"
+  done
+}
+
+if [ -z "$outfile" ]; then
+  emit_vulnerable_titles | sort -u
+else
+  emit_vulnerable_titles | sort -u >"$outfile"
+  log info "Wrote vulnerable template list to '$outfile'."
+fi

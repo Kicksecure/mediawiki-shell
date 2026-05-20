@@ -1,0 +1,131 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+set -o errexit
+set -o nounset
+set -o errtrace
+set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage() {
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI PAGE [REASON]
+Options:
+  --dry-run        Preview only; skip the actual delete on the server.
+Defaults:
+  REASON=${default_delete_reason}
+Example:
+  ${0##*/} 'https://www.whonix.org/w' 'Obsolete_Page'
+  ${0##*/} 'https://www.whonix.org/w' 'Obsolete_Page' 'no longer needed'" >&2
+  exit 1
+}
+
+default_delete_reason="mediawiki-shell-bot-delete"
+
+while true; do
+  case "${1-}" in
+    --dry-run)
+      export DRY_RUN="true"
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die 2 "Invalid option: '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "${2-}" ]; then
+  usage
+fi
+
+WIKI_URL="$1"
+page_title="$2"
+delete_reason="${3-"${default_delete_reason}"}"
+
+check_vars_exist page_title
+
+## Defense-in-depth: check page_title for malicious unicode before
+## sending it to the wiki API.
+printf '%s\n' "$page_title" | unicode-show
+
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "Deleting page '${WIKI_URL}' | '${WIKI_API}' | '$page_title'..."
+
+mw-login-test "$WIKI_URL"
+
+curl_run \
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --compressed \
+  --output "${TMPFOLDER}/fetch-delete-token.json" \
+  --request "GET" \
+  "${WIKI_API}?action=query&meta=tokens&format=json"
+
+csrf_token="$(jq --raw-output '.query.tokens.csrftoken' -- "${TMPFOLDER}/fetch-delete-token.json")"
+
+if [ "${#csrf_token}" = 42 ]; then
+  log info "Delete token for page OK."
+else
+  die 1 "Delete token for page not set."
+fi
+
+dry_run_skip "delete page '$page_title' on '$WIKI_URL'"
+
+curl_run \
+  "${curl_opts[@]}" \
+  --cookie "$cookie_jar" \
+  --cookie-jar "$cookie_jar" \
+  --header "Accept-Language: en-GB" \
+  --header "Connection: keep-alive" \
+  --header "Expect:" \
+  --data-urlencode "title=$page_title" \
+  --data-urlencode "token=$csrf_token" \
+  --data-urlencode "reason=$delete_reason" \
+  --output "${TMPFOLDER}/delete-result.json" \
+  --request "POST" \
+  "${WIKI_API}?action=delete&format=json&tags=mediawiki-shell"
+
+log info "Network for delete page ok."
+
+test -r "${TMPFOLDER}/delete-result.json"
+
+delete_result_output="$(stcat "${TMPFOLDER}/delete-result.json")"
+
+## Success: the response carries a '.delete' object (logid, title, reason).
+if jq -e '.delete' <<<"$delete_result_output" >/dev/null 2>&1; then
+  log info "Delete page success."
+  exit 0
+fi
+
+## Idempotent: a page that is already gone is treated as success, so callers
+## do not have to special-case a race against another deletion.
+error_code="$(jq -r '.error.code // empty' <<<"$delete_result_output")"
+if [ "$error_code" = "missingtitle" ]; then
+  log info "Page '$page_title' already absent on '$WIKI_URL', ok."
+  exit 0
+fi
+
+jq . <<<"$delete_result_output" | stcat >&2
+die 1 "Delete page error. error_code: '${error_code:-unknown}'"

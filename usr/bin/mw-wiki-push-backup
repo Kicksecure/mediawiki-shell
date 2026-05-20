@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -22,7 +24,7 @@ Options:
   --edit-msg=MSG           Edit summary for wiki edits (default: ${default_edit_msg})
   --git-diff-arg=ARG       Argument passed to 'git diff' to select commits
                            (default: HEAD~1, i.e. changes in the last commit)
-  --dry-run                Show what would be pushed without actually pushing.
+  --dry-run                Preview only; skip the actual write on the server.
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
   ${0##*/} --git-diff-arg=HEAD~1 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
@@ -33,7 +35,6 @@ Example:
 default_edit_msg="mediawiki-shell-bot-default-edit-message"
 git_diff_arg="HEAD~1"
 edit_msg="${default_edit_msg}"
-dry_run=false
 
 while true; do
   case "${1-}" in
@@ -46,7 +47,7 @@ while true; do
       shift
       ;;
     --dry-run)
-      dry_run=true
+      export DRY_RUN="true"
       shift
       ;;
     -h|--help)
@@ -87,7 +88,6 @@ log info "wiki_url     : $wiki_url"
 log info "backup_dir   : $backup_dir"
 log info "git_diff_arg : $git_diff_arg"
 log info "edit_msg     : $edit_msg"
-log info "dry_run      : $dry_run"
 
 mw-login-test "$wiki_url"
 
@@ -124,11 +124,6 @@ while IFS= read -r mw_file; do
 
   if [ ! -r "$file_path" ]; then
     log warn "SKIP $counter_currently / $counter_total | file not readable: $file_path"
-    continue
-  fi
-
-  if [ "$dry_run" = "true" ]; then
-    log info "dry-run $counter_currently / $counter_total | $page_title | $file_path"
     continue
   fi
 

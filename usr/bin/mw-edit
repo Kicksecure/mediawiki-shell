@@ -7,12 +7,16 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
 
 usage() {
-  printf '%s\n' "Usage: ${0##*/} WIKI INPUT PAGE [EDIT_MSG]
+  printf '%s\n' "Usage: ${0##*/} [--dry-run] WIKI INPUT PAGE [EDIT_MSG]
+Options:
+  --dry-run        Preview only; skip the actual edit on the server.
 Defaults:
   EDIT_MSG=${default_edit_msg}
 Example:
@@ -21,7 +25,30 @@ Example:
 }
 
 default_edit_msg="mediawiki-shell-bot-default-edit-message"
-if [[ -z "${3-}" || "${1-}" =~ (-h|--help) ]]; then
+
+while true; do
+  case "${1-}" in
+    --dry-run)
+      export DRY_RUN="true"
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die 2 "Invalid option: '$1'"
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ -z "${3-}" ]; then
   usage
 fi
 
@@ -82,6 +109,8 @@ fi
 ## &tags=mediawiki-shell
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
+
+dry_run_skip "edit page '$page_title' on '$WIKI_URL'"
 
 curl_run \
   "${curl_opts[@]}" \

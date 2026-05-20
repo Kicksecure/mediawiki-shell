@@ -66,6 +66,8 @@ else
   die 1 "Delete token for page not set."
 fi
 
+dry_run_skip "delete page '$page_title' on '$WIKI_URL'"
+
 curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \

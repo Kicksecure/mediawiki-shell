@@ -72,6 +72,8 @@ else
   die 1 "Protect token for page not set."
 fi
 
+dry_run_skip "protect page '$page_title' on '$WIKI_URL' ($protect_level)"
+
 curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \

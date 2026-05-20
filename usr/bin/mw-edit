@@ -83,6 +83,8 @@ fi
 ## Need to create wiki tag mediawiki-shell here:
 ## https://www.whonix.org/wiki/Special:Tags
 
+dry_run_skip "edit page '$page_title' on '$WIKI_URL'"
+
 curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \

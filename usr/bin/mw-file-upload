@@ -80,6 +80,8 @@ else
   die 1 "Edit token for file not set."
 fi
 
+dry_run_skip "upload file '$page_file' to '$WIKI_URL'"
+
 curl_run \
   "${curl_opts[@]}" \
   --cookie "$cookie_jar" \

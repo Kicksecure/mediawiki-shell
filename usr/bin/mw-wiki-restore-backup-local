@@ -1,0 +1,123 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+## AI-Assisted
+
+## Restore a plain-text wiki backup into a LOCAL MediaWiki database via
+## maintenance/importDump.php (XML built from the *.mw files). Offline, local
+## counterpart of the API-based mw-wiki-restore-backup. Text only -- media is
+## handled separately by mw-wiki-restore-images-local.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+default_mediawiki_dir="/var/www/public/wiki/w"
+default_web_user="www-data"
+
+usage() {
+   printf '%s\n' "Usage: ${0##*/} BACKUP_DIR [MEDIAWIKI_DIR]
+Imports every *.mw file in BACKUP_DIR into the local MediaWiki database
+at MEDIAWIKI_DIR via maintenance/importDump.php.
+
+  BACKUP_DIR     checkout of a *-wiki-backup repo (contains *.mw files)
+  MEDIAWIKI_DIR  MediaWiki install dir (default: ${default_mediawiki_dir})
+
+Options:
+  --web-user=USER  OS user that owns the wiki / runs PHP (default: ${default_web_user})
+  --dry-run        Build and validate the import XML but do not import.
+
+Example:
+  ${0##*/} ~/derivative-backup/kicksecure-wiki-backup /var/www/public/wiki/w" >&2
+   exit 1
+}
+
+web_user="${default_web_user}"
+dry_run="false"
+
+while true; do
+   case "${1-}" in
+      --web-user=*)
+         web_user="${1#--web-user=}"
+         shift
+         ;;
+      --dry-run)
+         dry_run="true"
+         shift
+         ;;
+      -h|--help)
+         usage
+         ;;
+      --)
+         shift
+         break
+         ;;
+      -*)
+         die 2 "Invalid option: '${1}'"
+         ;;
+      *)
+         break
+         ;;
+   esac
+done
+
+if [ -z "${1-}" ]; then
+   usage
+fi
+
+backup_dir="${1}"
+mediawiki_dir="${2:-${default_mediawiki_dir}}"
+
+check_vars_exist backup_dir mediawiki_dir web_user
+
+if [ ! -d "${backup_dir}" ]; then
+   die 1 "backup_dir '${backup_dir}' does not exist!"
+fi
+mw_run="${mediawiki_dir}/maintenance/run.php"
+if [ ! -f "${mw_run}" ]; then
+   die 1 "no MediaWiki maintenance runner at '${mw_run}' (wrong MEDIAWIKI_DIR?)"
+fi
+
+log info "backup_dir    : ${backup_dir}"
+log info "mediawiki_dir : ${mediawiki_dir}"
+log info "web_user      : ${web_user}"
+log info "dry_run       : ${dry_run}"
+
+## Built privately under TMPFOLDER (mode 0700 $HOME); fed to importDump.php on
+## stdin so the web user needs no access to the temp file.
+xml_out="${TMPFOLDER}/import.xml"
+
+## External helper keeps the Python independently lintable/testable.
+import_xml_builder="/usr/libexec/mediawiki-shell/mw-build-import-xml"
+if [ ! -x "${import_xml_builder}" ]; then
+   die 1 "import XML builder not found or not executable: '${import_xml_builder}'"
+fi
+page_count="$("${import_xml_builder}" "${backup_dir}" "${xml_out}")"
+
+log info "built import XML for ${page_count} page(s): ${xml_out}"
+
+if [ "${dry_run}" = "true" ]; then
+   log info "dry-run: not importing. XML left at: ${xml_out}"
+   exit 0
+fi
+
+## --no-updates skips link-table maintenance during bulk load; rebuildall
+## refreshes it afterwards.
+## SC2024: the '<' redirect runs in this (root) caller, not sudo (intended).
+# shellcheck disable=SC2024
+sudo --non-interactive -u "${web_user}" php "${mw_run}" importDump.php --no-updates < "${xml_out}"
+sudo --non-interactive -u "${web_user}" php "${mw_run}" rebuildall.php \
+   || log warn "rebuildall.php returned non-zero (link tables may be partially refreshed)"
+
+log info "Done. Imported ${page_count} page(s)."

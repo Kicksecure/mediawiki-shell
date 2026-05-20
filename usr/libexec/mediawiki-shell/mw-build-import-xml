@@ -1,0 +1,111 @@
+#!/usr/bin/python3 -su
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+## AI-Assisted
+
+# pylint: disable=invalid-name,missing-module-docstring
+
+## Build a maintenance/importDump.php XML stream from a plain-text *-wiki-backup
+## directory of *.mw files. Internal helper for mw-wiki-restore-backup-local.
+## Usage: mw-build-import-xml BACKUP_DIR XML_OUT  (prints the page count)
+##
+## Title decoding reuses mw-urlencode's decode_filename_to_page (the inverse of
+## the --encode-page-to-filename that named the backup), falling back to the
+## urllib.parse.unquote it is built on.
+
+import sys
+import os
+import html
+import time
+import shutil
+import importlib.util
+import importlib.machinery
+import urllib.parse
+
+
+def load_decoder():
+    path = shutil.which("mw-urlencode")
+    if path:
+        try:
+            loader = importlib.machinery.SourceFileLoader("mw_urlencode", path)
+            spec = importlib.util.spec_from_loader("mw_urlencode", loader)
+            mod = importlib.util.module_from_spec(spec)
+            loader.exec_module(mod)
+            return mod.decode_filename_to_page
+        except Exception as exc:  # pylint: disable=broad-except
+            print(f"mw-urlencode load failed ({exc}); using urllib.parse.unquote",
+                  file=sys.stderr)
+    return urllib.parse.unquote
+
+
+def unsafe(title):
+    if not title or title in (".", ".."):
+        return True
+    if title.startswith("/"):
+        return True
+    if any(seg == ".." for seg in title.split("/")):
+        return True
+    return any(ord(c) < 0x20 for c in title)
+
+
+def main():
+    if len(sys.argv) != 3:
+        print(f"Usage: {os.path.basename(sys.argv[0])} BACKUP_DIR XML_OUT",
+              file=sys.stderr)
+        sys.exit(1)
+    backup_dir = sys.argv[1]
+    out_path = sys.argv[2]
+
+    decode = load_decoder()
+
+    namespaces = [
+        (0, ""), (1, "Talk"), (2, "User"), (4, "Project"), (6, "File"),
+        (8, "MediaWiki"), (10, "Template"), (12, "Help"), (14, "Category"),
+        (274, "Widget"),
+    ]
+
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    n = 0
+    skipped = 0
+    with open(out_path, "w", encoding="utf-8") as out:
+        out.write('<?xml version="1.0"?>\n'
+                  '<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.11/" '
+                  'version="0.11" xml:lang="en">\n  <siteinfo>\n'
+                  '    <sitename>Wiki</sitename>\n    <case>first-letter</case>\n'
+                  '    <namespaces>\n')
+        for key, name in namespaces:
+            if name:
+                out.write(f'      <namespace key="{key}" case="first-letter">{name}</namespace>\n')
+            else:
+                out.write(f'      <namespace key="{key}" case="first-letter" />\n')
+        out.write('    </namespaces>\n  </siteinfo>\n')
+        for entry in sorted(os.scandir(backup_dir), key=lambda e: e.name):
+            if not entry.is_file() or not entry.name.endswith(".mw"):
+                continue
+            title = decode(entry.name[:-3])
+            if unsafe(title):
+                print(f"SKIP unsafe title from {entry.name!r}: {title!r}", file=sys.stderr)
+                skipped += 1
+                continue
+            ## Open by the real scandir path, never a title-derived one (decode
+            ## restores '/'); unsafe() already dropped traversal/absolute titles.
+            with open(entry.path, encoding="utf-8") as fh:
+                text = fh.read()
+            out.write('  <page>\n'
+                      f'    <title>{html.escape(title)}</title>\n    <revision>\n'
+                      f'      <timestamp>{ts}</timestamp>\n'
+                      '      <contributor><username>Maintenance script</username></contributor>\n'
+                      f'      <text bytes="{len(text.encode())}" xml:space="preserve">'
+                      f'{html.escape(text)}</text>\n    </revision>\n  </page>\n')
+            n += 1
+        out.write('</mediawiki>\n')
+
+    if skipped:
+        print(f"skipped {skipped} unsafe filename(s)", file=sys.stderr)
+    print(n)
+
+
+if __name__ == "__main__":
+    main()

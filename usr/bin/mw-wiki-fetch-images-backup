@@ -1,0 +1,140 @@
+#!/bin/bash
+
+## Copyright (C) 2025 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+## AI-Assisted
+
+## Download a wiki's current media files (action API list=allimages) into a
+## separate per-wiki media backup repo -- the media counterpart of the
+## plain-text *-wiki-backup. Files are stored under their real MediaWiki
+## filename (importImages.php reads the on-disk basename). Restore with
+## mw-wiki-restore-images-local or mw-file-upload.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../share/mediawiki-shell/common
+source /usr/share/mediawiki-shell/common
+
+log info "START"
+
+usage() {
+   printf '%s\n' "Usage: ${0##*/} WIKI BACKUP_DIR
+Downloads every current media file from WIKI into BACKUP_DIR.
+
+  WIKI        wiki base URL or shortcut (e.g. https://www.kicksecure.com/w,
+              or 'kicksecure' / 'whonix')
+  BACKUP_DIR  checkout of the per-wiki *media* backup repo
+
+Options:
+  --dry-run   List the files that would be downloaded; download nothing.
+
+Example:
+  ${0##*/} kicksecure ~/derivative-backup/kicksecure-wiki-backup-media" >&2
+   exit 1
+}
+
+dry_run="false"
+while true; do
+   case "${1-}" in
+      --dry-run)
+         dry_run="true"
+         shift
+         ;;
+      -h|--help)
+         usage
+         ;;
+      --)
+         shift
+         break
+         ;;
+      -*)
+         die 2 "Invalid option: '${1}'"
+         ;;
+      *)
+         break
+         ;;
+   esac
+done
+
+if [ -z "${2-}" ]; then
+   usage
+fi
+
+WIKI_URL="${1}"
+backup_dir="${2}"
+check_vars_exist WIKI_URL backup_dir
+
+if [ ! -d "${backup_dir}" ]; then
+   die 1 "backup_dir '${backup_dir}' does not exist!"
+fi
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=../share/mediawiki-shell/wiki-config
+source /usr/share/mediawiki-shell/wiki-config
+
+log info "wiki_api    : ${WIKI_API}"
+log info "backup_dir  : ${backup_dir}"
+log info "dry_run     : ${dry_run}"
+
+aicontinue=""
+total=0
+skipped=0
+downloaded=0
+
+while true; do
+   ## list=allimages: aiprop=url gives the direct download URL; ailimit=500
+   ## is the API page size for non-bots; paginate via aicontinue.
+   api_url="${WIKI_API}?action=query&format=json&list=allimages&ailimit=500&aiprop=url"
+   if [ -n "${aicontinue}" ]; then
+      api_url="${api_url}&aicontinue=${aicontinue}"
+   fi
+
+   response="$(curl_run "${curl_opts[@]}" --header "Expect:" "${api_url}")"
+
+   ## Iterate (name, url) pairs in the current shell (process substitution,
+   ## not a pipe) so the counters survive the loop.
+   while IFS=$'\t' read -r name url; do
+      if [ -z "${name}" ]; then
+         continue
+      fi
+      total=$((total + 1))
+
+      if ! validate_safe_filename name >/dev/null 2>&1; then
+         log warn "SKIP filename failing validate_safe_filename: '${name}'"
+         skipped=$((skipped + 1))
+         continue
+      fi
+
+      dest="${backup_dir}/${name}"
+      assert_path_within_dir "${backup_dir}" "${dest}"
+
+      if [ "${dry_run}" = "true" ]; then
+         log info "dry-run | ${name}"
+         continue
+      fi
+
+      ## url is already percent-encoded by the API; do not re-encode.
+      curl_run_no_encode=true \
+         curl_run "${curl_opts[@]}" --header "Expect:" --output "${dest}" "${url}"
+      downloaded=$((downloaded + 1))
+      log info "saved ${downloaded} | ${name}"
+   done < <(printf '%s' "${response}" | jq -r '.query.allimages[]? | [.name, .url] | @tsv')
+
+   aicontinue="$(printf '%s' "${response}" | jq -r '.continue.aicontinue // empty')"
+   if [ -z "${aicontinue}" ]; then
+      break
+   fi
+done
+
+if [ "${dry_run}" = "true" ]; then
+   log info "dry-run: ${total} file(s) would be fetched (${skipped} skipped)."
+else
+   log info "Done. Downloaded ${downloaded} / ${total} file(s) (${skipped} skipped)."
+fi

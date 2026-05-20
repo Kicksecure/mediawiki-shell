@@ -21,6 +21,8 @@ Options:
   --continue-from-page=N      Continue from page index
   --multiwiki-category=X      Category of multiwiki (default: ${default_multiwiki_category})
   --multiwiki-extra-pages=X   Extra multiwiki pages to append
+  --delete                    Act on stale target pages (default: report-only)
+  --delete-max=N              Safety cap on pages acted on per run (default: ${default_delete_max})
 Defaults:
   WIKI=${default_wiki_url}
   WIKI_TARGET=${default_wiki_url_target}
@@ -41,8 +43,11 @@ default_wiki_url_target="https://www.whonix.org/w"
 default_output_dir="$HOME/mediawiki-shell/mirror-multi-wiki"
 
 default_multiwiki_category="MultiWiki"
+default_delete_max="50"
 continue_from_page=""
 multiwiki_extra_pages=""
+delete_mode="false"
+delete_max="${default_delete_max}"
 
 while true; do
   [[ "${1-}" =~ ^- ]] || break
@@ -52,6 +57,8 @@ while true; do
     continue-from-page) get_arg; continue_from_page="${arg}";;
     multiwiki-category) get_arg; multiwiki_category="${arg}";;
     multiwiki-extra-pages) get_arg; multiwiki_extra_pages="${arg}";;
+    delete) delete_mode="true";;
+    delete-max) get_arg; delete_max="${arg}";;
     h|help) usage;;
     --|"") break;;
     *) die 2 "Invalid option: '${opt_orig}'"
@@ -61,6 +68,8 @@ done
 
 multiwiki_category="${multiwiki_category-"${default_multiwiki_category}"}"
 edit_msg='mediawiki-shell-bot-mirror-multi-wiki-page-from-kicksecure-to-whonix'
+delete_reason_msg='mediawiki-shell-bot-multi-wiki-delete-stale-page-removed-from-source-category'
+detag_msg='mediawiki-shell-bot-multi-wiki-remove-stale-category-tag-source-page-still-exists'
 
 WIKI_URL="${1-"${default_wiki_url}"}"
 wiki_url_target="${2-"${default_wiki_url_target}"}"
@@ -68,6 +77,177 @@ output_dir="${3-"${default_output_dir}"}"
 
 # shellcheck source=../share/mediawiki-shell/wiki-config
 source /usr/share/mediawiki-shell/wiki-config
+
+## Append the titles of all members of Category:<category> on the wiki at
+## <api> to <outfile>. Iterates cmcontinue so categories with more than
+## cmlimit (500) members are not silently truncated.
+fetch_category_members() {
+  local api category outfile cm_continue all_pages
+  api="$1"
+  category="$2"
+  outfile="$3"
+  cm_continue=""
+  while true; do
+    all_pages="$(
+      curl_run \
+        "${curl_opts[@]}" \
+        --get \
+        --data-urlencode "cmtitle=Category:$category" \
+        --data-urlencode "cmcontinue=$cm_continue" \
+        "${api}?action=query&format=json&list=categorymembers&cmlimit=500"
+    )"
+    stecho "$all_pages" | jq -r ".query.categorymembers[] | .title" | tee -a -- "$outfile" >/dev/null
+    cm_continue="$(stecho "$all_pages" | jq -r '.continue.cmcontinue // empty')"
+    if [ -z "$cm_continue" ]; then
+      break
+    fi
+  done
+}
+
+## Return 0 if <page> exists on the source wiki (WIKI_API), 1 if it is
+## missing. Used to distinguish a deleted page from a merely de-categorized
+## one. Read-only, no login required.
+page_exists_on_source() {
+  local page page_info_json page_missing
+  page="$1"
+  page_info_json="$(
+    curl_run \
+      "${curl_opts[@]}" \
+      --get \
+      --data-urlencode "titles=$page" \
+      "${WIKI_API}?action=query&format=json&prop=info"
+  )"
+  ## Missing pages carry a "missing" key (and a negative pageid). 'any'
+  ## collapses to a single value, so no 'head' is needed (which would risk a
+  ## SIGPIPE under 'set -o pipefail'). An empty page set yields "no", i.e.
+  ## treated as still-existing, which fails safe (no deletion).
+  page_missing="$(stecho "$page_info_json" | jq -r 'if any(.query.pages[]?; has("missing")) then "yes" else "no" end')"
+  if [ "$page_missing" = "yes" ]; then
+    return 1
+  fi
+  return 0
+}
+
+## Copy <infile> to <outfile>, dropping any line that is exactly the
+## multiwiki category tag ('[[Category:<category>]]', optional sort key,
+## optional surrounding whitespace). Only own-line tags are removed; an
+## inline tag is left in place, which fails safe: the page stays in the
+## category and is simply reported again on the next run.
+strip_category_tag() {
+  local infile outfile line trimmed
+  infile="$1"
+  outfile="$2"
+  shopt -s nocasematch
+  while IFS= read -r line || [ -n "$line" ]; do
+    ## Trim leading and trailing whitespace for the comparison only.
+    trimmed="${line#"${line%%[![:space:]]*}"}"
+    trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+    if [[ "$trimmed" == "[[category:${multiwiki_category}]]" \
+       || "$trimmed" == "[[category:${multiwiki_category}|"*"]]" ]]; then
+      continue
+    fi
+    printf '%s\n' "$line"
+  done <"$infile" >"$outfile"
+  shopt -u nocasematch
+}
+
+## Delete (or, for a still-existing source page, de-tag) target pages that
+## carry the multiwiki category but are no longer in the source category.
+## See the rationale block at the call site. Report-only unless delete_mode.
+cleanup_stale_target_pages() {
+  local target_api target_pages_file source_sorted target_sorted stale_file
+  local stale_count page pending_exit_code detag_file detag_out
+
+  target_api="${wiki_url_target}/api.php"
+  target_pages_file="${TMPFOLDER}/target-allpages.txt"
+  source_sorted="${TMPFOLDER}/source-sorted.txt"
+  target_sorted="${TMPFOLDER}/target-sorted.txt"
+  stale_file="${TMPFOLDER}/stale-pages.txt"
+  detag_file="${TMPFOLDER}/detag-in"
+  detag_out="${TMPFOLDER}/detag-out"
+  safe-rm -f -- "$target_pages_file" "$source_sorted" "$target_sorted" "$stale_file"
+  touch -- "$target_pages_file"
+
+  log info "CLEANUP | Enumerating Category:${multiwiki_category} on target '${target_api}'..."
+  fetch_category_members "$target_api" "$multiwiki_category" "$target_pages_file"
+
+  if [ ! -s "$target_pages_file" ]; then
+    log info "CLEANUP | Target has no '${multiwiki_category}' members, nothing to clean, ok."
+    return 0
+  fi
+
+  ## 'allpages_file' is the source keep-set: source category members plus any
+  ## '--multiwiki-extra-pages'. Anything in the target set but not in the keep
+  ## set is stale. An empty source keep-set already aborted earlier, so this
+  ## diff can never degrade into "delete everything".
+  LC_ALL=C sort -u -- "$allpages_file"     >"$source_sorted"
+  LC_ALL=C sort -u -- "$target_pages_file" >"$target_sorted"
+  LC_ALL=C comm -13 "$source_sorted" "$target_sorted" >"$stale_file"
+
+  stale_count="$(awk 'END {print NR}' "$stale_file")"
+  if [ "$stale_count" = "0" ]; then
+    log info "CLEANUP | No stale pages on target, ok."
+    return 0
+  fi
+
+  log info "CLEANUP | Stale page candidates on target: ${stale_count}"
+
+  if [ "$delete_mode" = "true" ] && [ "$stale_count" -gt "$delete_max" ]; then
+    die 1 "CLEANUP | Refusing to act on ${stale_count} stale pages (exceeds --delete-max=${delete_max}). Re-run with a higher --delete-max if this is intentional."
+  fi
+
+  while IFS=$'\n' read -r page; do
+    [ -n "$page" ] || continue
+
+    ## Defense-in-depth: reject malicious unicode before using the title.
+    printf '%s\n' "$page" | unicode-show
+
+    if page_exists_on_source "$page"; then
+      ## Source page still exists; only its category tag was removed.
+      if [ "$delete_mode" != "true" ]; then
+        log info "CLEANUP | [REPORT] would DE-TAG (source page still exists): '$page'"
+        continue
+      fi
+      pending_exit_code=0
+      mw-page-pending-check "$wiki_url_target" "$page" || pending_exit_code="$?"
+      if [ "$pending_exit_code" = "10" ]; then
+        log warn "CLEANUP | DE-TAG skipped, target page has PENDING EDITS: '$page'"
+        continue
+      fi
+      if [ "$pending_exit_code" != "0" ]; then
+        die 1 "CLEANUP | mw-page-pending-check failed for '$page' with exit code '$pending_exit_code'."
+      fi
+      log info "CLEANUP | DE-TAG '$page' on target..."
+      mw-fetch "$wiki_url_target" "$page" "$detag_file"
+      strip_category_tag "$detag_file" "$detag_out"
+      if [ ! -s "$detag_out" ]; then
+        log warn "CLEANUP | DE-TAG skipped, stripping the tag would empty '$page'; handle manually."
+        continue
+      fi
+      mw-edit "$wiki_url_target" "$detag_out" "$page" "$detag_msg"
+      log info "CLEANUP | DE-TAG '$page' success."
+      continue
+    fi
+
+    ## Source page is gone; delete the stale target copy.
+    if [ "$delete_mode" != "true" ]; then
+      log info "CLEANUP | [REPORT] would DELETE (source page missing): '$page'"
+      continue
+    fi
+    pending_exit_code=0
+    mw-page-pending-check "$wiki_url_target" "$page" || pending_exit_code="$?"
+    if [ "$pending_exit_code" = "10" ]; then
+      log warn "CLEANUP | DELETE skipped, target page has PENDING EDITS: '$page'"
+      continue
+    fi
+    if [ "$pending_exit_code" != "0" ]; then
+      die 1 "CLEANUP | mw-page-pending-check failed for '$page' with exit code '$pending_exit_code'."
+    fi
+    log info "CLEANUP | DELETE '$page' on target..."
+    mw-delete "$wiki_url_target" "$page" "$delete_reason_msg"
+    log info "CLEANUP | DELETE '$page' success."
+  done <"$stale_file"
+}
 
 allpages_file="${TMPFOLDER}/allpages.txt"
 safe-rm -f -- "$allpages_file"
@@ -80,6 +260,8 @@ log info "allpages_file        : $allpages_file"
 log info "multiwiki_category   : $multiwiki_category"
 log info "multiwiki_extra_pages: $multiwiki_extra_pages"
 log info "continue_from_page   : ${continue_from_page-}"
+log info "delete_mode          : $delete_mode"
+log info "delete_max           : $delete_max"
 
 mkdir --parents -- "$output_dir"
 
@@ -101,26 +283,7 @@ for multiwiki_extra_pages_item in $multiwiki_extra_pages; do
   stecho "$multiwiki_extra_pages_item" | tee -a -- "$allpages_file" >/dev/null
 done
 
-## Iterate cmcontinue so categories with more than cmlimit (500) members
-## are not silently truncated.
-cm_continue=""
-while true; do
-  all_pages="$(
-    curl_run \
-      "${curl_opts[@]}" \
-      --get \
-      --data-urlencode "cmtitle=Category:$multiwiki_category" \
-      --data-urlencode "cmcontinue=$cm_continue" \
-      "${WIKI_API}?action=query&format=json&list=categorymembers&cmlimit=500"
-  )"
-
-  stecho "$all_pages" | jq -r ".query.categorymembers[] | .title" | tee -a -- "$allpages_file" >/dev/null
-
-  cm_continue="$(stecho "$all_pages" | jq -r '.continue.cmcontinue // empty')"
-  if [ -z "$cm_continue" ]; then
-    break
-  fi
-done
+fetch_category_members "$WIKI_API" "$multiwiki_category" "$allpages_file"
 
 test -f "$allpages_file"
 if [ ! -s "$allpages_file" ]; then
@@ -194,3 +357,24 @@ while IFS=$'\n' read -r item_from_all_pages; do
   continue
 
 done <"$allpages_file"
+
+## ----------------------------------------------------------------------
+## Deletion / cleanup pass.
+##
+## The loop above only sees pages that are currently in
+## Category:<multiwiki_category> on the source wiki, so a page deleted (or
+## de-categorized) on the source vanishes from that list and its mirrored
+## copy on the target is never cleaned up.
+##
+## The mirrored target copies carry the same category tag (it is part of the
+## copied wikitext), so the target wiki's own category membership is the
+## record of "what was mirrored". A page in the target category but absent
+## from the source keep-set is therefore stale:
+##   - source page missing -> delete the target copy
+##   - source page exists  -> only the tag was removed; strip it on target
+##
+## Report-only unless '--delete' is given.
+## ----------------------------------------------------------------------
+log info "CLEANUP | START (delete_mode=$delete_mode, delete_max=$delete_max)"
+cleanup_stale_target_pages
+log info "CLEANUP | END"

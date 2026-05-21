@@ -1,3 +1,53 @@
+commit 763de15940cb986e56ba5c1d88916074967699a0
+Merge: f0cdb64 9269ea5
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 13:33:13 2026 -0400
+
+    Merge remote-tracking branch 'org-ai-assisted/claude/sleepy-rubin-enHt4'
+
+commit f0cdb64453dae1c2d0a88144f401b138b4ca0c30
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 17:24:00 2026 +0000
+
+    bumped changelog version
+
+commit 9269ea5e3fb3c9f0d5c6477f46d6004469ffc944
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 17:19:40 2026 +0000
+
+    mw-wiki-fetch-backup: do not treat pending-check failure as "pending"
+
+    mw-page-pending-check exits 10 specifically for "page has pending edits";
+    any other non-zero is a check failure (network error, a crash, or the
+    exit-126 from a missing executable bit). The old `if ! mw-page-pending-check`
+    conflated all of these with "pending" and exited 0, silently dropping the
+    page from the backup -- a data-loss hazard in a backup tool.
+
+    Capture the exit code and skip (exit 0) only on 10, mirroring the handling
+    already used in mw-multi-wiki; on any other non-zero, retry within the
+    existing loop and fail (exit 1) once retries are exhausted so the failure
+    surfaces instead of being swallowed. Also `continue` the retry loop after a
+    failed mw-fetch so the {1..5} attempts actually take effect (previously every
+    path exited on the first iteration, making the retry loop dead code).
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 6a7afd4987dabff537c5fdc62ee079a9e05300e2
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 17:19:33 2026 +0000
+
+    Restore executable bit on mw-page-pending-check
+
+    Commit 56c4325 accidentally dropped the executable bit (100755 -> 100644).
+    It is the only script in usr/bin/ that is not executable. On a .deb install
+    dh_fixperms masks this by forcing usr/bin/* to 0755, but running the scripts
+    directly from the source tree -- development, CI checkouts that copy usr/bin/,
+    local wiki reproduction -- fails with exit 126 "Permission denied". Worse,
+    mw-wiki-fetch-backup then misreads that 126 as "page has pending edits" and
+    silently skips the page from the backup.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
 commit f47efaa713a5a81fea20162bfe28c040c00866c0
 Merge: 41c2c15 4e22292
 Author: Patrick Schleizer <adrelanos@whonix.org>

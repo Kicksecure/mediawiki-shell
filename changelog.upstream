@@ -1,3 +1,161 @@
+commit e886c205869c3cc8534a9f95c5ec7a81f22c9663
+Merge: 95d3149 4af8c89
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 18:42:41 2026 -0400
+
+    Merge remote-tracking branch 'org-ai-assisted/master'
+
+commit 4af8c89197c6ff720a15b2afe58ecadf0c51291d
+Merge: 78bf1c2 95d3149
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 18:41:41 2026 -0400
+
+    Merge branch 'Kicksecure:master' into master
+
+commit 95d3149636f94b7356a95e03dc095799617d639e
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 22:13:33 2026 +0000
+
+    bumped changelog version
+
+commit 78bf1c2b8e7d03f3838b635ff70a522e1f18ec90
+Merge: 763de15 70dad7f
+Author: assisted-by-ai (Bot Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Thu May 21 16:11:02 2026 -0400
+
+    Merge pull request #5 from org-ai-assisted/claude/sleepy-rubin-enHt4
+
+    Add CI test suites: offline unit tests + live-wiki integration tests
+
+commit 70dad7f4a25351ae04f5c7d90ecd597fe6dab198
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 20:07:11 2026 +0000
+
+    ci: add consumer-pre-push-static.yml (was dropped from the prior commit)
+
+    The previous commit removed local-shell-lint.yml but a multi-pathspec
+    git-add aborted before staging the replacement, so consumer-pre-push-static.yml
+    (the reusable pre-push static gate) was left untracked. Add it now so the
+    repo actually has the lint gate.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 5be14f0be4dfbf10b90be41543a2707ea9f40060
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 20:05:54 2026 +0000
+
+    ci: use the reusable pre-push static gate instead of a custom shellcheck job
+
+    Replace the hand-rolled local-shell-lint.yml (which called the shellcheck
+    composite action directly) with consumer-pre-push-static.yml, the byte-identical
+    org template that calls
+    org-ai-assisted/developer-meta-files/.github/workflows/reusable-pre-push-static.yml@master.
+
+    The reusable gate is a superset: shellcheck --external-sources plus bash -n,
+    R-001 ASCII, the Tier-1 bash-style-guide rules (R-010/011/042/051/070/081/090/
+    102/120/130), and the pre-commit-hooks set -- all in the same debian:trixie
+    container CI uses elsewhere. local-unit-tests.yml stays (it runs this repo's own
+    offline suite via the install-deps composite action; there is no reusable
+    workflow for a repo's bespoke tests).
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 9269d5569591348007e3769a68d7ac7d253aabf5
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 19:27:20 2026 +0000
+
+    unit-tests.bash: apply the bash-style-guide fixes (R-010/R-090/R-120)
+
+    The prior commit only recorded the integration-tests.bash removal; the
+    unit-tests.bash edits were left unstaged (git add aborted on the already-rm'd
+    pathspec). This commits the actual style-guide compliance changes:
+
+      * R-010: full strict-mode block; commands-under-test guarded with
+        '|| var=...' / '|| rc=$?' so failures FAIL the assertion, not abort.
+      * R-090: no 'command -v' (call mw-urlencode directly; xmllint is a
+        guaranteed unit-tests workflow dependency).
+      * R-120: safe-rm for temp-fixture cleanup.
+
+    Passes agents/pre-push-static.sh and the unit suite (33/33).
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 0761e553846e4f58780288563586134f2aec2cfe
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 19:24:04 2026 +0000
+
+    tests: comply with the bash style guide; drop integration-tests
+
+    Brings tests/unit-tests.bash into line with developer-meta-files'
+    agents/bash-style-guide.md (enforced by agents/pre-push-static.sh):
+      * R-010: full strict-mode block (errexit/nounset/pipefail/errtrace +
+        inherit_errexit/shift_verbose). Commands under test are guarded with
+        '|| var=...' / '|| rc=$?' so a real failure surfaces as a FAIL assertion
+        instead of aborting the suite under errexit.
+      * R-090: drop 'command -v' -- call mw-urlencode directly and rely on xmllint
+        (a guaranteed unit-tests workflow dependency) rather than probing for it.
+      * R-120: safe-rm instead of rm for temp-fixture cleanup.
+
+    Removes tests/integration-tests.bash: live-wiki coverage now lives in
+    dist-encrypted's .github/scripts/wiki-mediawiki-shell-test.sh (driven by the
+    wiki reproduction), which supersedes it.
+
+    Unit suite still passes 33/33.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 34dcf95bd31997cdd0c25585a5f1b63c9393593a
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 18:46:10 2026 +0000
+
+    mw-multi-wiki: log into the actual target wiki, not the default
+
+    The pre-mirror login check used the hardcoded default_wiki_url_target
+    (www.whonix.org) instead of the resolved wiki_url_target ($2). With the
+    default target it happened to coincide, but any explicit target argument made
+    mw-multi-wiki authenticate against (and fail on) the wrong wiki before doing
+    any work. Use "$wiki_url_target" so the login check matches the wiki actually
+    being mirrored to.
+
+    Found while testing mw-multi-wiki --delete against a local target wiki.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 0b5c457b360bea6e4a0e4f7f4c87ebb4053a3bb6
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 18:13:53 2026 +0000
+
+    Add CI test suites: offline unit tests + live-wiki integration tests
+
+    Adds the first automated test coverage for mediawiki-shell, modelled on the
+    sibling repos' pattern (msgcollector tests + the developer-meta-files
+    install-deps / shellcheck composite actions).
+
+    tests/unit-tests.bash (no wiki; runs in CI):
+      - mw-urlencode filename<->title codec round-trips (incl. '/'->%2F subpage
+        safety and space->underscore normalization).
+      - mw-build-import-xml: XML construction, escaping, subpage decode, and
+        unsafe-title (path-traversal) skipping.
+      - common helpers: assert_path_within_dir traversal guard,
+        should_start_processing (--continue-from), set/decode_backup_page_item.
+
+    tests/integration-tests.bash (live wiki via WIKI_URL):
+      - read-only: mw-all-pages, mw-fetch, mw-page-pending-check.
+      - backup + fidelity: mw-wiki-fetch-backup and a full mw-process-all-pages
+        namespace run, byte-compared against a source backup.
+
+    Workflows:
+      - local-shell-lint.yml  -- shellcheck (shebang-discovered) over usr/bin,
+        usr/share/mediawiki-shell, tests.
+      - local-unit-tests.yml  -- install-deps (genmkfile + helper-scripts +
+        self) then run the offline unit suite.
+
+    Validated locally: 33/33 unit assertions and 9/9 integration assertions pass
+    against a reproduced Kicksecure wiki (2070 pages). The live-wiki integration
+    workflow (which must stand up a wiki in CI) is intentionally not added yet.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
 commit 763de15940cb986e56ba5c1d88916074967699a0
 Merge: f0cdb64 9269ea5
 Author: Patrick Schleizer <adrelanos@whonix.org>

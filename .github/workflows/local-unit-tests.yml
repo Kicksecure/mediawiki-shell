@@ -1,0 +1,44 @@
+## Copyright (C) 2026 - 2026 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
+## See the file COPYING for copying conditions.
+
+## AI-Assisted
+
+name: unit-tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install apt deps + genmkfile + helper-scripts + mediawiki-shell
+        uses: org-ai-assisted/developer-meta-files/.github/actions/install-deps@master
+        with:
+          ## common's collect_reqs needs retry/curl/jq/safe-rm/sponge(moreutils)
+          ## /realpath(coreutils); the codec/XML helpers need python3; the XML
+          ## well-formedness check uses xmllint (libxml2-utils). str_replace /
+          ## stprint come from helper-scripts (installed by this action).
+          apt-packages: 'safe-rm moreutils jq curl retry python3 libxml2-utils'
+          install-self: 'true'
+
+      - name: Run unit tests
+        ## GitHub Actions sets CI=true, which the suite requires.
+        run: tests/unit-tests.bash

@@ -103,7 +103,10 @@ trap error_handler ERR
 ##   Returns 0 to process the item, 1 to skip it.
 should_start_processing() {
   local index="$1" title="$2" continue_from="$3"
-  local -n _ssp_state="$4"
+  local -n _ssp_state
+
+  check_variable_name "$4" || return 1
+  _ssp_state="$4"
 
   if [ -z "$continue_from" ]; then
     return 0
@@ -114,6 +117,10 @@ should_start_processing() {
   fi
 
   if [[ "$continue_from" =~ ^[0-9]+$ ]]; then
+    ## TODO: Are negative numbers allowable here? If so, use
+    ## is_integer instead of is_whole_number.
+    is_whole_number "$index" || return 1
+    is_whole_number "$continue_from" || return 1
     if (( index >= continue_from )); then
       _ssp_state="yes"
       return 0

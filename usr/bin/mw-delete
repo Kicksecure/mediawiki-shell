@@ -111,6 +111,8 @@ log info "Network for delete page ok."
 
 test -r "${TMPFOLDER}/delete-result.json"
 
+## FIXME: Sanitizing JSON before handing to jq is prohibited, see Bash
+## style guide rule R-140. Sanitize after parsing with jq.
 delete_result_output="$(stcat "${TMPFOLDER}/delete-result.json")"
 
 ## Success: the response carries a '.delete' object (logid, title, reason).

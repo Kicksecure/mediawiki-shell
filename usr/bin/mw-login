@@ -87,5 +87,7 @@ if [ "$result" = "Success" ]; then
   exit 0
 fi
 
+## FIXME: Sanitizing JSON before handing to jq is prohibited, see Bash
+## style guide rule R-140. Sanitize after parsing with jq.
 reason="$(jq -r ".login.reason" < <(stcat "${TMPFOLDER}/login-result.json"))"
 die 1 "Login failed to '$WIKI_API' as '$WIKI_API_USER_NAME': ${result}: ${reason}"

@@ -11,10 +11,20 @@
 ## usr/share/mediawiki-shell/common (path-traversal guard, continue-from
 ## logic, backup-item encode/decode round-trip).
 ##
-## Run on CI (no wiki required). For live-wiki coverage see integration-tests.bash.
+## Run on CI (no wiki required). Live-wiki coverage lives in dist-encrypted's
+## .github/scripts/wiki-mediawiki-shell-test.sh (driven by the wiki
+## reproduction), not here.
+##
+## Commands under test are invoked with '|| var=...' / '|| rc=$?' guards so a
+## genuine failure surfaces as a FAIL assertion rather than aborting the suite
+## under errexit.
 
+set -o errexit
 set -o nounset
 set -o pipefail
+set -o errtrace
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 if [ "${CI:-}" != "true" ]; then
   printf '%s\n' "$0: These tests are only supposed to run on CI (set CI=true)." >&2
@@ -38,7 +48,6 @@ assert_rc() {
   if [ "$2" = "$3" ]; then pass "$1"; else fail "$1 (expected rc '$2', got '$3')"; fi
 }
 
-mw_urlencode="$(command -v mw-urlencode)"
 import_xml_builder="/usr/libexec/mediawiki-shell/mw-build-import-xml"
 
 ## ===========================================================================
@@ -65,27 +74,27 @@ roundtrip_titles=(
   "Category:Tor"
 )
 for title in "${roundtrip_titles[@]}"; do
-  enc="$("${mw_urlencode}" --encode-page-to-filename "${title}")" || { fail "encode '${title}' errored"; continue; }
+  enc="$(mw-urlencode --encode-page-to-filename "${title}")" || { fail "encode '${title}' errored"; continue; }
   ## Encoded form must be a single line and contain no '/' (subpage separator
   ## must be percent-encoded so it cannot create directories) and no spaces.
   if printf '%s' "${enc}" | grep -q '/'; then fail "encoded '${title}' still contains '/': '${enc}'"; continue; fi
   if printf '%s' "${enc}" | grep -q ' '; then fail "encoded '${title}' still contains a space: '${enc}'"; continue; fi
-  dec="$("${mw_urlencode}" --decode-filename-to-page "${enc}")" || { fail "decode '${enc}' errored"; continue; }
+  dec="$(mw-urlencode --decode-filename-to-page "${enc}")" || { fail "decode '${enc}' errored"; continue; }
   assert_eq "round-trip '${title}' (enc='${enc}')" "${title}" "${dec}"
 done
 
 ## Spaces specifically must become underscores (git-mediawiki convention).
-enc_space="$("${mw_urlencode}" --encode-page-to-filename "A page with spaces")"
+enc_space="$(mw-urlencode --encode-page-to-filename "A page with spaces")" || enc_space="<error>"
 assert_eq "space -> underscore" "A_page_with_spaces" "${enc_space}"
 
 ## Decoding the underscore form yields the underscore (canonical) title, NOT a
 ## space. MediaWiki treats space and underscore as equivalent in titles, so
 ## this is lossless at the wiki level; assert it as intended behavior.
-dec_us="$("${mw_urlencode}" --decode-filename-to-page "A_page_with_spaces")"
+dec_us="$(mw-urlencode --decode-filename-to-page "A_page_with_spaces")" || dec_us="<error>"
 assert_eq "decode keeps underscore canonical form (space==underscore)" "A_page_with_spaces" "${dec_us}"
 
 ## '/' must become %2F (preserve subpage, no directory traversal).
-enc_slash="$("${mw_urlencode}" --encode-page-to-filename "Dev/mediawiki")"
+enc_slash="$(mw-urlencode --encode-page-to-filename "Dev/mediawiki")" || enc_slash="<error>"
 assert_eq "slash -> %2F" "Dev%2Fmediawiki" "${enc_slash}"
 
 ## ===========================================================================
@@ -93,7 +102,7 @@ printf '%s\n' "=== mw-build-import-xml: XML construction + unsafe-title skip ===
 ## ===========================================================================
 fixture_dir="$(mktemp -d)"
 xml_out="$(mktemp)"
-cleanup_fixtures() { rm -rf -- "${fixture_dir}" "${xml_out}"; }
+cleanup_fixtures() { safe-rm --recursive --force -- "${fixture_dir}" "${xml_out}"; }
 trap cleanup_fixtures EXIT
 
 ## Three legitimate pages across namespaces, with content needing XML escaping.
@@ -103,23 +112,23 @@ printf '%s\n' "{{#widget:CodeSelect}}"  > "${fixture_dir}/Widget:CodeSelect.mw"
 ## A non-.mw file must be ignored.
 printf '%s\n' "ignore me"               > "${fixture_dir}/README.txt"
 
-count="$("${import_xml_builder}" "${fixture_dir}" "${xml_out}")"
+count="$("${import_xml_builder}" "${fixture_dir}" "${xml_out}")" || count="<error>"
 assert_eq "import-xml page count (3 .mw files, 1 non-.mw ignored)" "3" "${count}"
 
-## XML well-formedness + content escaping + subpage title decode.
-if command -v xmllint >/dev/null 2>&1; then
-  if xmllint --noout "${xml_out}" 2>/dev/null; then pass "import XML is well-formed"; else fail "import XML is not well-formed"; fi
-fi
+## XML well-formedness + content escaping + subpage title decode. xmllint is a
+## guaranteed dependency (libxml2-utils, installed by the unit-tests workflow).
+if xmllint --noout "${xml_out}" 2>/dev/null; then pass "import XML is well-formed"; else fail "import XML is not well-formed"; fi
 if grep -q '<title>Dev/mediawiki</title>' "${xml_out}"; then pass "subpage filename %2F decoded back to '/' in title"; else fail "subpage title not decoded"; fi
 if grep -q 'Hello &lt;world&gt; &amp; friends' "${xml_out}"; then pass "page text XML-escaped"; else fail "page text not XML-escaped"; fi
 
 ## Unsafe titles must be skipped, not written (path traversal / absolute / control).
 unsafe_dir="$(mktemp -d)"
+unsafe_xml="$(mktemp)"
 printf '%s\n' "evil" > "${unsafe_dir}/%2E%2E%2Fescape.mw"   # decodes to "../escape"
 printf '%s\n' "ok"   > "${unsafe_dir}/Safe.mw"
-unsafe_count="$("${import_xml_builder}" "${unsafe_dir}" "$(mktemp)" 2>/dev/null)"
+unsafe_count="$("${import_xml_builder}" "${unsafe_dir}" "${unsafe_xml}" 2>/dev/null)" || unsafe_count="<error>"
 assert_eq "import-xml skips traversal title (only 'Safe' kept)" "1" "${unsafe_count}"
-rm -rf -- "${unsafe_dir}"
+safe-rm --recursive --force -- "${unsafe_dir}" "${unsafe_xml}"
 
 ## ===========================================================================
 printf '%s\n' "=== common: assert_path_within_dir (traversal guard) ==="

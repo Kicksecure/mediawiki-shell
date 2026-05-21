@@ -7,6 +7,8 @@ set -o errexit
 set -o nounset
 set -o errtrace
 set -o pipefail
+shopt -s inherit_errexit
+shopt -s shift_verbose
 
 # shellcheck source=../share/mediawiki-shell/common
 source /usr/share/mediawiki-shell/common
@@ -18,6 +20,10 @@ Options:
   --article-sanity-test=X    Guarantee that string is present on the fetched pages
   --namespace-default-list=N Page collection per namespace
   --namespace-extra-list=N   Extra page collection per namespace
+  --keep-going               Continue past per-item failures (record them, exit non-zero)
+  --retry                    Skip items already recorded done; retry the rest
+  --reset                    Clear any prior state before starting
+  --state-file=PATH          Override the state-file location (default: under TMPFOLDER)
 Note:
   ARGS are passed to the SCRIPT.
 Example:
@@ -25,7 +31,7 @@ Example:
   exit 1
 }
 
-# shellcheck source=/usr/libexec/helper-scripts/parse_opt.sh
+# shellcheck source=../../../helper-scripts/usr/libexec/helper-scripts/parse_opt.sh
 source /usr/libexec/helper-scripts/parse_opt.sh
 
 continue_from=""
@@ -33,18 +39,50 @@ article_sanity_test=""
 namespace_default_list=""
 namespace_extra_list=""
 
+# shellcheck disable=SC2034  # KEEP_GOING/RETRY/STATE_RESET/STATE_FILE set here, read by common's state_* helpers
 while true; do
   [[ "${1-}" =~ ^- ]] || break
   begin_optparse "${1:-}" "${2:-}" || break
   true "${opt-}" "${arg-}" "${opt_orig-}"
   case "${opt}" in
-    continue-from) get_arg; continue_from="${arg}";;
-    article-sanity-test) get_arg; article_sanity_test="${arg}";;
-    namespace-default-list) get_arg; namespace_default_list="${arg}";;
-    namespace-extra-list) get_arg; namespace_extra_list="${arg}";;
-    h|help) usage;;
-    --|"") break;;
-    *) die 2 "Invalid option: '${opt_orig}'"
+    continue-from)
+      get_arg
+      continue_from="${arg}"
+      ;;
+    article-sanity-test)
+      get_arg
+      article_sanity_test="${arg}"
+      ;;
+    namespace-default-list)
+      get_arg
+      namespace_default_list="${arg}"
+      ;;
+    namespace-extra-list)
+      get_arg
+      namespace_extra_list="${arg}"
+      ;;
+    keep-going)
+      KEEP_GOING="true"
+      ;;
+    retry)
+      RETRY="true"
+      ;;
+    reset)
+      STATE_RESET="true"
+      ;;
+    state-file)
+      get_arg
+      STATE_FILE="${arg}"
+      ;;
+    h|help)
+      usage
+      ;;
+    --|"")
+      break
+      ;;
+    *)
+      die 2 "Invalid option: '${opt_orig}'"
+      ;;
   esac
   shift "${shift_n:-1}"
 done
@@ -78,6 +116,8 @@ log info "TMPFOLDER    : $TMPFOLDER"
 log info "WIKI_URL     : $WIKI_URL"
 log info "continue_from: ${continue_from-}"
 
+state_setup "$WIKI_URL"
+
 ## Not required for public wiki.
 #mw-login-test "$WIKI_URL"
 
@@ -103,6 +143,7 @@ unicode-show "$allpages_file"
 
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
+# shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 counter_currently=0
 counter_chunk=0
@@ -119,6 +160,11 @@ while IFS=$'\n' read -r item_from_all_pages; do
     log info "skip: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
     continue
   fi
+
+  if state_should_skip "$item_from_all_pages"; then
+    log info "retry-skip: $counter_currently / $counter_total | already done | $item_from_all_pages"
+    continue
+  fi
   log info "act: $counter_currently / $counter_total | counter_chunk: $counter_chunk | $item_from_all_pages | $backup_filename_item"
 
   assert_path_within_dir "$output_dir" "$output_dir/$backup_filename_item"
@@ -130,16 +176,29 @@ while IFS=$'\n' read -r item_from_all_pages; do
   TMPFOLDER_SEPARATE="$TMPFOLDER/separate/$counter_currently"
   mkdir --parents -- "$TMPFOLDER_SEPARATE"
 
+  item_rc=0
   log_run \
     info \
     env \
     counter_currently="$counter_currently" \
     counter_chunk="$counter_chunk" \
     TMPFOLDER="$TMPFOLDER_SEPARATE" \
-    mw-retry-wrapper "$wiki_script" "$WIKI_URL" "$item_from_all_pages" "$output_dir/$backup_filename_item"
+    mw-retry-wrapper "$wiki_script" "$WIKI_URL" "$item_from_all_pages" "$output_dir/$backup_filename_item" \
+    || item_rc="$?"
+
+  if [ "$item_rc" = "0" ]; then
+    state_record_done "$item_from_all_pages"
+  else
+    state_handle_failure "$item_from_all_pages" "$wiki_script rc=$item_rc"
+  fi
 
   if [ "$counter_chunk" -ge "$chunk_max_size" ] || [ "$counter_currently" -ge "$counter_total" ]; then
     counter_chunk=0
   fi
 
 done <"$allpages_file"
+
+state_finish
+if [ "$state_fail_count" -gt 0 ]; then
+  exit 2
+fi

@@ -25,6 +25,10 @@ Options:
   --git-diff-arg=ARG         Argument passed to 'git diff' to select commits
                              (default: HEAD~1, i.e. changes in the last commit)
   --continue-from=N|TITLE    Continue from file index (N) or page title (case-insensitive)
+  --keep-going               Continue past per-item failures (record them, exit non-zero)
+  --retry                    Skip items already recorded done; retry the rest
+  --reset                    Clear any prior state before starting
+  --state-file=PATH          Override the state-file location (default: under TMPFOLDER)
   --dry-run                  Preview only; skip the actual write on the server.
 Example:
   ${0##*/} 'https://www.kicksecure.com/w' ~/derivative-backup/kicksecure-wiki-backup
@@ -38,6 +42,7 @@ git_diff_arg="HEAD~1"
 edit_msg="${default_edit_msg}"
 continue_from=""
 
+# shellcheck disable=SC2034  # KEEP_GOING/RETRY/STATE_RESET/STATE_FILE set here, read by common's state_* helpers
 while true; do
   case "${1-}" in
     --edit-msg=*)
@@ -50,6 +55,22 @@ while true; do
       ;;
     --continue-from=*)
       continue_from="${1#--continue-from=}"
+      shift
+      ;;
+    --keep-going)
+      KEEP_GOING="true"
+      shift
+      ;;
+    --retry)
+      RETRY="true"
+      shift
+      ;;
+    --reset)
+      STATE_RESET="true"
+      shift
+      ;;
+    --state-file=*)
+      STATE_FILE="${1#--state-file=}"
       shift
       ;;
     --dry-run)
@@ -96,6 +117,8 @@ log info "git_diff_arg  : $git_diff_arg"
 log info "edit_msg      : $edit_msg"
 log info "continue_from : ${continue_from-}"
 
+state_setup "$wiki_url"
+
 mw-login-test "$wiki_url"
 
 ## Get list of modified/added .mw files from git diff.
@@ -118,6 +141,7 @@ counter_currently=0
 
 log info "Found $counter_total modified .mw file(s) to push."
 
+# shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 while IFS= read -r mw_file; do
   (( counter_currently++ )) || true
@@ -132,6 +156,11 @@ while IFS= read -r mw_file; do
     continue
   fi
 
+  if state_should_skip "$page_title"; then
+    log info "retry-skip $counter_currently / $counter_total | already done | $page_title"
+    continue
+  fi
+
   file_path="${backup_dir}/${mw_file}"
   assert_path_within_dir "$backup_dir" "$file_path"
 
@@ -142,8 +171,19 @@ while IFS= read -r mw_file; do
 
   log info "push $counter_currently / $counter_total | $page_title | $file_path"
 
-  mw-edit "$wiki_url" "$file_path" "$page_title" "$edit_msg"
+  push_rc=0
+  mw-edit "$wiki_url" "$file_path" "$page_title" "$edit_msg" || push_rc="$?"
+  if [ "$push_rc" = "0" ]; then
+    state_record_done "$page_title"
+  else
+    state_handle_failure "$page_title" "mw-edit rc=$push_rc"
+  fi
 
 done <<< "$modified_files"
+
+state_finish
+if [ "$state_fail_count" -gt 0 ]; then
+  exit 2
+fi
 
 log info "Done. Pushed $counter_currently / $counter_total page(s)."

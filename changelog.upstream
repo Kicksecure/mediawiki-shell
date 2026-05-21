@@ -1,3 +1,75 @@
+commit f47efaa713a5a81fea20162bfe28c040c00866c0
+Merge: 41c2c15 4e22292
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 12:27:09 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/multi-credentials-wiki-url-5KgcL'
+
+commit 41c2c151c925472ae414a77387507e7de7a6e5c4
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed May 20 22:14:33 2026 +0000
+
+    bumped changelog version
+
+commit 4e22292407a6b63f1362e5a475bbad73d955596f
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 22:09:46 2026 +0000
+
+    add --keep-going / --retry / --reset / --state-file resumable batch state
+
+    Long batch runs over a wiki's page list previously aborted on the first
+    per-item failure and had to restart from the top. Add an opt-in state
+    layer in common, used by the batch scripts:
+
+    - --keep-going       continue past a per-item failure (record it) instead
+                         of aborting; exit non-zero at the end if any failed.
+    - --retry            skip items already recorded done in a prior run and
+                         retry the rest. Safe on a first run (empty state).
+    - --reset            clear any prior state before starting.
+    - --state-file=PATH  override the default state-file location.
+
+    State is a TSV under TMPFOLDER (one '<status>\t<title>' record per line,
+    appended; last record per title wins on load; compacted via sponge on
+    load to bound growth). Parsing uses 'IFS=$'\t' read -r' only -- no
+    eval/source/glob -- so a hostile page title in the file cannot lead to
+    code execution. MediaWiki titles cannot contain a tab or newline, so the
+    format is unambiguous. State is disabled under DRY_RUN so a preview never
+    records items as done.
+
+    Without any of these flags every state_* helper is a no-op and the prior
+    fail-fast behaviour is unchanged.
+
+    Wired into mw-process-all-pages, mw-wiki-push-backup,
+    mw-flagged-revisions-approve-all, mw-multi-wiki (per-page; pending-edit
+    skips stay unrecorded so --retry revisits them), and forwarded by
+    mw-patch-modify-wiki-all.
+
+    https://claude.ai/code/session_018oz8E5Ak6HDL1AwCHVzotZ
+
+commit 8673de71387262e80a769599d3fd611618bb5989
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 20:54:14 2026 +0000
+
+    bash-style-guide + shellcheck compliance for the --continue-from scripts
+
+    These files entered the static gate's (agents/pre-push-static.sh)
+    changed-file scope via the --continue-from work; bring them into
+    compliance:
+    - R-010: add the missing 'shopt -s inherit_errexit' / 'shopt -s
+      shift_verbose' lines (mw-process-all-pages,
+      mw-flagged-revisions-approve-all, mw-patch-modify-wiki-all,
+      wiki-config).
+    - R-070/R-071: expand the parse_opt and WIKI_URL case arms so ';;'
+      sits on its own line and each statement is on its own line.
+    - R-080: point the parse_opt.sh 'shellcheck source=' directive at the
+      relative source-tree path, not the absolute install path.
+    - shellcheck SC2034: silence the 'continue_state appears unused' false
+      positive (it is mutated by should_start_processing through a
+      nameref) and drop the genuinely unused 'f' local in wiki-config's
+      source_credentials.
+
+    https://claude.ai/code/session_018oz8E5Ak6HDL1AwCHVzotZ
+
 commit 0d01914645535d7a4b62043730f45b6c74fcd98b
 Merge: 7360609 e5eab01
 Author: Patrick Schleizer <adrelanos@whonix.org>

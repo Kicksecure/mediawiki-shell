@@ -326,7 +326,7 @@ if ! test -w "$output_dir"; then
   die 1 "Cannot continue."
 fi
 
-mw-login-test "$default_wiki_url_target"
+mw-login-test "$wiki_url_target"
 
 for multiwiki_extra_pages_item in $multiwiki_extra_pages; do
   stecho "$multiwiki_extra_pages_item" | tee -a -- "$allpages_file" >/dev/null

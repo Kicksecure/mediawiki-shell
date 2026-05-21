@@ -1,3 +1,9 @@
+mediawiki-shell (3:6.8-1) unstable; urgency=medium
+
+  * New upstream version (local package).
+
+ -- Patrick Schleizer <adrelanos@whonix.org>  Thu, 21 May 2026 22:13:33 +0000
+
 mediawiki-shell (3:6.7-1) unstable; urgency=medium
 
   * New upstream version (local package).

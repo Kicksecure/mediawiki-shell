@@ -65,7 +65,9 @@ fi
 
 for retry_counter in {1..5}; do
   if ! mw-fetch "$wiki_url" "$page" "$temp_output_file"; then
+    log warn "fetch attempt ${retry_counter} failed for page '$page'; retrying..."
     sleep 5
+    continue
   fi
 
   ## time-of-check to time-of-use TOCTOU
@@ -73,9 +75,22 @@ for retry_counter in {1..5}; do
   ## Checking for pending edits before fetching page would leave room for
   ## making a pending edit after the page has been fetched.
   ## This ensures that the fetched edit was not pending, i.e. confirmed.
-  if ! mw-page-pending-check "$wiki_url" "$page"; then
+  ##
+  ## mw-page-pending-check exits 10 specifically for "page has pending edits".
+  ## Any other non-zero is a CHECK FAILURE (e.g. network error) and must NOT
+  ## be silently treated as "pending" -- doing so would drop the page from the
+  ## backup on a transient failure. Distinguish the two by exit code, mirroring
+  ## mw-multi-wiki's handling.
+  pending_exit_code=0
+  mw-page-pending-check "$wiki_url" "$page" || pending_exit_code="$?"
+  if [ "$pending_exit_code" = "10" ]; then
     log warn "SKIP: page '$page' has PENDING edits."
     exit 0
+  fi
+  if [ "$pending_exit_code" != "0" ]; then
+    log warn "pending-check failed (rc=${pending_exit_code}) for page '$page'; retrying..."
+    sleep 5
+    continue
   fi
 
   mv -- "$temp_output_file" "$output"

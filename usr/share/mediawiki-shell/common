@@ -135,6 +135,171 @@ should_start_processing() {
   return 1
 }
 
+## --- resumable batch state -------------------------------------------
+## Optional per-item done/fail tracking for the batch scripts, so a long
+## run can (a) continue past per-item failures (--keep-going) instead of
+## aborting on the first one, and (b) be resumed (--retry) after a partial
+## run without redoing already-completed items.
+##
+## State lives in a TSV under TMPFOLDER (override with --state-file). One
+## "<status>\t<title>" record per line, appended as items finish; on load
+## the last record for a title wins. MediaWiki titles cannot contain a tab
+## or a newline, so the format is unambiguous, and the file is parsed with
+## 'IFS=$'\t' read -r' only (never source/eval/glob), so a hostile title in
+## the file cannot lead to code execution.
+##
+## Defaults below are overridden by each script's option parser.
+KEEP_GOING="false"
+RETRY="false"
+STATE_RESET="false"
+STATE_FILE=""
+declare -A STATE_DONE_SET=()
+state_done_count=0
+state_fail_count=0
+state_skipped_count=0
+state_failed_titles=()
+
+## State tracking is active only when the caller opted in via --keep-going
+## or --retry; otherwise every state_* helper is a no-op and the default
+## fail-fast behaviour is preserved. It is also disabled under DRY_RUN: a
+## preview never actually writes to the server, so recording items as
+## "done" would poison a later real --retry run.
+state_enabled() {
+  [ "${DRY_RUN:-false}" != "true" ] || return 1
+  [ "${KEEP_GOING}" = "true" ] || [ "${RETRY}" = "true" ]
+}
+
+## Resolve STATE_FILE (unless given via --state-file), honour --reset, and
+## load any prior state. Call once, after wiki-config is sourced.
+## Usage: state_setup KEY   (KEY is a stable per-target string, e.g. WIKI_URL)
+state_setup() {
+  local key sanitized status title file_done file_not_done
+
+  state_enabled || return 0
+
+  key="${1:-default}"
+  if [ -z "${STATE_FILE}" ]; then
+    sanitized="$(printf '%s' "${key}" | LC_ALL=C tr -c 'A-Za-z0-9._-' '_')"
+    STATE_FILE="${TMPFOLDER}/state/${0##*/}__${sanitized}.tsv"
+  fi
+  mkdir --parents -- "${STATE_FILE%/*}"
+
+  if [ "${STATE_RESET}" = "true" ] && [ -f "${STATE_FILE}" ]; then
+    safe-rm -f -- "${STATE_FILE}"
+    log info "STATE | --reset: cleared prior state file '${STATE_FILE}'."
+  fi
+
+  if [ -f "${STATE_FILE}" ]; then
+    while IFS=$'\t' read -r status title; do
+      [ -n "${title}" ] || continue
+      STATE_DONE_SET["${title}"]="${status}"
+    done < "${STATE_FILE}"
+  fi
+
+  ## Compact the loaded last-wins state back to disk so the file does not
+  ## grow without bound across repeated --retry runs. sponge reads its
+  ## input fully before writing, so replacing the same file is safe.
+  if [ "${#STATE_DONE_SET[@]}" -gt 0 ]; then
+    for title in "${!STATE_DONE_SET[@]}"; do
+      printf '%s\t%s\n' "${STATE_DONE_SET[${title}]}" "${title}"
+    done | sponge "${STATE_FILE}"
+  fi
+
+  file_done=0
+  file_not_done=0
+  if [ "${#STATE_DONE_SET[@]}" -gt 0 ]; then
+    for status in "${STATE_DONE_SET[@]}"; do
+      if [ "${status}" = "done" ]; then
+        file_done=$((file_done + 1))
+      else
+        file_not_done=$((file_not_done + 1))
+      fi
+    done
+  fi
+
+  log info "STATE | enabled (keep_going=${KEEP_GOING} retry=${RETRY})"
+  log info "STATE | file: ${STATE_FILE}"
+  if [ "${file_done}" -gt 0 ] || [ "${file_not_done}" -gt 0 ]; then
+    log info "STATE | prior state: ${file_done} done, ${file_not_done} not-done."
+    if [ "${RETRY}" = "true" ]; then
+      log info "STATE | --retry: will skip the ${file_done} already-done item(s)."
+    else
+      log info "STATE | no --retry: all items processed (pass --retry to skip done items)."
+    fi
+  fi
+}
+
+## Return 0 (skip this item) when --retry is set and the item is already
+## recorded done; return 1 (process it) otherwise.
+state_should_skip() {
+  local title="$1"
+
+  [ "${RETRY}" = "true" ] || return 1
+  if [ "${STATE_DONE_SET[${title}]-}" = "done" ]; then
+    state_skipped_count=$((state_skipped_count + 1))
+    return 0
+  fi
+  return 1
+}
+
+state_record_done() {
+  local title="$1"
+
+  state_done_count=$((state_done_count + 1))
+  if state_enabled; then
+    printf '%s\t%s\n' "done" "${title}" >> "${STATE_FILE}"
+    STATE_DONE_SET["${title}"]="done"
+  fi
+}
+
+state_record_fail() {
+  local title="$1" context="${2:-}"
+
+  state_fail_count=$((state_fail_count + 1))
+  state_failed_titles+=("${title}")
+  if state_enabled; then
+    printf '%s\t%s\n' "fail" "${title}" >> "${STATE_FILE}"
+    STATE_DONE_SET["${title}"]="fail"
+  fi
+  if [ -n "${context}" ]; then
+    log warn "STATE | fail: '${title}' (${context})"
+  fi
+}
+
+## Per-item failure handler. Records the failure, then either continues
+## (--keep-going) or aborts fail-fast (default). On abort it prints the
+## summary first so the operator sees the state-file path for --retry.
+## Usage: state_handle_failure TITLE [CONTEXT]
+state_handle_failure() {
+  local title="$1" context="${2:-}"
+
+  state_record_fail "${title}" "${context}"
+  if [ "${KEEP_GOING}" = "true" ]; then
+    log warn "STATE | keep-going past failure on '${title}'."
+    return 0
+  fi
+  log error "Failed on '${title}'${context:+ (${context})}. Pass --keep-going to continue past per-item failures."
+  state_finish
+  exit 1
+}
+
+## End-of-run summary. Lists this run's failures and points at the state
+## file plus the --retry hint. No-op unless state tracking is enabled.
+state_finish() {
+  local title
+
+  state_enabled || return 0
+  log info "STATE | summary: done=${state_done_count} failed=${state_fail_count} skipped-already-done=${state_skipped_count}"
+  if [ "${state_fail_count}" -gt 0 ]; then
+    log warn "STATE | ${state_fail_count} item(s) failed this run:"
+    for title in "${state_failed_titles[@]}"; do
+      log warn "STATE |   fail: '${title}'"
+    done
+    log warn "STATE | state file: ${STATE_FILE}"
+    log warn "STATE | re-run the same command with --retry to retry failed/unfinished items."
+  fi
+}
+
 exit_handler() {
   local exit_code="$?"
   trap - INT HUP ABRT QUIT EXIT

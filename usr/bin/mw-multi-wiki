@@ -26,6 +26,10 @@ Options:
   --delete                    Act on stale target pages (default: report-only)
   --delete-max=N              Safety cap on pages acted on per run (default: ${default_delete_max})
   --dry-run                   Preview actions; make no changes to the target wiki.
+  --keep-going                Continue past per-page failures (record them, exit non-zero)
+  --retry                     Skip pages already recorded done; retry the rest
+  --reset                     Clear any prior state before starting
+  --state-file=PATH           Override the state-file location (default: under TMPFOLDER)
 Defaults:
   WIKI=${default_wiki_url}
   WIKI_TARGET=${default_wiki_url_target}
@@ -53,6 +57,7 @@ delete_mode="false"
 dry_run="${DRY_RUN:-false}"
 delete_max="${default_delete_max}"
 
+# shellcheck disable=SC2034  # KEEP_GOING/RETRY/STATE_RESET/STATE_FILE set here, read by common's state_* helpers
 while true; do
   [[ "${1-}" =~ ^- ]] || break
   begin_optparse "${1:-}" "${2:-}" || break
@@ -80,6 +85,19 @@ while true; do
     dry-run)
       dry_run="true"
       export DRY_RUN="true"
+      ;;
+    keep-going)
+      KEEP_GOING="true"
+      ;;
+    retry)
+      RETRY="true"
+      ;;
+    reset)
+      STATE_RESET="true"
+      ;;
+    state-file)
+      get_arg
+      STATE_FILE="${arg}"
       ;;
     h|help)
       usage
@@ -292,6 +310,8 @@ log info "delete_mode          : $delete_mode"
 log info "delete_max           : $delete_max"
 log info "dry_run              : $dry_run"
 
+state_setup "${WIKI_URL}_to_${wiki_url_target}"
+
 mkdir --parents -- "$output_dir"
 
 if ! test -d "$output_dir"; then
@@ -306,7 +326,7 @@ if ! test -w "$output_dir"; then
   die 1 "Cannot continue."
 fi
 
-mw-login-test "$default_wiki_url_target"
+mw-login-test "$wiki_url_target"
 
 for multiwiki_extra_pages_item in $multiwiki_extra_pages; do
   stecho "$multiwiki_extra_pages_item" | tee -a -- "$allpages_file" >/dev/null
@@ -321,6 +341,7 @@ fi
 unicode-show "$allpages_file"
 counter_total="$(awk 'END {print NR}' "$allpages_file")"
 
+# shellcheck disable=SC2034  # mutated by should_start_processing via nameref
 continue_state="no"
 counter_currently=0
 while IFS=$'\n' read -r item_from_all_pages; do
@@ -331,7 +352,16 @@ while IFS=$'\n' read -r item_from_all_pages; do
     continue
   fi
 
+  if state_should_skip "$item_from_all_pages"; then
+    log info "retry-skip | $counter_currently / $counter_total | already done | $item_from_all_pages"
+    continue
+  fi
+
   log info "PAGE | $counter_currently / $counter_total | $item_from_all_pages"
+
+  ## A page mirrored with pending edits (exit 10) is left unrecorded so a
+  ## later --retry revisits it; only a clean mirror is recorded done.
+  page_pending="false"
 
   copy_wiki_pages_exit_code=0
 
@@ -342,41 +372,46 @@ while IFS=$'\n' read -r item_from_all_pages; do
   case "$copy_wiki_pages_exit_code" in
     10)
       log warn "PAGE - Skipped item_from_all_pages '$item_from_all_pages' because of pending edits."
+      page_pending="true"
       ;;
     0)
       log info "PAGE - item_from_all_pages '$item_from_all_pages' mirroring success."
       ;;
     *)
-      die 1 "PAGE - item_from_all_pages '$item_from_all_pages' mirroring error! copy_wiki_pages_exit_code: '$copy_wiki_pages_exit_code'"
+      state_handle_failure "$item_from_all_pages" "mw-copy-wiki-pages rc=$copy_wiki_pages_exit_code"
+      continue
       ;;
   esac
 
-  if ! stecho "$item_from_all_pages" | grep --ignore-case --fixed-strings -- "File:" >/dev/null 2>&1; then
+  if stecho "$item_from_all_pages" | grep --ignore-case --fixed-strings -- "File:" >/dev/null 2>&1; then
+    log info "FILE | $counter_currently / $counter_total | $item_from_all_pages"
+
+    copy_wiki_file_exit_code=0
+
+    TMPFOLDER="$TMPFOLDER" \
+      mw-copy-wiki-file "--edit-msg=${edit_msg}" "$WIKI_URL" "$wiki_url_target" "$item_from_all_pages" \
+        || copy_wiki_file_exit_code="$?"
+
+    case "$copy_wiki_file_exit_code" in
+      10)
+        log warn "FILE - Skipped item_from_all_pages '$item_from_all_pages' because of pending edits."
+        page_pending="true"
+        ;;
+      0)
+        log info "FILE - item_from_all_pages '$item_from_all_pages' mirroring success."
+        ;;
+      *)
+        state_handle_failure "$item_from_all_pages" "mw-copy-wiki-file rc=$copy_wiki_file_exit_code"
+        continue
+        ;;
+    esac
+  else
     log info "FILE | No, not a file, ok."
-    continue
   fi
 
-  log info "FILE | $counter_currently / $counter_total | $item_from_all_pages"
-
-  copy_wiki_file_exit_code=0
-
-  TMPFOLDER="$TMPFOLDER" \
-    mw-copy-wiki-file "--edit-msg=${edit_msg}" "$WIKI_URL" "$wiki_url_target" "$item_from_all_pages" \
-      || copy_wiki_file_exit_code="$?"
-
-  case "$copy_wiki_file_exit_code" in
-    10)
-      log warn "FILE - Skipped item_from_all_pages '$item_from_all_pages' because of pending edits."
-      ;;
-    0)
-      log info "FILE - item_from_all_pages '$item_from_all_pages' mirroring success."
-      ;;
-    *)
-      die 1 "FILE - item_from_all_pages '$item_from_all_pages' mirroring error! copy_wiki_file_exit_code: '$copy_wiki_file_exit_code'"
-      ;;
-  esac
-
-  continue
+  if [ "$page_pending" != "true" ]; then
+    state_record_done "$item_from_all_pages"
+  fi
 
 done <"$allpages_file"
 
@@ -400,3 +435,8 @@ done <"$allpages_file"
 log info "CLEANUP | START (delete_mode=$delete_mode, delete_max=$delete_max)"
 cleanup_stale_target_pages
 log info "CLEANUP | END"
+
+state_finish
+if [ "$state_fail_count" -gt 0 ]; then
+  exit 2
+fi

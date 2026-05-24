@@ -1,3 +1,283 @@
+commit e886c205869c3cc8534a9f95c5ec7a81f22c9663
+Merge: 95d3149 4af8c89
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 18:42:41 2026 -0400
+
+    Merge remote-tracking branch 'org-ai-assisted/master'
+
+commit 4af8c89197c6ff720a15b2afe58ecadf0c51291d
+Merge: 78bf1c2 95d3149
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 18:41:41 2026 -0400
+
+    Merge branch 'Kicksecure:master' into master
+
+commit 95d3149636f94b7356a95e03dc095799617d639e
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 22:13:33 2026 +0000
+
+    bumped changelog version
+
+commit 78bf1c2b8e7d03f3838b635ff70a522e1f18ec90
+Merge: 763de15 70dad7f
+Author: assisted-by-ai (Bot Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Thu May 21 16:11:02 2026 -0400
+
+    Merge pull request #5 from org-ai-assisted/claude/sleepy-rubin-enHt4
+
+    Add CI test suites: offline unit tests + live-wiki integration tests
+
+commit 70dad7f4a25351ae04f5c7d90ecd597fe6dab198
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 20:07:11 2026 +0000
+
+    ci: add consumer-pre-push-static.yml (was dropped from the prior commit)
+
+    The previous commit removed local-shell-lint.yml but a multi-pathspec
+    git-add aborted before staging the replacement, so consumer-pre-push-static.yml
+    (the reusable pre-push static gate) was left untracked. Add it now so the
+    repo actually has the lint gate.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 5be14f0be4dfbf10b90be41543a2707ea9f40060
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 20:05:54 2026 +0000
+
+    ci: use the reusable pre-push static gate instead of a custom shellcheck job
+
+    Replace the hand-rolled local-shell-lint.yml (which called the shellcheck
+    composite action directly) with consumer-pre-push-static.yml, the byte-identical
+    org template that calls
+    org-ai-assisted/developer-meta-files/.github/workflows/reusable-pre-push-static.yml@master.
+
+    The reusable gate is a superset: shellcheck --external-sources plus bash -n,
+    R-001 ASCII, the Tier-1 bash-style-guide rules (R-010/011/042/051/070/081/090/
+    102/120/130), and the pre-commit-hooks set -- all in the same debian:trixie
+    container CI uses elsewhere. local-unit-tests.yml stays (it runs this repo's own
+    offline suite via the install-deps composite action; there is no reusable
+    workflow for a repo's bespoke tests).
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 9269d5569591348007e3769a68d7ac7d253aabf5
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 19:27:20 2026 +0000
+
+    unit-tests.bash: apply the bash-style-guide fixes (R-010/R-090/R-120)
+
+    The prior commit only recorded the integration-tests.bash removal; the
+    unit-tests.bash edits were left unstaged (git add aborted on the already-rm'd
+    pathspec). This commits the actual style-guide compliance changes:
+
+      * R-010: full strict-mode block; commands-under-test guarded with
+        '|| var=...' / '|| rc=$?' so failures FAIL the assertion, not abort.
+      * R-090: no 'command -v' (call mw-urlencode directly; xmllint is a
+        guaranteed unit-tests workflow dependency).
+      * R-120: safe-rm for temp-fixture cleanup.
+
+    Passes agents/pre-push-static.sh and the unit suite (33/33).
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 0761e553846e4f58780288563586134f2aec2cfe
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 19:24:04 2026 +0000
+
+    tests: comply with the bash style guide; drop integration-tests
+
+    Brings tests/unit-tests.bash into line with developer-meta-files'
+    agents/bash-style-guide.md (enforced by agents/pre-push-static.sh):
+      * R-010: full strict-mode block (errexit/nounset/pipefail/errtrace +
+        inherit_errexit/shift_verbose). Commands under test are guarded with
+        '|| var=...' / '|| rc=$?' so a real failure surfaces as a FAIL assertion
+        instead of aborting the suite under errexit.
+      * R-090: drop 'command -v' -- call mw-urlencode directly and rely on xmllint
+        (a guaranteed unit-tests workflow dependency) rather than probing for it.
+      * R-120: safe-rm instead of rm for temp-fixture cleanup.
+
+    Removes tests/integration-tests.bash: live-wiki coverage now lives in
+    dist-encrypted's .github/scripts/wiki-mediawiki-shell-test.sh (driven by the
+    wiki reproduction), which supersedes it.
+
+    Unit suite still passes 33/33.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 34dcf95bd31997cdd0c25585a5f1b63c9393593a
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 18:46:10 2026 +0000
+
+    mw-multi-wiki: log into the actual target wiki, not the default
+
+    The pre-mirror login check used the hardcoded default_wiki_url_target
+    (www.whonix.org) instead of the resolved wiki_url_target ($2). With the
+    default target it happened to coincide, but any explicit target argument made
+    mw-multi-wiki authenticate against (and fail on) the wrong wiki before doing
+    any work. Use "$wiki_url_target" so the login check matches the wiki actually
+    being mirrored to.
+
+    Found while testing mw-multi-wiki --delete against a local target wiki.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 0b5c457b360bea6e4a0e4f7f4c87ebb4053a3bb6
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 18:13:53 2026 +0000
+
+    Add CI test suites: offline unit tests + live-wiki integration tests
+
+    Adds the first automated test coverage for mediawiki-shell, modelled on the
+    sibling repos' pattern (msgcollector tests + the developer-meta-files
+    install-deps / shellcheck composite actions).
+
+    tests/unit-tests.bash (no wiki; runs in CI):
+      - mw-urlencode filename<->title codec round-trips (incl. '/'->%2F subpage
+        safety and space->underscore normalization).
+      - mw-build-import-xml: XML construction, escaping, subpage decode, and
+        unsafe-title (path-traversal) skipping.
+      - common helpers: assert_path_within_dir traversal guard,
+        should_start_processing (--continue-from), set/decode_backup_page_item.
+
+    tests/integration-tests.bash (live wiki via WIKI_URL):
+      - read-only: mw-all-pages, mw-fetch, mw-page-pending-check.
+      - backup + fidelity: mw-wiki-fetch-backup and a full mw-process-all-pages
+        namespace run, byte-compared against a source backup.
+
+    Workflows:
+      - local-shell-lint.yml  -- shellcheck (shebang-discovered) over usr/bin,
+        usr/share/mediawiki-shell, tests.
+      - local-unit-tests.yml  -- install-deps (genmkfile + helper-scripts +
+        self) then run the offline unit suite.
+
+    Validated locally: 33/33 unit assertions and 9/9 integration assertions pass
+    against a reproduced Kicksecure wiki (2070 pages). The live-wiki integration
+    workflow (which must stand up a wiki in CI) is intentionally not added yet.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 763de15940cb986e56ba5c1d88916074967699a0
+Merge: f0cdb64 9269ea5
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 13:33:13 2026 -0400
+
+    Merge remote-tracking branch 'org-ai-assisted/claude/sleepy-rubin-enHt4'
+
+commit f0cdb64453dae1c2d0a88144f401b138b4ca0c30
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 17:24:00 2026 +0000
+
+    bumped changelog version
+
+commit 9269ea5e3fb3c9f0d5c6477f46d6004469ffc944
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 17:19:40 2026 +0000
+
+    mw-wiki-fetch-backup: do not treat pending-check failure as "pending"
+
+    mw-page-pending-check exits 10 specifically for "page has pending edits";
+    any other non-zero is a check failure (network error, a crash, or the
+    exit-126 from a missing executable bit). The old `if ! mw-page-pending-check`
+    conflated all of these with "pending" and exited 0, silently dropping the
+    page from the backup -- a data-loss hazard in a backup tool.
+
+    Capture the exit code and skip (exit 0) only on 10, mirroring the handling
+    already used in mw-multi-wiki; on any other non-zero, retry within the
+    existing loop and fail (exit 1) once retries are exhausted so the failure
+    surfaces instead of being swallowed. Also `continue` the retry loop after a
+    failed mw-fetch so the {1..5} attempts actually take effect (previously every
+    path exited on the first iteration, making the retry loop dead code).
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit 6a7afd4987dabff537c5fdc62ee079a9e05300e2
+Author: Claude <noreply@anthropic.com>
+Date:   Thu May 21 17:19:33 2026 +0000
+
+    Restore executable bit on mw-page-pending-check
+
+    Commit 56c4325 accidentally dropped the executable bit (100755 -> 100644).
+    It is the only script in usr/bin/ that is not executable. On a .deb install
+    dh_fixperms masks this by forcing usr/bin/* to 0755, but running the scripts
+    directly from the source tree -- development, CI checkouts that copy usr/bin/,
+    local wiki reproduction -- fails with exit 126 "Permission denied". Worse,
+    mw-wiki-fetch-backup then misreads that 126 as "page has pending edits" and
+    silently skips the page from the backup.
+
+    https://claude.ai/code/session_0137YSGyp94ohviiHtGwzgEA
+
+commit f47efaa713a5a81fea20162bfe28c040c00866c0
+Merge: 41c2c15 4e22292
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 12:27:09 2026 -0400
+
+    Merge remote-tracking branch 'assisted-by-ai/claude/multi-credentials-wiki-url-5KgcL'
+
+commit 41c2c151c925472ae414a77387507e7de7a6e5c4
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed May 20 22:14:33 2026 +0000
+
+    bumped changelog version
+
+commit 4e22292407a6b63f1362e5a475bbad73d955596f
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 22:09:46 2026 +0000
+
+    add --keep-going / --retry / --reset / --state-file resumable batch state
+
+    Long batch runs over a wiki's page list previously aborted on the first
+    per-item failure and had to restart from the top. Add an opt-in state
+    layer in common, used by the batch scripts:
+
+    - --keep-going       continue past a per-item failure (record it) instead
+                         of aborting; exit non-zero at the end if any failed.
+    - --retry            skip items already recorded done in a prior run and
+                         retry the rest. Safe on a first run (empty state).
+    - --reset            clear any prior state before starting.
+    - --state-file=PATH  override the default state-file location.
+
+    State is a TSV under TMPFOLDER (one '<status>\t<title>' record per line,
+    appended; last record per title wins on load; compacted via sponge on
+    load to bound growth). Parsing uses 'IFS=$'\t' read -r' only -- no
+    eval/source/glob -- so a hostile page title in the file cannot lead to
+    code execution. MediaWiki titles cannot contain a tab or newline, so the
+    format is unambiguous. State is disabled under DRY_RUN so a preview never
+    records items as done.
+
+    Without any of these flags every state_* helper is a no-op and the prior
+    fail-fast behaviour is unchanged.
+
+    Wired into mw-process-all-pages, mw-wiki-push-backup,
+    mw-flagged-revisions-approve-all, mw-multi-wiki (per-page; pending-edit
+    skips stay unrecorded so --retry revisits them), and forwarded by
+    mw-patch-modify-wiki-all.
+
+    https://claude.ai/code/session_018oz8E5Ak6HDL1AwCHVzotZ
+
+commit 8673de71387262e80a769599d3fd611618bb5989
+Author: Claude <noreply@anthropic.com>
+Date:   Wed May 20 20:54:14 2026 +0000
+
+    bash-style-guide + shellcheck compliance for the --continue-from scripts
+
+    These files entered the static gate's (agents/pre-push-static.sh)
+    changed-file scope via the --continue-from work; bring them into
+    compliance:
+    - R-010: add the missing 'shopt -s inherit_errexit' / 'shopt -s
+      shift_verbose' lines (mw-process-all-pages,
+      mw-flagged-revisions-approve-all, mw-patch-modify-wiki-all,
+      wiki-config).
+    - R-070/R-071: expand the parse_opt and WIKI_URL case arms so ';;'
+      sits on its own line and each statement is on its own line.
+    - R-080: point the parse_opt.sh 'shellcheck source=' directive at the
+      relative source-tree path, not the absolute install path.
+    - shellcheck SC2034: silence the 'continue_state appears unused' false
+      positive (it is mutated by should_start_processing through a
+      nameref) and drop the genuinely unused 'f' local in wiki-config's
+      source_credentials.
+
+    https://claude.ai/code/session_018oz8E5Ak6HDL1AwCHVzotZ
+
 commit 0d01914645535d7a4b62043730f45b6c74fcd98b
 Merge: 7360609 e5eab01
 Author: Patrick Schleizer <adrelanos@whonix.org>

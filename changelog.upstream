@@ -1,3 +1,29 @@
+commit c6908850a7cb1c2edcb8ff833d5b9100ab02f90a
+Merge: ce987e3 bb43b0e
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sun May 24 14:50:24 2026 -0400
+
+    Merge remote-tracking branch 'refs/remotes/ArrayBolt3/arraybolt3/trixie'
+
+commit bb43b0e3365f6fd14bb874eb19b91aca7e35726c
+Author: Aaron Rainbolt <arraybolt3@gmail.com>
+Date:   Sun May 24 12:05:21 2026 -0400
+
+    Fixes, TODOs
+
+commit 2f275dd505778758ef155140f84395ce0bb3ea74
+Merge: 672e84b ce987e3
+Author: Aaron Rainbolt <arraybolt3@gmail.com>
+Date:   Sun May 24 11:09:45 2026 -0400
+
+    Merge branch 'master' into arraybolt3/trixie
+
+commit ce987e3f7ce6c85293156ab932e3856c34f11e92
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 21 22:44:23 2026 +0000
+
+    bumped changelog version
+
 commit e886c205869c3cc8534a9f95c5ec7a81f22c9663
 Merge: 95d3149 4af8c89
 Author: Patrick Schleizer <adrelanos@whonix.org>
@@ -212,6 +238,12 @@ Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu May 21 12:27:09 2026 -0400
 
     Merge remote-tracking branch 'assisted-by-ai/claude/multi-credentials-wiki-url-5KgcL'
+
+commit 672e84b56559bb433a3a2fabda0fbcf4e6193557
+Author: Aaron Rainbolt <arraybolt3@gmail.com>
+Date:   Wed May 20 22:52:16 2026 -0400
+
+    fixes, TODO, FIXMEs
 
 commit 41c2c151c925472ae414a77387507e7de7a6e5c4
 Author: Patrick Schleizer <adrelanos@whonix.org>

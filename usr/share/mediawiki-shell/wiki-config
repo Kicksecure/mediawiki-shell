@@ -76,7 +76,9 @@ source_credentials
 ## If the credentials file populated WIKI_USER_NAMES / WIKI_USER_PASSES,
 ## look up the active wiki's credentials by full URL. A credentials file
 ## that sets WIKI_API_USER_NAME / WIKI_API_USER_PASS directly (e.g. via
-## a `case` block) takes precedence.
+## a `case` block) takes precedence. Both WIKI_USER_NAMES and
+## WIKI_USER_PASSES are associative arrays, so there is no code
+## injection risk here.
 [[ -v WIKI_API_USER_NAME ]] || WIKI_API_USER_NAME="${WIKI_USER_NAMES[$WIKI_URL]-}"
 [[ -v WIKI_API_USER_PASS ]] || WIKI_API_USER_PASS="${WIKI_USER_PASSES[$WIKI_URL]-}"
 

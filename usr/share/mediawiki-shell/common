@@ -103,7 +103,10 @@ trap error_handler ERR
 ##   Returns 0 to process the item, 1 to skip it.
 should_start_processing() {
   local index="$1" title="$2" continue_from="$3"
-  local -n _ssp_state="$4"
+  local -n _ssp_state
+
+  check_variable_name "$4" || return 1
+  _ssp_state="$4"
 
   if [ -z "$continue_from" ]; then
     return 0
@@ -114,6 +117,10 @@ should_start_processing() {
   fi
 
   if [[ "$continue_from" =~ ^[0-9]+$ ]]; then
+    ## TODO: Are negative numbers allowable here? If so, use
+    ## is_integer instead of is_whole_number.
+    is_whole_number "$index" || return 1
+    is_whole_number "$continue_from" || return 1
     if (( index >= continue_from )); then
       _ssp_state="yes"
       return 0
@@ -158,7 +165,14 @@ state_failed_titles=()
 ## preview never actually writes to the server, so recording items as
 ## "done" would poison a later real --retry run.
 state_enabled() {
+  ## TODO: Could this be written as
+  ## `[ "${DRY_RUN:-false}" = 'true' ] && return 1` for better
+  ## readability, or would that break something? The double-negation
+  ## of != and || combined is confusing.
   [ "${DRY_RUN:-false}" != "true" ] || return 1
+
+  ## TODO: Maybe avoid implicit return code propagation for
+  ## readability.
   [ "${KEEP_GOING}" = "true" ] || [ "${RETRY}" = "true" ]
 }
 
@@ -229,6 +243,7 @@ state_should_skip() {
 
   [ "${RETRY}" = "true" ] || return 1
   if [ "${STATE_DONE_SET[${title}]-}" = "done" ]; then
+    is_whole_number "${state_skipped_count}"
     state_skipped_count=$((state_skipped_count + 1))
     return 0
   fi
@@ -238,8 +253,10 @@ state_should_skip() {
 state_record_done() {
   local title="$1"
 
+  is_whole_number "${state_done_count}"
   state_done_count=$((state_done_count + 1))
   if state_enabled; then
+    ## TODO: Use 'tee --append' or 'sponge -a' here?
     printf '%s\t%s\n' "done" "${title}" >> "${STATE_FILE}"
     STATE_DONE_SET["${title}"]="done"
   fi
@@ -248,9 +265,11 @@ state_record_done() {
 state_record_fail() {
   local title="$1" context="${2:-}"
 
+  is_whole_number "${state_fail_count}"
   state_fail_count=$((state_fail_count + 1))
   state_failed_titles+=("${title}")
   if state_enabled; then
+    ## TODO: Use 'tee --append' or 'sponge -a' here?
     printf '%s\t%s\n' "fail" "${title}" >> "${STATE_FILE}"
     STATE_DONE_SET["${title}"]="fail"
   fi

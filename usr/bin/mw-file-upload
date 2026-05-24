@@ -129,6 +129,8 @@ log info "Network for file upload ok."
 
 test -r "${TMPFOLDER}/upload-result.json"
 
+## FIXME: Sanitizing JSON before handing to jq is prohibited, see Bash
+## style guide rule R-140. Sanitize after parsing with jq.
 edit_result_output="$(stcat "${TMPFOLDER}/upload-result.json")"
 if [ "$(jq -r ".error.code" <<<"$edit_result_output")" = "fileexists-no-change" ]; then
   log info "Upload file success."

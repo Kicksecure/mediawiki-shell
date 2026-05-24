@@ -131,6 +131,8 @@ log info "Network for edit page ok."
 
 test -r "${TMPFOLDER}/edit-result.json"
 
+## FIXME: Sanitizing JSON before handing to jq is prohibited, see Bash
+## style guide rule R-140. Sanitize after parsing with jq.
 edit_result_output="$(stcat "${TMPFOLDER}/edit-result.json")"
 
 edit_result_jq="$(jq -r ".edit.result" <<<"$edit_result_output")"

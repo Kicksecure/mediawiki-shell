@@ -61,6 +61,8 @@ curl_run \
 
 log info "Network for imageinfo ok."
 
+## FIXME: Sanitizing JSON before handing to jq is prohibited, see Bash
+## style guide rule R-140. Sanitize after parsing with jq.
 query_result=$(stcat "${TMPFOLDER}/wiki-remote-file-name-fetch-to-file.json")
 
 ## example query_result in case of error:

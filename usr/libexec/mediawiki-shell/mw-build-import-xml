@@ -47,7 +47,12 @@ def unsafe(title):
         return True
     if any(seg == ".." for seg in title.split("/")):
         return True
-    return any(ord(c) < 0x20 for c in title)
+    for c in title:
+        c_ord = ord(c)
+        ## Characters above 0x7F may be valid Unicode characters.
+        if c_ord < 0x20 or c_ord == 0x7F:
+            return True
+    return False
 
 
 def main():

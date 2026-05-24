@@ -119,6 +119,8 @@ log info "Network for protect page ok."
 
 test -r "${TMPFOLDER}/protect-result.json"
 
+## FIXME: Sanitizing JSON before handing to jq is prohibited, see Bash
+## style guide rule R-140. Sanitize after parsing with jq.
 protect_result_output="$(stcat "${TMPFOLDER}/protect-result.json")"
 
 ## Success: the response carries a '.protect' object (title, reason,

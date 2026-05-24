@@ -165,7 +165,14 @@ state_failed_titles=()
 ## preview never actually writes to the server, so recording items as
 ## "done" would poison a later real --retry run.
 state_enabled() {
+  ## TODO: Could this be written as
+  ## `[ "${DRY_RUN:-false}" = 'true' ] && return 1` for better
+  ## readability, or would that break something? The double-negation
+  ## of != and || combined is confusing.
   [ "${DRY_RUN:-false}" != "true" ] || return 1
+
+  ## TODO: Maybe avoid implicit return code propagation for
+  ## readability.
   [ "${KEEP_GOING}" = "true" ] || [ "${RETRY}" = "true" ]
 }
 
@@ -236,6 +243,7 @@ state_should_skip() {
 
   [ "${RETRY}" = "true" ] || return 1
   if [ "${STATE_DONE_SET[${title}]-}" = "done" ]; then
+    is_whole_number "${state_skipped_count}"
     state_skipped_count=$((state_skipped_count + 1))
     return 0
   fi
@@ -245,8 +253,10 @@ state_should_skip() {
 state_record_done() {
   local title="$1"
 
+  is_whole_number "${state_done_count}"
   state_done_count=$((state_done_count + 1))
   if state_enabled; then
+    ## TODO: Use 'tee --append' or 'sponge -a' here?
     printf '%s\t%s\n' "done" "${title}" >> "${STATE_FILE}"
     STATE_DONE_SET["${title}"]="done"
   fi
@@ -255,9 +265,11 @@ state_record_done() {
 state_record_fail() {
   local title="$1" context="${2:-}"
 
+  is_whole_number "${state_fail_count}"
   state_fail_count=$((state_fail_count + 1))
   state_failed_titles+=("${title}")
   if state_enabled; then
+    ## TODO: Use 'tee --append' or 'sponge -a' here?
     printf '%s\t%s\n' "fail" "${title}" >> "${STATE_FILE}"
     STATE_DONE_SET["${title}"]="fail"
   fi

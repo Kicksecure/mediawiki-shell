@@ -186,4 +186,6 @@ if [ "$state_fail_count" -gt 0 ]; then
   exit 2
 fi
 
+## TODO: Should we print some sort of progress message in the failure
+## path above too?
 log info "Done. Pushed $counter_currently / $counter_total page(s)."

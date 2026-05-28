@@ -570,7 +570,21 @@ curl_run() {
 
 trap exit_handler INT HUP ABRT QUIT EXIT
 
-[[ -v TMPFOLDER ]] || TMPFOLDER="$HOME/mediawiki-shell-temp"
+## TMPFOLDER fallback: $HOME (typical), then XDG runtime dir (service
+## accounts and sandboxed environments where $HOME may not be writable
+## by EUID), finally an ephemeral mktemp directory.
+if [[ ! -v TMPFOLDER ]]; then
+  for tmpfolder_parent in \
+      "${HOME:-}" \
+      "${XDG_RUNTIME_DIR:-/run/user/${EUID}}" ; do
+    if [ -d "${tmpfolder_parent}" ] && [ -w "${tmpfolder_parent}" ]; then
+      TMPFOLDER="${tmpfolder_parent}/mediawiki-shell-temp"
+      break
+    fi
+  done
+  unset tmpfolder_parent
+fi
+[[ -v TMPFOLDER ]] || TMPFOLDER="$(mktemp --directory -t mediawiki-shell.XXXXXX)"
 [[ -v USERDOMAIN ]] || USERDOMAIN=""
 [[ -v cookie_jar ]] || cookie_jar="$TMPFOLDER/wiki-cookiejar"
 [[ -v curl ]] || set_curl_binary_default

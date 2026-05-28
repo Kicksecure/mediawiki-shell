@@ -1,3 +1,33 @@
+commit 698f8e2b386921c96a6d37b4d0b53416a09296e8
+Merge: 21f2af8 767bc78
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu May 28 15:28:25 2026 -0400
+
+    Merge remote-tracking branch 'refs/remotes/org-ai-assisted/master'
+
+commit 767bc7866e2f5d36e87f2994f96ce346d1ca2507
+Author: assisted-by-ai (Bot Account) <228987186+assisted-by-ai@users.noreply.github.com>
+Date:   Thu May 28 14:15:12 2026 -0400
+
+    common: fall back to XDG runtime / mktemp when $HOME is unwritable (#6)
+
+    TMPFOLDER previously defaulted unconditionally to $HOME/mediawiki-shell-temp.
+    Service accounts (where $HOME is set but root-owned and unwritable to EUID)
+    and sandboxed environments (where $HOME may pre-exist with a foreign owner)
+    both broke the subsequent mkdir.
+
+    Cascade through writable candidates instead: $HOME first (typical case),
+    then XDG_RUNTIME_DIR / /run/user/$EUID, finally an ephemeral mktemp -d.
+    An explicitly-set TMPFOLDER continues to win -- the guard is unchanged.
+
+    Co-authored-by: Claude <noreply@anthropic.com>
+
+commit 21f2af87d98a5c766b4d19405420432e3e7d56f6
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Sun May 24 19:09:32 2026 +0000
+
+    bumped changelog version
+
 commit c6908850a7cb1c2edcb8ff833d5b9100ab02f90a
 Merge: ce987e3 bb43b0e
 Author: Patrick Schleizer <adrelanos@whonix.org>

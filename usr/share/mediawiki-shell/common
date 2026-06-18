@@ -11,12 +11,10 @@ shopt -s inherit_errexit
 shopt -s shift_verbose
 
 # shellcheck disable=SC1091
-{
-  source /usr/libexec/helper-scripts/log_run_die.sh
-  source /usr/libexec/helper-scripts/has.sh
-  source /usr/libexec/helper-scripts/not_as_root.sh
-  source /usr/libexec/helper-scripts/strings.bsh
-}
+source /usr/libexec/helper-scripts/log_run_die.sh
+source /usr/libexec/helper-scripts/has.sh
+source /usr/libexec/helper-scripts/not_as_root.sh
+source /usr/libexec/helper-scripts/strings.bsh
 
 collect_reqs() {
   local collect cmd
@@ -30,6 +28,7 @@ collect_reqs() {
     die 1 "${FUNCNAME[0]}: command(s) unavailable: '$collect'" >&2
   fi
 }
+
 collect_reqs retry curl jq safe-rm str_replace stprint realpath sponge
 
 check_vars_exist() {

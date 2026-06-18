@@ -133,6 +133,18 @@ if [ "${dry_run}" = "true" ]; then
    import_opts+=( "--dry" )
 fi
 
+## importImages.php's findFiles() defaults its extension filter to
+## $wgFileExtensions, which omits 'svg' on purpose: interactive svg uploads are
+## disabled site-wide as a stored-XSS hardening. But a restore only ever
+## replays already-vetted backup content, so widen the *restore-time* filter to
+## the configured extensions plus svg. --extensions REPLACES the default list,
+## so the configured set must be carried over explicitly. This does NOT touch
+## $wgFileExtensions, so interactive uploads stay svg-free; and importImages.php
+## stores via recordUpload3() without re-checking $wgFileExtensions, so listing
+## svg here is both sufficient and confined to the restore path.
+configured_extensions="$(sudo --non-interactive -u "${web_user}" php "${mw_run}" eval <<< 'echo implode(",", $wgFileExtensions);')"
+import_opts+=( "--extensions=${configured_extensions},svg" )
+
 ## importImages.php scans BACKUP_DIR and uploads each file by basename.
 sudo --non-interactive -u "${web_user}" php "${mw_run}" importImages.php "${import_opts[@]}" "${backup_dir}"
 

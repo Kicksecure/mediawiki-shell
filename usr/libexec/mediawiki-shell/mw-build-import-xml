@@ -68,7 +68,7 @@ def main():
     namespaces = [
         (0, ""), (1, "Talk"), (2, "User"), (4, "Project"), (6, "File"),
         (8, "MediaWiki"), (10, "Template"), (12, "Help"), (14, "Category"),
-        (274, "Widget"),
+        (274, "Widget"), (500, "Moved"),
     ]
 
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())

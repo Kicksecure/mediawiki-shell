@@ -32,7 +32,8 @@ usage() {
 Imports every media file in BACKUP_DIR into the local MediaWiki database
 at MEDIAWIKI_DIR via maintenance/importImages.php.
 
-  BACKUP_DIR     checkout of a per-wiki *media* backup repo
+  BACKUP_DIR     directory of media files to import (e.g. the File: binaries
+                 staged from a git-mediawiki clone)
   MEDIAWIKI_DIR  MediaWiki install dir (default: ${default_mediawiki_dir})
 
 Options:
@@ -43,11 +44,11 @@ Options:
 
 Note: importImages.php runs as the (unprivileged) web user and opens the
 files itself, so BACKUP_DIR must be readable by that user (unlike the text
-importer, it cannot take the data on stdin). Place the media backup
+importer, it cannot take the data on stdin). Place the media files
 somewhere the web user can traverse, e.g. under /tmp or /var/cache.
 
 Example:
-  ${0##*/} ~/derivative-backup/kicksecure-wiki-backup-media /var/www/public/wiki/w" >&2
+  ${0##*/} /tmp/kicksecure-wiki-media-import /var/www/public/wiki/w" >&2
    exit 1
 }
 

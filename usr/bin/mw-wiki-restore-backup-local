@@ -112,12 +112,20 @@ if [ "${dry_run}" = "true" ]; then
    exit 0
 fi
 
+## Wiki-farm DB selector: MediaWiki's wikiconfig reads MW_TARGET_WIKI via
+## getenv() to pick the target DB. sudo scrubs the environment, so forward it
+## inline on each web-user invocation. Unset/empty -> default DB.
+mw_target_env=()
+if [ -n "${MW_TARGET_WIKI:-}" ]; then
+   mw_target_env=( "MW_TARGET_WIKI=${MW_TARGET_WIKI}" )
+fi
+
 ## --no-updates skips link-table maintenance during bulk load; rebuildall
 ## refreshes it afterwards.
 ## SC2024: the '<' redirect runs in this (root) caller, not sudo (intended).
 # shellcheck disable=SC2024
-sudo --non-interactive -u "${web_user}" php "${mw_run}" importDump.php --no-updates < "${xml_out}"
-sudo --non-interactive -u "${web_user}" php "${mw_run}" rebuildall.php \
+sudo --non-interactive -u "${web_user}" "${mw_target_env[@]}" php "${mw_run}" importDump.php --no-updates < "${xml_out}"
+sudo --non-interactive -u "${web_user}" "${mw_target_env[@]}" php "${mw_run}" rebuildall.php \
    || log warn "rebuildall.php returned non-zero (link tables may be partially refreshed)"
 
 log info "Done. Imported ${page_count} page(s)."

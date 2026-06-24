@@ -1,3 +1,80 @@
+commit 2412edb561a24aa481e4f6cf5a8b433001645a84
+Merge: 8650c43 aefab84
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Wed Jun 24 13:04:15 2026 -0400
+
+    Merge remote-tracking branch 'gitlab-adrelanos/master'
+
+commit aefab8410efdff0da0c8c5081b1f36efc5bbdb06
+Author: claude <noreply@anthropic.com>
+Date:   Mon Jun 22 13:16:40 2026 -0400
+
+    mw-wiki-restore-images-local: align usage with git-mediawiki media source
+
+    The reproduction now sources File: media from the git-mediawiki clone
+    (single source of truth) staged into /tmp, not a separate
+    *-wiki-backup-media repo. This generic importer is source-agnostic, so
+    describe BACKUP_DIR as a directory of media files (e.g. staged from a
+    git-mediawiki clone) and point the example at the staged import dir.
+
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01N9kZLX7JLijcYkWFcxLbrY
+
+commit b97b2ffeed8ce75492af185ed5ceb219a00fc5ed
+Author: claude <noreply@anthropic.com>
+Date:   Mon Jun 22 11:46:24 2026 -0400
+
+    restore helpers: forward MW_TARGET_WIKI inline through web-user sudo
+
+    sudo scrubs the environment, so the wiki-farm target-DB selector never reached
+    importDump/importImages/rebuildall. Forward it inline per web-user invocation
+    (unset/empty -> default DB). Lets the reproduction populate the served target
+    wiki, not just the default clone-source DB.
+
+commit 5b44e901997606d713308e501eedebe11586a748
+Author: claude <noreply@anthropic.com>
+Date:   Mon Jun 22 11:00:21 2026 -0400
+
+    mw-build-import-xml: declare Moved (500) namespace in import siteinfo
+
+    The import XML siteinfo <namespaces> block omitted the custom Moved
+    (500) namespace, so a restore of a wiki-backup containing Moved: pages
+    declared no matching namespace in the export header. importDump.php
+    still resolves the namespace from the live wiki config, so this was
+    cosmetic for the actual import, but the siteinfo must enumerate every
+    content namespace present in the backup for the dump to be
+    self-describing and to match the wiki's namespace set.
+
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01N9kZLX7JLijcYkWFcxLbrY
+
+commit 737186806ba30128838e327b99645923962ff662
+Author: claude <noreply@anthropic.com>
+Date:   Thu Jun 18 14:34:42 2026 -0400
+
+    mw-wiki-restore-images-local: restore svg media
+
+    importImages.php filters candidate files by $wgFileExtensions, which
+    omits svg on purpose (interactive svg uploads are disabled site-wide as
+    a stored-XSS hardening). That filter was silently dropping every svg
+    from the media backup on restore, so a rebuilt wiki served 404 for all
+    svg files (logos, hero images) despite the backup containing them.
+
+    A restore only replays already-vetted backup content, so pass
+    --extensions=<configured>,svg to widen the restore-time filter only.
+    $wgFileExtensions is untouched, so interactive uploads stay svg-free;
+    importImages.php stores via recordUpload3() and performs no
+    $wgFileExtensions re-check, so listing svg here is sufficient and
+    confined to the restore path.
+
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+commit 8650c4319e025cd26e9fc46bfc9918d9d8e36bea
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jun 18 13:55:43 2026 +0000
+
+    bumped changelog version
+
 commit 5524e02281f7131ded31ffe27a95fb7a55ba263d
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Jun 18 09:37:30 2026 -0400

@@ -32,7 +32,8 @@ usage() {
 Imports every media file in BACKUP_DIR into the local MediaWiki database
 at MEDIAWIKI_DIR via maintenance/importImages.php.
 
-  BACKUP_DIR     checkout of a per-wiki *media* backup repo
+  BACKUP_DIR     directory of media files to import (e.g. the File: binaries
+                 staged from a git-mediawiki clone)
   MEDIAWIKI_DIR  MediaWiki install dir (default: ${default_mediawiki_dir})
 
 Options:
@@ -43,11 +44,11 @@ Options:
 
 Note: importImages.php runs as the (unprivileged) web user and opens the
 files itself, so BACKUP_DIR must be readable by that user (unlike the text
-importer, it cannot take the data on stdin). Place the media backup
+importer, it cannot take the data on stdin). Place the media files
 somewhere the web user can traverse, e.g. under /tmp or /var/cache.
 
 Example:
-  ${0##*/} ~/derivative-backup/kicksecure-wiki-backup-media /var/www/public/wiki/w" >&2
+  ${0##*/} /tmp/kicksecure-wiki-media-import /var/www/public/wiki/w" >&2
    exit 1
 }
 
@@ -125,6 +126,14 @@ log info "overwrite     : ${overwrite}"
 log info "dry_run       : ${dry_run}"
 log info "media file(s) : ${file_count}"
 
+## Wiki-farm DB selector: MediaWiki's wikiconfig reads MW_TARGET_WIKI via
+## getenv() to pick the target DB. sudo scrubs the environment, so forward it
+## inline on each web-user invocation. Unset/empty -> default DB.
+mw_target_env=()
+if [ -n "${MW_TARGET_WIKI:-}" ]; then
+   mw_target_env=( "MW_TARGET_WIKI=${MW_TARGET_WIKI}" )
+fi
+
 import_opts=( "--comment=${comment}" )
 if [ "${overwrite}" = "true" ]; then
    import_opts+=( "--overwrite" )
@@ -133,7 +142,19 @@ if [ "${dry_run}" = "true" ]; then
    import_opts+=( "--dry" )
 fi
 
+## importImages.php's findFiles() defaults its extension filter to
+## $wgFileExtensions, which omits 'svg' on purpose: interactive svg uploads are
+## disabled site-wide as a stored-XSS hardening. But a restore only ever
+## replays already-vetted backup content, so widen the *restore-time* filter to
+## the configured extensions plus svg. --extensions REPLACES the default list,
+## so the configured set must be carried over explicitly. This does NOT touch
+## $wgFileExtensions, so interactive uploads stay svg-free; and importImages.php
+## stores via recordUpload3() without re-checking $wgFileExtensions, so listing
+## svg here is both sufficient and confined to the restore path.
+configured_extensions="$(sudo --non-interactive -u "${web_user}" "${mw_target_env[@]}" php "${mw_run}" eval <<< 'echo implode(",", $wgFileExtensions);')"
+import_opts+=( "--extensions=${configured_extensions},svg" )
+
 ## importImages.php scans BACKUP_DIR and uploads each file by basename.
-sudo --non-interactive -u "${web_user}" php "${mw_run}" importImages.php "${import_opts[@]}" "${backup_dir}"
+sudo --non-interactive -u "${web_user}" "${mw_target_env[@]}" php "${mw_run}" importImages.php "${import_opts[@]}" "${backup_dir}"
 
 log info "Done. Imported up to ${file_count} media file(s)."

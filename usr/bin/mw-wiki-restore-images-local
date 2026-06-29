@@ -9,6 +9,12 @@
 ## MediaWiki database via maintenance/importImages.php. Offline counterpart for
 ## images; sibling of mw-wiki-restore-backup-local (which imports page text).
 ## importImages.php uploads each file under a title derived from its basename.
+##
+## LEGACY (reproduction): the local reproduction stage now loads wiki content AND
+## media via git-mediawiki -- "git-mediawiki all the way" (stage-clone-git-mediawiki /
+## reproduce-wiki-content-git-mediawiki-push; see dist-encrypted bootstrap-modes.md).
+## This mediawiki-shell importImages path is no longer called by the reproduction
+## bootstrap; it is kept for manual / non-reproduction importImages use only.
 
 set -o errexit
 set -o nounset
@@ -22,6 +28,8 @@ shopt -s shift_verbose
 source /usr/share/mediawiki-shell/common
 
 log info "START"
+
+log info "LEGACY: mediawiki-shell importImages restore -- superseded by git-mediawiki for the local reproduction stage (stage-clone-git-mediawiki). Kept for manual / non-reproduction use only."
 
 default_mediawiki_dir="/var/www/public/wiki/w"
 default_web_user="www-data"

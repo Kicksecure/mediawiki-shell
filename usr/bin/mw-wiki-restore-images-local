@@ -9,6 +9,12 @@
 ## MediaWiki database via maintenance/importImages.php. Offline counterpart for
 ## images; sibling of mw-wiki-restore-backup-local (which imports page text).
 ## importImages.php uploads each file under a title derived from its basename.
+##
+## LEGACY (reproduction): the local reproduction stage now loads wiki content AND
+## media via git-mediawiki -- "git-mediawiki all the way" (stage-clone-git-mediawiki /
+## reproduce-wiki-content-git-mediawiki-push; see dist-encrypted bootstrap-modes.md).
+## This mediawiki-shell importImages path is no longer called by the reproduction
+## bootstrap; it is kept for manual / non-reproduction importImages use only.
 
 set -o errexit
 set -o nounset
@@ -22,6 +28,8 @@ shopt -s shift_verbose
 source /usr/share/mediawiki-shell/common
 
 log info "START"
+
+log info "LEGACY: mediawiki-shell importImages restore -- superseded by git-mediawiki for the local reproduction stage (stage-clone-git-mediawiki). Kept for manual / non-reproduction use only."
 
 default_mediawiki_dir="/var/www/public/wiki/w"
 default_web_user="www-data"
@@ -126,12 +134,16 @@ log info "overwrite     : ${overwrite}"
 log info "dry_run       : ${dry_run}"
 log info "media file(s) : ${file_count}"
 
-## Wiki-farm DB selector: MediaWiki's wikiconfig reads MW_TARGET_WIKI via
-## getenv() to pick the target DB. sudo scrubs the environment, so forward it
-## inline on each web-user invocation. Unset/empty -> default DB.
-mw_target_env=()
+## Wiki-farm DB selectors: MediaWiki's wikiconfig reads MW_TARGET_WIKI (target /
+## mw-shell-test wiki) and MW_OLD_WIKI (the pre-migration old. wiki) via getenv()
+## to pick the DB. sudo scrubs the environment, so forward whichever is set inline
+## on each web-user invocation. Unset/empty -> default DB.
+mw_wiki_env=()
 if [ -n "${MW_TARGET_WIKI:-}" ]; then
-   mw_target_env=( "MW_TARGET_WIKI=${MW_TARGET_WIKI}" )
+   mw_wiki_env+=( "MW_TARGET_WIKI=${MW_TARGET_WIKI}" )
+fi
+if [ -n "${MW_OLD_WIKI:-}" ]; then
+   mw_wiki_env+=( "MW_OLD_WIKI=${MW_OLD_WIKI}" )
 fi
 
 import_opts=( "--comment=${comment}" )
@@ -151,10 +163,10 @@ fi
 ## $wgFileExtensions, so interactive uploads stay svg-free; and importImages.php
 ## stores via recordUpload3() without re-checking $wgFileExtensions, so listing
 ## svg here is both sufficient and confined to the restore path.
-configured_extensions="$(sudo --non-interactive -u "${web_user}" "${mw_target_env[@]}" php "${mw_run}" eval <<< 'echo implode(",", $wgFileExtensions);')"
+configured_extensions="$(sudo --non-interactive -u "${web_user}" "${mw_wiki_env[@]}" php "${mw_run}" eval <<< 'echo implode(",", $wgFileExtensions);')"
 import_opts+=( "--extensions=${configured_extensions},svg" )
 
 ## importImages.php scans BACKUP_DIR and uploads each file by basename.
-sudo --non-interactive -u "${web_user}" "${mw_target_env[@]}" php "${mw_run}" importImages.php "${import_opts[@]}" "${backup_dir}"
+sudo --non-interactive -u "${web_user}" "${mw_wiki_env[@]}" php "${mw_run}" importImages.php "${import_opts[@]}" "${backup_dir}"
 
 log info "Done. Imported up to ${file_count} media file(s)."

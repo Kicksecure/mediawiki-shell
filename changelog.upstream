@@ -1,8 +1,51 @@
+commit d5915a76d9404556d5d9e280c89ff8cf17153c51
+Merge: 746455c db28d21
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jul 2 02:29:05 2026 -0400
+
+    Merge remote-tracking branch 'org-ai-assisted/master'
+
+commit 746455c8f7bef518ad2d7b04618d527d497090d7
+Author: Patrick Schleizer <adrelanos@whonix.org>
+Date:   Thu Jul 2 06:15:55 2026 +0000
+
+    bumped changelog version
+
 commit c18414108d904b21186c88fcba181faff9cd83e2
 Author: Patrick Schleizer <adrelanos@whonix.org>
 Date:   Thu Jul 2 02:12:55 2026 -0400
 
     .
+
+commit db28d2141b00e8235636e954cf113a0ba9fa26bb
+Author: claude (dist-encrypted2 29e015ca-8f98-4585-9a76-e5ba55b8b345) <noreply@anthropic.com>
+Date:   Mon Jun 29 09:03:26 2026 -0400
+
+    mw-wiki-restore-*-local: mark LEGACY (superseded by git-mediawiki for reproduction)
+
+    The local reproduction stage now loads wiki content (text + media) via
+    git-mediawiki -- "git-mediawiki all the way" (stage-clone-git-mediawiki /
+    stage-refresh-git-mediawiki / reproduce-wiki-content-git-mediawiki-push; see
+    dist-encrypted bootstrap-modes.md). The mediawiki-shell importDump/importImages
+    restore is no longer called by the reproduction bootstrap. Add a LEGACY comment
+    and a runtime log notice to both restore helpers; they remain for manual /
+    non-reproduction use.
+
+    Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01KMF4JXWy2JtUaPLoVjFbW3
+
+commit 367ef47cac16c63d10e09c5a910cbeb867ab08f8
+Author: claude <noreply@anthropic.com>
+Date:   Wed Jun 24 23:13:40 2026 -0400
+
+    mw-wiki-restore-{backup,images}-local: forward MW_OLD_WIKI too
+
+    The wiki-farm DB selector forwarding (across the env-scrubbing sudo to the web
+    user) only carried MW_TARGET_WIKI, so a restore into the pre-migration old. wiki
+    (MW_OLD_WIKI=1) silently routed to the DEFAULT DB -- the old. wiki stayed empty
+    (the DOM-diff baseline never loaded). Forward MW_OLD_WIKI alongside MW_TARGET_WIKI
+    (renamed the array mw_target_env -> mw_wiki_env). Both selectors mutually exclusive
+    in practice; unset -> default DB, unchanged.
 
 commit 3f73ce3e960a9e09223d04f7f69c09c258b24a41
 Author: Patrick Schleizer <adrelanos@whonix.org>
